@@ -1,0 +1,82 @@
+/* ==========================================================================
+   layout.css - page tokens, the three full-height sections, tree stage
+   --------------------------------------------------------------------------
+   To add content to a section later, put it inside that section's <section>
+   in index.html. Colours and heights live in the tokens below.
+   ========================================================================== */
+
+:root {
+  /* Section backgrounds: darkest (1) -> medium (2) -> lightest (3) */
+  --pink-1: #fde3ee;
+  --pink-2: #f8a9c6;
+  --pink-3: #f8a3c2;
+  --pink-4: #f48fb1;
+
+  /* Horizontal room kept free for the floating sidebar */
+  --nav-gutter: 84px;
+
+  /* Written by fit-tree.js; 1 = original 1100x680 size */
+  --tree-scale: 1;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+.section {
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100svh;
+}
+
+.section--tree {
+  background: var(--pink-1);
+}
+.section--memory {
+  background: var(--pink-2);
+}
+.section--future {
+  background: var(--pink-3);
+}
+
+/* Section 1 centres the existing tree animation */
+.section--tree {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px var(--nav-gutter);
+}
+
+/* The tree canvas is a fixed 1100x680 design. The stage reserves the scaled
+   footprint and the scaler shrinks it (never enlarges it) on small screens. */
+/* z-index 2 keeps the tree above the emoji layer (z-index 1); the section
+   background itself stays beneath it so the emojis show on every section. */
+.tree-stage {
+  position: relative;
+  z-index: 2;
+  flex: none;
+  width: calc(1100px * var(--tree-scale));
+  height: calc(
+    690px * var(--tree-scale)
+  ); /* 680 canvas + 10 margin-top of #wrap */
+}
+.tree-scaler {
+  display: flow-root; /* keeps #wrap's top margin inside the box */
+  width: 1100px;
+  transform: scale(var(--tree-scale));
+  transform-origin: top left;
+}
+
+/* Sections 2 and 3 are intentionally empty containers. The emoji layer is
+   z-index 1, so give any future content position: relative; z-index: 2. */
+
+@media (max-width: 900px) {
+  :root {
+    --nav-gutter: 64px;
+  }
+  .section--tree {
+    padding-right: 8px;
+  }
+}

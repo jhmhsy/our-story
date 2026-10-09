@@ -1,0 +1,343 @@
+/* section4.css - password gate + poem/ASCII section */
+
+/* ---- Password gate ---- */
+.password-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background:
+    radial-gradient(ellipse at 30% 20%, rgba(255, 182, 213, 0.55), transparent 55%),
+    radial-gradient(ellipse at 70% 80%, rgba(245, 140, 180, 0.4), transparent 50%),
+    linear-gradient(160deg, #fde3ee 0%, #f8a9c6 45%, #f48fb1 100%);
+  transition: opacity 0.45s ease, visibility 0.45s ease;
+}
+.password-gate.is-hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.password-gate__card {
+  position: relative;
+  width: min(380px, 100%);
+  padding: 40px 32px 36px;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow:
+    0 20px 50px rgba(190, 40, 100, 0.22),
+    0 0 0 1px rgba(255, 255, 255, 0.4) inset;
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  text-align: center;
+}
+
+.password-gate__hearts {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: 28px;
+}
+.pw-heart {
+  position: absolute;
+  color: #e5457f;
+  opacity: 0.28;
+  font-size: 18px;
+  animation: pw-float 4.5s ease-in-out infinite;
+}
+.pw-heart--1 { left: 12%; top: 18%; animation-delay: 0s; font-size: 16px; }
+.pw-heart--2 { right: 14%; top: 28%; animation-delay: 1.2s; font-size: 22px; }
+.pw-heart--3 { left: 42%; bottom: 12%; animation-delay: 2.4s; font-size: 14px; }
+
+@keyframes pw-float {
+  0%, 100% { transform: translateY(0) scale(1); opacity: 0.22; }
+  50%      { transform: translateY(-10px) scale(1.15); opacity: 0.4; }
+}
+
+.password-gate__title {
+  margin: 0 0 8px;
+  font: 700 28px/1.2 "Segoe UI", Tahoma, Verdana, sans-serif;
+  color: #9c1f58;
+  letter-spacing: 0.02em;
+}
+.password-gate__hint {
+  margin: 0 0 28px;
+  font: 400 14px/1.5 "Segoe UI", Tahoma, Verdana, sans-serif;
+  color: #b44a78;
+}
+
+.password-gate__form {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+}
+.password-gate__label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+.password-gate__input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 14px 18px;
+  border: 2px solid rgba(229, 69, 127, 0.35);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.9);
+  font: 600 18px/1 "Segoe UI", Tahoma, Verdana, sans-serif;
+  color: #9c1f58;
+  letter-spacing: 0.2em;
+  text-align: center;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.password-gate__input:focus {
+  border-color: #e5457f;
+  box-shadow: 0 0 0 4px rgba(229, 69, 127, 0.2);
+}
+.password-gate__btn {
+  margin-top: 4px;
+  padding: 14px 20px;
+  border: none;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #ff7aa8, #e5457f);
+  color: #fff;
+  font: 600 16px/1 "Segoe UI", Tahoma, Verdana, sans-serif;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(229, 69, 127, 0.4);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.password-gate__btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 22px rgba(229, 69, 127, 0.5);
+}
+.password-gate__btn:active { transform: translateY(0); }
+
+.password-gate__error {
+  margin: 4px 0 0;
+  font: 500 13px/1.4 "Segoe UI", Tahoma, Verdana, sans-serif;
+  color: #c6284a;
+  min-height: 1.2em;
+}
+.password-gate__error[hidden] { display: none; }
+
+.site-content[hidden] { display: none !important; }
+
+/* ---- Section 4: poem + ASCII ---- */
+:root {
+  --pink-4: #f48fb1;
+}
+
+.section--poem {
+  background: var(--pink-4);
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  padding: 28px var(--nav-gutter) 36px;
+  box-sizing: border-box;
+}
+
+.poem-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  align-items: stretch;
+  min-height: calc(100vh - 64px);
+  min-height: calc(100svh - 64px);
+}
+
+.poem-col {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  min-width: 0;
+}
+
+.poem-panel {
+  flex: 1;
+  box-sizing: border-box;
+  padding: 28px 24px;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  box-shadow: 0 12px 32px rgba(190, 40, 100, 0.12);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  /* empty area ready for poem — readable romantic typography when filled */
+  font: 400 17px/1.7 "Georgia", "Times New Roman", serif;
+  color: #6b2040;
+  overflow: auto;
+}
+
+.ascii-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  min-height: 0;
+}
+
+.ascii-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  font: 500 13px/1 "Segoe UI", Tahoma, Verdana, sans-serif;
+  color: #9c1f58;
+}
+
+.ascii-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+}
+.ascii-file-label { position: relative; cursor: pointer; }
+.ascii-file-btn {
+  display: inline-block;
+  padding: 8px 14px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #ff7aa8, #e5457f);
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 3px 10px rgba(229, 69, 127, 0.35);
+}
+.ascii-file-btn:hover { filter: brightness(1.05); }
+
+.ascii-pixel-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ascii-slider-wrap {
+  display: inline-block;
+  width: 120px;
+  vertical-align: middle;
+  position: relative;
+}
+.ascii-slider-wrap input[type="range"] {
+  display: block;
+  width: 100%;
+  margin: 0;
+  accent-color: #e5457f;
+}
+.ascii-danger-bar {
+  display: block;
+  height: 3px;
+  width: 0;
+  margin-top: 2px;
+  background: #e33;
+  border-radius: 2px;
+}
+.ascii-warning {
+  color: #c6284a;
+  font-size: 12px;
+}
+
+.ascii-zoom-btns {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+.ascii-zoom-btn {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.85);
+  color: #9c1f58;
+  font: 700 16px/1 "Segoe UI", sans-serif;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(190, 40, 100, 0.15);
+  transition: background 0.15s ease;
+}
+.ascii-zoom-btn:hover { background: #fff; }
+.ascii-zoom-btn:active { transform: scale(0.96); }
+
+/* Viewport isolates zoom; stage is tilted slightly clockwise */
+.ascii-viewport {
+  position: relative;
+  flex: 1;
+  min-height: 320px;
+  overflow: auto;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  box-shadow: 0 12px 32px rgba(190, 40, 100, 0.12);
+  /* extra padding so rotated content is not clipped */
+  padding: 28px;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: none; /* pinch handled in JS */
+}
+
+.ascii-stage {
+  display: inline-block;
+  transform: rotate(3deg);
+  transform-origin: center center;
+  transition: transform 0.05s linear;
+  will-change: transform;
+}
+
+.ascii-output {
+  width: max-content;
+  margin: 0 auto;
+  line-height: 1;
+  font-family: monospace;
+  font-size: 4px;
+  white-space: pre;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.ascii-output .word {
+  display: inline-block;
+  white-space: pre;
+}
+
+.ascii-source-canvas {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .poem-layout {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    min-height: auto;
+  }
+  .poem-panel {
+    min-height: 180px;
+  }
+  .ascii-viewport {
+    min-height: 280px;
+  }
+  .section--poem {
+    padding: 20px 16px 28px;
+  }
+  .ascii-zoom-btns {
+    margin-left: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pw-heart { animation: none; }
+  .password-gate { transition: none; }
+}

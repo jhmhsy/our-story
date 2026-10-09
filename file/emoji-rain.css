@@ -1,0 +1,48 @@
+/* emoji-rain.css - love emojis drifting down AND up across every section.
+   One fixed, click-through layer, so it never blocks the tree or the page. */
+
+.emoji-rain {
+  position: fixed;
+  top: 0; right: 0; bottom: 0; left: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;                 /* above section backgrounds, below content */
+}
+
+.love-drop {
+  position: absolute;
+  top: 0;
+  left: var(--x);
+  font-size: var(--size);
+  line-height: 1;
+  opacity: var(--o);
+  animation-duration: var(--dur);
+  animation-delay: var(--delay);
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: transform;
+}
+.love-drop--fall { animation-name: love-fall; }
+.love-drop--rise { animation-name: love-rise; }
+
+.love-drop__glyph {
+  display: block;
+  animation: love-sway var(--sway-dur) ease-in-out infinite alternate;
+}
+
+@keyframes love-fall {
+  from { transform: translate3d(0, -12vh, 0); }
+  to   { transform: translate3d(0, 112vh, 0); }
+}
+@keyframes love-rise {
+  from { transform: translate3d(0, 112vh, 0); }
+  to   { transform: translate3d(0, -12vh, 0); }
+}
+@keyframes love-sway {
+  from { transform: translateX(calc(var(--sway) * -1)) rotate(-12deg); }
+  to   { transform: translateX(var(--sway)) rotate(12deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .emoji-rain { display: none; }
+}

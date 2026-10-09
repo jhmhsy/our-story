@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Image to ILOVEYOU</title>
+
+    <style>
+        body {
+            margin: 0;
+            background: #111;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+
+        #controls {
+            padding: 20px;
+            background: #222;
+        }
+
+        #output {
+            width: max-content;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1;
+            font-family: monospace;
+            font-size: 4px;
+            white-space: pre;
+        }
+
+        .word {
+            display: inline-block;
+            white-space: pre;
+        }
+
+        #sourceCanvas {
+            display: none;
+        }
+
+        #sliderWrap {
+            display: inline-block;
+            width: 200px;
+            vertical-align: middle;
+        }
+
+        #pixelSize {
+            display: block;
+            width: 100%;
+            margin: 0;
+        }
+
+        #dangerBar {
+            display: block;
+            height: 4px;
+            width: 0;
+            margin-top: 2px;
+            background: #e33;
+            border-radius: 2px;
+        }
+
+        #warning {
+            color: #f66;
+            font-size: 13px;
+            margin-left: 12px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="controls">
+        <input type="file" id="imageInput" accept="image/*">
+
+        <label>
+            Pixel Size:
+            <span id="sliderWrap">
+                <input type="range" id="pixelSize" min="1" max="40" value="10">
+                <span id="dangerBar"></span>
+            </span>
+        </label>
+        <span id="warning"></span>
+    </div>
+
+    <canvas id="sourceCanvas"></canvas>
+
+    <div id="output"></div>
+
+    <script>
+        var imageInput = document.getElementById("imageInput");
+        var output = document.getElementById("output");
+        var canvas = document.getElementById("sourceCanvas");
+        var ctx = canvas.getContext("2d");
+        var pixelSize = document.getElementById("pixelSize");
+        var MAX_WORDS = 30000;  // above this, rendering starts to lag
+        var safeStep = 1;       // smallest step that stays under MAX_WORDS
+        var warning = document.getElementById("warning");
+        var dangerBar = document.getElementById("dangerBar");
+
+        var STATIC_IMAGE = "test.jpg";
+        var currentImage = null;
+
+        // load a new image, auto-fit once, then render
+        function loadImage() {
+            var file = imageInput && imageInput.files[0];
+
+            var image = new Image();
+            image.onload = function () {
+                currentImage = image;
+                var fitted = fitPixelSize(image);
+                pixelSize.value = fitted;
+                safeStep = Math.min(findSafeStep(image), fitted); // the fitted value is never "danger"
+                updateDangerUI();
+                renderTextImage(image, fitted);
+            };
+            image.onerror = function () {
+                console.error("Could not load image");
+            };
+            image.src = file ? URL.createObjectURL(file) : STATIC_IMAGE;
+        }
+
+        // slider only re-renders the current image, no re-fit
+        function rerender() {
+            if (currentImage) {
+                renderTextImage(currentImage, parseInt(pixelSize.value));
+            }
+        }
+
+        if (imageInput) {
+            imageInput.addEventListener("change", loadImage);
+        }
+        pixelSize.addEventListener("input", function () {
+            updateDangerUI();
+            if (!isDanger()) rerender();   // safe range: live updates
+        });
+        pixelSize.addEventListener("change", function () {
+            if (isDanger()) rerender();    // danger range: render once on release
+        });
+
+        loadImage(); // initial load
+
+        function measureWord() {
+            var probe = document.createElement("span");
+            probe.className = "word";
+            probe.textContent = "ILOVEYOU";
+            output.appendChild(probe);
+            var rect = probe.getBoundingClientRect();
+            output.removeChild(probe);
+            return rect;
+        }
+
+        // compute the step that fits the image in the window (runs once per image)
+        function fitPixelSize(image) {
+            output.innerHTML = "";
+            var rect = measureWord();
+            var ratio = rect.width / rect.height;
+
+            var FIT = 1; // lower (e.g. 0.8) to leave breathing room
+            var controls = document.getElementById("controls");
+            var availableW = (document.documentElement.clientWidth - 40) * FIT;
+            var availableH = (window.innerHeight - (controls ? controls.offsetHeight : 0) - 40) * FIT;
+
+            var wordsPerRow = Math.max(1, Math.floor(availableW / rect.width));
+            var rowsFit = Math.max(1, Math.floor(availableH / rect.height));
+
+            var stepX = Math.max(
+                1,
+                Math.ceil(image.width / wordsPerRow),
+                Math.ceil((image.height * ratio) / rowsFit)
+            );
+
+            // make sure the slider can hold the fitted value
+            pixelSize.max = Math.max(40, stepX * 2);
+            return stepX;
+        }
+
+        function renderTextImage(image, stepX) {
+            var width = image.width;
+            var height = image.height;
+
+            canvas.width = width;
+            canvas.height = height;
+            ctx.drawImage(image, 0, 0, width, height);
+
+            var data = ctx.getImageData(0, 0, width, height).data;
+
+            output.innerHTML = "";
+
+            var rect = measureWord();
+            var ratio = rect.width / rect.height;
+            var stepY = Math.max(1, Math.round(stepX / ratio));
+
+            for (var y = 0; y < height; y += stepY) {
+                var line = document.createElement("div");
+
+                for (var x = 0; x < width; x += stepX) {
+                    var index = (y * width + x) * 4;
+                    if (data[index + 3] === 0) continue;
+
+                    var word = document.createElement("span");
+                    word.className = "word";
+                    word.textContent = "ILOVEYOU";
+                    word.style.color =
+                        "rgb(" + data[index] + "," + data[index + 1] + "," + data[index + 2] + ")";
+                    line.appendChild(word);
+                }
+
+                output.appendChild(line);
+            }
+        }
+        function getRatio() {
+            var rect = measureWord();
+            return rect.width / rect.height;
+        }
+
+        function wordCount(image, step, ratio) {
+            var stepY = Math.max(1, Math.round(step / ratio));
+            return Math.ceil(image.width / step) * Math.ceil(image.height / stepY);
+        }
+
+        function findSafeStep(image) {
+            var ratio = getRatio();
+            var step = 1;
+            while (wordCount(image, step, ratio) > MAX_WORDS) step++;
+            return step;
+        }
+
+        function isDanger() {
+            return parseInt(pixelSize.value) < safeStep;
+        }
+
+        function updateDangerUI() {
+            var min = parseInt(pixelSize.min);
+            var max = parseInt(pixelSize.max);
+            var pct = Math.min(100, Math.max(0, (safeStep - min) / (max - min) * 100));
+            dangerBar.style.width = pct + "%";
+
+            if (currentImage && isDanger()) {
+                var count = wordCount(currentImage, parseInt(pixelSize.value), getRatio());
+                warning.textContent = "⚠ ~" + count.toLocaleString() + " words, release to render (may lag)";
+            } else {
+                warning.textContent = "";
+            }
+        }
+    </script>
+
+</body>
+
+</html>

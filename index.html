@@ -1,0 +1,310 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Birthday Heart Animation | @coding.stella</title>
+    <link type="text/css" rel="stylesheet" href="file/default.css">
+    <link type="text/css" rel="stylesheet" href="file/layout.css">
+    <link type="text/css" rel="stylesheet" href="file/sidebar.css">
+    <link type="text/css" rel="stylesheet" href="file/emoji-rain.css">
+    <link type="text/css" rel="stylesheet" href="file/section4.css">
+    <script type="text/javascript" src="file/jquery.min.js"></script>
+    <script type="text/javascript" src="file/jscex.min.js"></script>
+    <script type="text/javascript" src="file/jscex-parser.js"></script>
+    <script type="text/javascript" src="file/jscex-jit.js"></script>
+    <script type="text/javascript" src="file/jscex-builderbase.min.js"></script>
+    <script type="text/javascript" src="file/jscex-async.min.js"></script>
+    <script type="text/javascript" src="file/jscex-async-powerpack.min.js"></script>
+    <script type="text/javascript" src="file/function.js" charset="utf-8"></script>
+    <script type="text/javascript" src="file/love.js" charset="utf-8"></script>
+    <script type="text/javascript" src="file/password-gate.js" charset="utf-8"></script>
+    <script type="text/javascript" src="file/ascii-art.js" charset="utf-8"></script>
+    <script>
+        function playAudio() {
+            var audio = document.getElementById("myAudio");
+            if (audio) audio.play();
+        }
+    </script>
+</head>
+
+<body>
+    <!-- Password gate: personal access screen (client-side only) -->
+    <div id="password-gate" class="password-gate" role="dialog" aria-modal="true" aria-labelledby="pw-title">
+        <div class="password-gate__card">
+            <div class="password-gate__hearts" aria-hidden="true">
+                <span class="pw-heart pw-heart--1">&#10084;</span>
+                <span class="pw-heart pw-heart--2">&#10084;</span>
+                <span class="pw-heart pw-heart--3">&#10084;</span>
+            </div>
+            <h1 id="pw-title" class="password-gate__title">For You &#128151;</h1>
+            <p class="password-gate__hint">Enter the special date to open our little world</p>
+            <form id="password-form" class="password-gate__form" autocomplete="off">
+                <label class="password-gate__label" for="password-input">Password</label>
+                <input type="password" id="password-input" class="password-gate__input"
+                    placeholder="******" maxlength="20"
+                    inputmode="numeric" aria-describedby="password-error" autofocus>
+                <button type="submit" class="password-gate__btn">Open with love</button>
+                <p id="password-error" class="password-gate__error" role="alert" hidden>Not quite right, try again &#128149;</p>
+            </form>
+        </div>
+    </div>
+
+    <div id="site-content" class="site-content" hidden>
+    <nav id="love-nav" class="love-nav" aria-label="Sections">
+        <span class="love-nav__heart" aria-hidden="true">&#128151;</span>
+        <a class="love-nav__link" href="#greetings">
+            <span class="love-nav__icon" aria-hidden="true">&#127800;</span>
+            <span class="love-nav__label">Tree Animation</span>
+        </a>
+        <a class="love-nav__link" href="#story">
+            <span class="love-nav__icon" aria-hidden="true">&#128140;</span>
+            <span class="love-nav__label">Memory Timeline</span>
+        </a>
+        <a class="love-nav__link" href="#gallery">
+            <span class="love-nav__icon" aria-hidden="true">&#128158;</span>
+            <span class="love-nav__label">Future Section</span>
+        </a>
+        <a class="love-nav__link" href="#last">
+            <span class="love-nav__icon" aria-hidden="true">&#128221;</span>
+            <span class="love-nav__label">Poem &amp; ASCII Artwork</span>
+        </a>
+    </nav>
+
+    <div id="emoji-rain" class="emoji-rain" aria-hidden="true"></div>
+
+    <!-- Section 1: Tree Animation (existing markup, unchanged) -->
+    <section id="greetings" class="section section--tree">
+      <div class="tree-stage">
+        <div class="tree-scaler">
+    <div id="main">
+        <div id="error"><a
+                href="http://www.google.cn/chrome/intl/zh-CN/landing_chrome.html?hl=zh-CN&brand=CHMI">Chrome</a> (<a
+                href="http://firefox.com.cn/download/">Firefox</a>)</div>
+        <audio autoplay="autoplay" height="100" width="100" id="myAudio">
+            <source src="aud.mp3" type="audio/mp3" />
+            <embed height="100" width="100" src="aud.mp3" />
+        </audio>
+        <div id="wrap">
+            <div id="text">
+                <div id="code">
+                    <span class="say">Hi baby 💞</span><br>
+                    <span class="say">I love you 🎈</span><br>
+                    <span class="say">My handsome boy🍀</span><br>
+                    <span class="say">My honeybunch 💕</span><br>
+                    <span class="say">Sending good hugs & kisses 😏</span><br>
+                    <span class="say">Plus points na me? mwheheh ❤️</span><br>
+                    <span class="say">- From your lablab ❤️😘</span><br>
+                </div>
+            </div>
+            <div id="clock-box">
+                <span id="clock">577 days 0 hours 0 minutes 0 seconds</span>
+            </div>
+            <canvas id="canvas" width="1100" height="680"></canvas>
+        </div>
+    </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 2: Memory Timeline - intentionally empty -->
+    <section id="story" class="section section--memory" aria-label="Memory Timeline"></section>
+
+    <!-- Section 3: Future Section - intentionally empty -->
+    <section id="gallery" class="section section--future" aria-label="Future Section"></section>
+
+    <!-- Section 4: Poem (left) + Image-to-ASCII (right) -->
+    <section id="last" class="section section--poem" aria-label="Poem and ASCII Artwork">
+      <div class="poem-layout">
+        <div class="poem-col poem-col--text">
+          <div class="poem-panel">
+            <!-- Empty on purpose: poem / essay goes here later -->
+          </div>
+        </div>
+        <div class="poem-col poem-col--art">
+          <div class="ascii-panel">
+            <div class="ascii-controls">
+              <label class="ascii-file-label">
+                <input type="file" id="imageInput" accept="image/*" class="ascii-file-input">
+                <span class="ascii-file-btn">Choose image</span>
+              </label>
+              <label class="ascii-pixel-label">
+                Pixel size
+                <span class="ascii-slider-wrap">
+                  <input type="range" id="pixelSize" min="1" max="40" value="10">
+                  <span id="dangerBar" class="ascii-danger-bar"></span>
+                </span>
+              </label>
+              <span id="warning" class="ascii-warning"></span>
+              <div class="ascii-zoom-btns">
+                <button type="button" id="zoomOut" class="ascii-zoom-btn" title="Zoom out" aria-label="Zoom out">&#8722;</button>
+                <button type="button" id="zoomReset" class="ascii-zoom-btn" title="Reset zoom" aria-label="Reset zoom">1:1</button>
+                <button type="button" id="zoomIn" class="ascii-zoom-btn" title="Zoom in" aria-label="Zoom in">+</button>
+              </div>
+            </div>
+            <div id="asciiViewport" class="ascii-viewport" tabindex="0" aria-label="ASCII artwork. Scroll to zoom.">
+              <div id="asciiStage" class="ascii-stage">
+                <div id="output" class="ascii-output"></div>
+              </div>
+            </div>
+            <canvas id="sourceCanvas" class="ascii-source-canvas"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+    </div><!-- /#site-content -->
+
+    <script type="text/javascript" src="file/fit-tree.js"></script>
+    <script type="text/javascript" src="file/emoji-rain.js" charset="utf-8"></script>
+    <script type="text/javascript" src="file/sidebar.js"></script>
+    <script type="text/javascript" src="file/ascii-art.js" charset="utf-8"></script>
+    <script type="text/javascript" src="file/password-gate.js" charset="utf-8"></script>
+
+    <script>
+        (function () {
+            var canvas = $('#canvas');
+
+            if (!canvas[0] || !canvas[0].getContext) {
+                $("#error").show();
+                return false;
+            }
+
+            var width = canvas.width();
+            var height = canvas.height();
+            canvas.attr("width", width);
+            canvas.attr("height", height);
+
+            var sectionBg = (window.getComputedStyle(document.documentElement)
+                .getPropertyValue('--pink-1') || '').replace(/^\s+|\s+$/g, '') || '#fff';
+
+            function canvasPoint(e) {
+                var rect = canvas[0].getBoundingClientRect();
+                var k = rect.width / width || 1;
+                return { x: (e.clientX - rect.left) / k, y: (e.clientY - rect.top) / k };
+            }
+
+            var opts = {
+                seed: {
+                    x: width / 2 - 20,
+                    color: "rgb(190, 26, 37)",
+                    scale: 2
+                },
+                branch: [
+                    [535, 680, 570, 250, 500, 200, 30, 100, [
+                        [540, 500, 455, 417, 340, 400, 13, 100, [
+                            [450, 435, 434, 430, 394, 395, 2, 40]
+                        ]],
+                        [550, 445, 600, 356, 680, 345, 12, 100, [
+                            [578, 400, 648, 409, 661, 426, 3, 80]
+                        ]],
+                        [539, 281, 537, 248, 534, 217, 3, 40],
+                        [546, 397, 413, 247, 328, 244, 9, 80, [
+                            [427, 286, 383, 253, 371, 205, 2, 40],
+                            [498, 345, 435, 315, 395, 330, 4, 60]
+                        ]],
+                        [546, 357, 608, 252, 678, 221, 6, 100, [
+                            [590, 293, 646, 277, 648, 271, 2, 80]
+                        ]]
+                    ]]
+                ],
+                bloom: {
+                    num: 700,
+                    width: 1080,
+                    height: 650,
+                },
+                footer: {
+                    width: 1200,
+                    height: 5,
+                    speed: 10,
+                    color: sectionBg,
+                }
+            }
+
+            var tree = new Tree(canvas[0], width, height, opts);
+            var seed = tree.seed;
+            var foot = tree.footer;
+            var hold = 1;
+
+            canvas.click(function (e) {
+                playAudio();
+                var pt = canvasPoint(e), x = pt.x, y = pt.y;
+                if (seed.hover(x, y)) {
+                    hold = 0;
+                    canvas.unbind("click");
+                    canvas.unbind("mousemove");
+                    canvas.removeClass('hand');
+                }
+            }).mousemove(function (e) {
+                var pt = canvasPoint(e), x = pt.x, y = pt.y;
+                canvas.toggleClass('hand', seed.hover(x, y));
+            });
+
+            var seedAnimate = eval(Jscex.compile("async", function () {
+                seed.draw();
+                while (hold) {
+                    $await(Jscex.Async.sleep(10));
+                }
+                while (seed.canScale()) {
+                    seed.scale(0.95);
+                    $await(Jscex.Async.sleep(10));
+                }
+                while (seed.canMove()) {
+                    seed.move(0, 2);
+                    foot.draw();
+                    $await(Jscex.Async.sleep(10));
+                }
+            }));
+
+            var growAnimate = eval(Jscex.compile("async", function () {
+                do {
+                    tree.grow();
+                    $await(Jscex.Async.sleep(10));
+                } while (tree.canGrow());
+            }));
+
+            var flowAnimate = eval(Jscex.compile("async", function () {
+                do {
+                    tree.flower(2);
+                    $await(Jscex.Async.sleep(10));
+                } while (tree.canFlower());
+            }));
+
+            var moveAnimate = eval(Jscex.compile("async", function () {
+                tree.snapshot("p1", 240, 0, 610, 680);
+                while (tree.move("p1", 500, 0)) {
+                    foot.draw();
+                    $await(Jscex.Async.sleep(10));
+                }
+                foot.draw();
+                tree.snapshot("p2", 500, 0, 610, 680);
+
+                canvas.parent().css("background", "url(" + tree.toDataURL('image/png') + ")");
+                canvas.css("background", sectionBg);
+                $await(Jscex.Async.sleep(300));
+                canvas.css("background", "none");
+            }));
+
+            var textAnimate = eval(Jscex.compile("async", function () {
+                $("#code").show().typewriter();
+            }));
+
+            var runAsync = eval(Jscex.compile("async", function () {
+                $await(seedAnimate());
+                $await(growAnimate());
+                $await(flowAnimate());
+                $await(moveAnimate());
+                textAnimate().start();
+            }));
+
+            window.__startTreeAnimation = function () {
+                runAsync().start();
+            };
+            if (window.__siteUnlocked) {
+                window.__startTreeAnimation();
+            }
+        })();
+    </script>
+</body>
+
+</html>
