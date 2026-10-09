@@ -8,51 +8,103 @@
     var viewport = document.getElementById('asciiViewport');
     var stage = document.getElementById('asciiStage');
 
+    pixelSize.addEventListener('change', (e) => {
+        console.log(e.value);
+    });
+
     if (!output || !canvas || !pixelSize || !viewport || !stage) return;
 
     var ctx = canvas.getContext('2d');
     var MAX_WORDS = 30000;
+
     var safeStep = 1;
     // Static image at site root (same folder as index.html)
     var STATIC_IMAGE = 'image.jpg';
     var currentImage = null;
+    var PREFERRED_STEP = 16;
 
     /* ---- Zoom state (scale only; parent .ascii-viewport holds the tilt) ---- */
-    var zoom = 1;
-    var MIN_ZOOM = 0.25;
+    var BASE_FONT = 4;
+    var zoom = 0.3923;
+    var MIN_ZOOM = 0.15;
     var MAX_ZOOM = 12;
 
-    function applyZoom() {
-        stage.style.transform = 'scale(' + zoom + ')';
+    function applyFont() {
+        output.style.fontSize = (BASE_FONT * zoom) + 'px';
     }
 
-    function setZoom(z, anchorX, anchorY) {
-        var prev = zoom;
-        zoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, z));
-        if (zoom === prev) return;
+    function centerScroll() {
+        requestAnimationFrame(function () {
+            viewport.scrollLeft = Math.max(0, (viewport.scrollWidth - viewport.clientWidth) / 2);
+            viewport.scrollTop = Math.max(0, (viewport.scrollHeight - viewport.clientHeight) / 2);
+        });
+    }
 
-        if (typeof anchorX === 'number' && typeof anchorY === 'number') {
-            var rect = viewport.getBoundingClientRect();
-            var relX = anchorX - rect.left + viewport.scrollLeft;
-            var relY = anchorY - rect.top + viewport.scrollTop;
-            var ratio = zoom / prev;
-            viewport.scrollLeft = relX * ratio - (anchorX - rect.left);
-            viewport.scrollTop = relY * ratio - (anchorY - rect.top);
+    function fitZoomToViewport() {
+        if (!output.firstChild) return 1;
+
+        // temporarily set zoom=1 so we can measure true size
+        var oldZoom = zoom;
+        zoom = 1;
+        applyFont();
+
+        var stageW = stage.scrollWidth || stage.offsetWidth;
+        var stageH = stage.scrollHeight || stage.offsetHeight;
+        var viewW = viewport.clientWidth - 24;   // small padding
+        var viewH = viewport.clientHeight - 24;
+
+        if (stageW === 0 || stageH === 0) {
+            zoom = oldZoom;
+            applyFont();
+            return oldZoom;
         }
-        applyZoom();
+
+        var scale = Math.min(viewW / stageW, viewH / stageH, 1); // never enlarge past 1
+        scale = Math.max(MIN_ZOOM, scale);
+
+        zoom = scale;
+        applyFont();
+        console.log('[ascii-art] fitZoomToViewport →', zoom.toFixed(4));
+        return scale;
+    }
+
+    function clamp01(v) { return Math.max(0, Math.min(1, v)); }
+
+    function setZoom(z, anchorX, anchorY) {
+        z = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, z));
+        if (z === zoom) return;
+
+        // Default anchor = viewport center (used by the +/- buttons)
+        var vr = viewport.getBoundingClientRect();
+        if (typeof anchorX !== 'number' || typeof anchorY !== 'number') {
+            anchorX = vr.left + vr.width / 2;
+            anchorY = vr.top + vr.height / 2;
+        }
+
+        // Which fraction of the image is under the anchor right now?
+        var sr = stage.getBoundingClientRect();
+        var fx = sr.width ? clamp01((anchorX - sr.left) / sr.width) : 0.5;
+        var fy = sr.height ? clamp01((anchorY - sr.top) / sr.height) : 0.5;
+
+        zoom = z;
+        applyFont();
+        console.log('[ascii-art] zoom =', zoom.toFixed(4));   // ← add this
+
+        // Keep that same point under the anchor. If the image now fits inside
+        // the viewport, scroll clamps to 0 and margin:auto centers it.
+        var nr = stage.getBoundingClientRect();
+        viewport.scrollLeft += (nr.left + fx * nr.width) - anchorX;
+        viewport.scrollTop += (nr.top + fy * nr.height) - anchorY;
     }
 
     function resetZoom() {
-        zoom = 1;
-        applyZoom();
-        viewport.scrollLeft = 0;
-        viewport.scrollTop = 0;
+        fitZoomToViewport();          // ← auto zoom-out so everything is visible
+        centerScroll();
     }
 
     viewport.addEventListener('wheel', function (e) {
         e.preventDefault();
-        var factor = e.deltaY < 0 ? 1.12 : 1 / 1.12;
-        setZoom(zoom * factor, e.clientX, e.clientY);
+        setZoom(zoom * Math.exp(-e.deltaY * 0.002), e.clientX, e.clientY);
     }, { passive: false });
 
     var btnIn = document.getElementById('zoomIn');
@@ -88,17 +140,31 @@
         if (e.touches.length < 2) pinchDist = 0;
     });
 
-    /* ---- Static image → ILOVEYOU rendering ---- */
     function loadImage() {
         var image = new Image();
         image.onload = function () {
             currentImage = image;
-            var fitted = fitPixelSize(image);
-            pixelSize.value = fitted;
-            safeStep = Math.min(findSafeStep(image), fitted);
+
+            // Calculate the absolute minimum allowed by word-count
+            safeStep = findSafeStep(image);
+
+            // Prefer the fixed quality, but never go below the safe limit
+            var step = Math.max(PREFERRED_STEP, safeStep);
+
+            // Still let the slider go higher if the user wants coarser
+            var fitted = fitPixelSize(image);          // updates pixelSize.max
+            pixelSize.max = Math.max(pixelSize.max, step * 2);
+            pixelSize.value = step;
             updateDangerUI();
-            renderTextImage(image, fitted);
-            resetZoom();
+            renderTextImage(image, step);
+
+            console.log('[ascii-art] default step =', step,
+                '| safeStep =', safeStep,
+                '| fitted-for-viewport =', fitted);
+
+            requestAnimationFrame(function () {
+                resetZoom();              // now uses the smart fitZoomToViewport
+            });
         };
         image.onerror = function () {
             console.error('Could not load static image:', STATIC_IMAGE);
@@ -109,6 +175,7 @@
     function rerender() {
         if (currentImage) {
             renderTextImage(currentImage, parseInt(pixelSize.value, 10));
+            centerScroll();
         }
     }
 
@@ -170,20 +237,54 @@
         var ratio = rect.width / rect.height;
         var stepY = Math.max(1, Math.round(stepX / ratio));
 
+        // helpful logging
+        console.log('[ascii-art] image:', width + '×' + height,
+            '| stepX:', stepX, '| stepY:', stepY,
+            '| ~words:', wordCount(image, stepX, ratio).toLocaleString(),
+            '| safeStep:', safeStep);
+
         for (var y = 0; y < height; y += stepY) {
             var line = document.createElement('div');
             for (var x = 0; x < width; x += stepX) {
-                var index = (y * width + x) * 4;
-                if (data[index + 3] === 0) continue;
+                var col = averageColor(data, width, x, y, stepX, stepY, width, height);
+                if (!col) continue;                 // skip transparent blocks
+
                 var word = document.createElement('span');
                 word.className = 'word';
                 word.textContent = 'ILOVEYOU';
-                word.style.color =
-                    'rgb(' + data[index] + ',' + data[index + 1] + ',' + data[index + 2] + ')';
+                word.style.color = 'rgb(' + col.r + ',' + col.g + ',' + col.b + ')';
+                // optional: also respect alpha if you want soft edges
+                // word.style.opacity = (col.a / 255).toFixed(2);
                 line.appendChild(word);
             }
-            output.appendChild(line);
+            if (line.childNodes.length) output.appendChild(line);
         }
+    }
+
+    function averageColor(data, width, x0, y0, stepX, stepY, imgW, imgH) {
+        var r = 0, g = 0, b = 0, a = 0, count = 0;
+        var xEnd = Math.min(x0 + stepX, imgW);
+        var yEnd = Math.min(y0 + stepY, imgH);
+
+        for (var y = y0; y < yEnd; y++) {
+            for (var x = x0; x < xEnd; x++) {
+                var i = (y * width + x) * 4;
+                var alpha = data[i + 3];
+                if (alpha === 0) continue;          // skip fully transparent
+                r += data[i];
+                g += data[i + 1];
+                b += data[i + 2];
+                a += alpha;
+                count++;
+            }
+        }
+        if (count === 0) return null;               // completely transparent block
+        return {
+            r: Math.round(r / count),
+            g: Math.round(g / count),
+            b: Math.round(b / count),
+            a: Math.round(a / count)
+        };
     }
 
     function getRatio() {
