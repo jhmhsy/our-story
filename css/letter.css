@@ -93,6 +93,7 @@
 }
 .lv-env__front {
   z-index: 3;
+  isolation: isolate;
   top: 0;
   right: 0;
   bottom: 0;
@@ -101,6 +102,15 @@
   background: linear-gradient(135deg, #ffe6ee, #ffc9dc);
   clip-path: polygon(0 0, 50% 56%, 100% 0, 100% 100%, 0 100%);
 }
+
+.lv-scene.is-open .lv-env__front {
+  z-index: 5;                  /* higher than the rising paper */
+}
+
+.lv-env__paper {
+  z-index: 2;
+}
+
 .lv-env__flap {
   position: absolute;
   z-index: 4;
@@ -227,7 +237,7 @@
     z-index 0s 0.25s;
 }
 .lv-scene.is-open .lv-env__paper {
-  transform: translateY(-70%);
+  transform: translateY(-88%);
   transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.5s;
 }
 .lv-scene.is-open .lv-hint {
