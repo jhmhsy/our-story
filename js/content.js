@@ -30,26 +30,34 @@
                 {
                     year: '2023',
                     date: 'February 2023',
-                    title: 'Where it all began',
-                    caption: 'Sample caption: the first hello that quietly changed everything.',
-                    image: sample('\uD83D\uDC8C', '2023', '#ff9fc0', '#e5457f'),
-                    alt: 'Sample photo for 2023'
+                    title: 'The first hello',
+                    caption: 'That quiet little moment when everything suddenly felt brighter.',
+                    image: 'images/image2.jpg',
+                    alt: 'The first hello'
                 },
                 {
                     year: '2024',
                     date: 'Summer 2024',
-                    title: 'Adventures together',
-                    caption: 'Sample caption: new places, bad jokes and way too many photos.',
-                    image: sample('\uD83C\uDF38', '2024', '#ffc2d6', '#f06a9b'),
-                    alt: 'Sample photo for 2024'
+                    title: 'Little adventures',
+                    caption: 'New places, laughter, and the kind of memories we still smile about.',
+                    image: 'images/image3.jpg',
+                    alt: 'Little adventures'
                 },
                 {
                     year: '2025',
-                    date: 'December 2025',
-                    title: 'Still choosing each other',
-                    caption: 'Sample caption: ordinary days that turned into favourites.',
-                    image: sample('\uD83E\uDDF8', '2025', '#ffb3cc', '#d93d78'),
-                    alt: 'Sample photo for 2025'
+                    date: 'March 2025',
+                    title: 'Our favorite rhythm',
+                    caption: 'The ordinary days that turned into our favorite story.',
+                    image: 'images/image4.jpg',
+                    alt: 'Our favorite rhythm'
+                },
+                {
+                    year: '2026',
+                    date: 'Now',
+                    title: 'Still choosing us',
+                    caption: 'Every day with you feels like a small love letter we get to keep.',
+                    image: 'images/image5.jpg',
+                    alt: 'Still choosing us'
                 }
             ],
 
@@ -66,15 +74,13 @@
         gallery: {
             title: 'Photo Booth',
             subtitle: 'Drag, swipe or use the arrows',
-            // One object per print. `caption` is written on the white bottom margin.
             photos: [
-                { src: sample('\uD83D\uDCF8', 'Booth night', '#ffb3cc', '#e5457f'), caption: 'Booth night' },
-                { src: sample('\u2615', 'Coffee date', '#ffc9a8', '#ef6f8f'), caption: 'Coffee date' },
-                { src: sample('\uD83C\uDF05', 'Golden hour', '#ffd0a6', '#e0527f'), caption: 'Golden hour' },
-                { src: sample('\uD83C\uDF0A', 'Beach day', '#ffbfd8', '#c93a82'), caption: 'Beach day' },
-                { src: sample('\uD83C\uDFAC', 'Movie night', '#f7a6c8', '#b83a76'), caption: 'Movie night' },
-                { src: sample('\uD83D\uDE1C', 'Silly faces', '#ffc4dc', '#ea5a8e'), caption: 'Silly faces' },
-                { src: sample('\uD83D\uDC96', 'Us', '#ff9fc0', '#d63a76'), caption: 'Us' }
+                { src: 'images/image5.jpg', caption: 'Us in bloom' },
+                { src: 'images/image6.jpg', caption: 'Sweet little moments' },
+                { src: 'images/image7.jpg', caption: 'Golden hour' },
+                { src: 'images/image8.jpg', caption: 'Happy us' },
+                { src: 'images/image9.jpg', caption: 'Always together' },
+                { src: 'images/image10.jpg', caption: 'Forever favorite' }
             ]
         },
 
@@ -83,12 +89,12 @@
             hint: 'Tap the envelope to open \uD83D\uDC8C',
             openLabel: 'Open the love letter',
             closeLabel: 'Close letter \u2715',
-            to: 'My dearest love,',
+            to: 'My dearest MJ,',
             // One string per paragraph.
             paragraphs: [
-                'This is a sample letter. Replace these words with your own. Every line lives in js/content.js, so you never have to touch the envelope code.',
                 'I wanted a little corner of the internet that only we can open, with the things I never say out loud quite right.',
-                'Thank you for every ordinary day that somehow turned into my favourite one.'
+                'Thank you for every ordinary day that you chose to spend with me :)',
+                'I hope we get to spend many more together in the future.'
             ],
             closing: 'Forever yours,',
             from: 'Your lablab \u2764\uFE0F'

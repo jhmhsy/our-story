@@ -19,7 +19,7 @@
 
     var safeStep = 1;
     // Static image at site root (same folder as index.html)
-    var STATIC_IMAGE = 'image.jpg';
+    var STATIC_IMAGE = './images/image1.jpg';
     var currentImage = null;
     var PREFERRED_STEP = 16;
 
@@ -158,12 +158,14 @@
             updateDangerUI();
             renderTextImage(image, step);
 
-            console.log('[ascii-art] default step =', step,
-                '| safeStep =', safeStep,
-                '| fitted-for-viewport =', fitted);
+            //console.log('[ascii-art] default step =', step,
+            //    '| safeStep =', safeStep,
+            //    '| fitted-for-viewport =', fitted);
 
             requestAnimationFrame(function () {
-                resetZoom();              // now uses the smart fitZoomToViewport
+                zoom = 0.3923;
+                applyFont();
+                centerScroll();             // now uses the smart fitZoomToViewport
             });
         };
         image.onerror = function () {
@@ -238,10 +240,10 @@
         var stepY = Math.max(1, Math.round(stepX / ratio));
 
         // helpful logging
-        console.log('[ascii-art] image:', width + '×' + height,
-            '| stepX:', stepX, '| stepY:', stepY,
-            '| ~words:', wordCount(image, stepX, ratio).toLocaleString(),
-            '| safeStep:', safeStep);
+        //console.log('[ascii-art] image:', width + '×' + height,
+        //    '| stepX:', stepX, '| stepY:', stepY,
+        //    '| ~words:', wordCount(image, stepX, ratio).toLocaleString(),
+        //    '| safeStep:', safeStep);
 
         for (var y = 0; y < height; y += stepY) {
             var line = document.createElement('div');
