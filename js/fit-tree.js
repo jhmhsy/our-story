@@ -2,7 +2,7 @@
    It only sets the --tree-scale CSS variable; the animation code is untouched. */
 (function () {
   var STAGE_W = 1100, STAGE_H = 690;
-  var section = document.getElementById('tree-animation');
+  var section = document.getElementById('greetings');
   if (!section) return;
 
   function px(v) { return parseFloat(v) || 0; }
