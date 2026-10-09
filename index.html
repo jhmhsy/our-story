@@ -5,22 +5,18 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Birthday Heart Animation | @coding.stella</title>
-    <link type="text/css" rel="stylesheet" href="file/default.css">
-    <link type="text/css" rel="stylesheet" href="file/layout.css">
-    <link type="text/css" rel="stylesheet" href="file/sidebar.css">
-    <link type="text/css" rel="stylesheet" href="file/emoji-rain.css">
-    <link type="text/css" rel="stylesheet" href="file/section4.css">
-    <script type="text/javascript" src="file/jquery.min.js"></script>
-    <script type="text/javascript" src="file/jscex.min.js"></script>
-    <script type="text/javascript" src="file/jscex-parser.js"></script>
-    <script type="text/javascript" src="file/jscex-jit.js"></script>
-    <script type="text/javascript" src="file/jscex-builderbase.min.js"></script>
-    <script type="text/javascript" src="file/jscex-async.min.js"></script>
-    <script type="text/javascript" src="file/jscex-async-powerpack.min.js"></script>
-    <script type="text/javascript" src="file/function.js" charset="utf-8"></script>
-    <script type="text/javascript" src="file/love.js" charset="utf-8"></script>
-    <script type="text/javascript" src="file/password-gate.js" charset="utf-8"></script>
-    <script type="text/javascript" src="file/ascii-art.js" charset="utf-8"></script>
+    <link type="text/css" rel="stylesheet" href="css/default.css">
+    <link type="text/css" rel="stylesheet" href="css/layout.css">
+    <link type="text/css" rel="stylesheet" href="css/sidebar.css">
+    <link type="text/css" rel="stylesheet" href="css/emoji-rain.css">
+    <link type="text/css" rel="stylesheet" href="css/section4.css">
+    <script type="text/javascript" src="assets/jquery.min.js"></script>
+    <script type="text/javascript" src="assets/jscex.min.js"></script>
+    <script type="text/javascript" src="assets/jscex-parser.js"></script>
+    <script type="text/javascript" src="assets/jscex-jit.js"></script>
+    <script type="text/javascript" src="assets/jscex-builderbase.min.js"></script>
+    <script type="text/javascript" src="assets/jscex-async.min.js"></script>
+    <script type="text/javascript" src="assets/jscex-async-powerpack.min.js"></script>
     <script>
         function playAudio() {
             var audio = document.getElementById("myAudio");
@@ -42,124 +38,123 @@
             <p class="password-gate__hint">Enter the special date to open our little world</p>
             <form id="password-form" class="password-gate__form" autocomplete="off">
                 <label class="password-gate__label" for="password-input">Password</label>
-                <input type="password" id="password-input" class="password-gate__input"
-                    placeholder="******" maxlength="20"
-                    inputmode="numeric" aria-describedby="password-error" autofocus>
+                <input type="password" id="password-input" class="password-gate__input" placeholder="******"
+                    maxlength="20" inputmode="numeric" aria-describedby="password-error" autofocus>
                 <button type="submit" class="password-gate__btn">Open with love</button>
-                <p id="password-error" class="password-gate__error" role="alert" hidden>Not quite right, try again &#128149;</p>
+                <p id="password-error" class="password-gate__error" role="alert" hidden>Not quite right, try again
+                    &#128149;</p>
             </form>
         </div>
     </div>
 
     <div id="site-content" class="site-content" hidden>
-    <nav id="love-nav" class="love-nav" aria-label="Sections">
-        <span class="love-nav__heart" aria-hidden="true">&#128151;</span>
-        <a class="love-nav__link" href="#greetings">
-            <span class="love-nav__icon" aria-hidden="true">&#127800;</span>
-            <span class="love-nav__label">Tree Animation</span>
-        </a>
-        <a class="love-nav__link" href="#story">
-            <span class="love-nav__icon" aria-hidden="true">&#128140;</span>
-            <span class="love-nav__label">Memory Timeline</span>
-        </a>
-        <a class="love-nav__link" href="#gallery">
-            <span class="love-nav__icon" aria-hidden="true">&#128158;</span>
-            <span class="love-nav__label">Future Section</span>
-        </a>
-        <a class="love-nav__link" href="#last">
-            <span class="love-nav__icon" aria-hidden="true">&#128221;</span>
-            <span class="love-nav__label">Poem &amp; ASCII Artwork</span>
-        </a>
-    </nav>
+        <nav id="love-nav" class="love-nav" aria-label="Sections">
+            <span class="love-nav__heart" aria-hidden="true">&#128151;</span>
+            <a class="love-nav__link" href="#greetings">
+                <span class="love-nav__icon" aria-hidden="true">&#127800;</span>
+                <span class="love-nav__label">Tree Animation</span>
+            </a>
+            <a class="love-nav__link" href="#story">
+                <span class="love-nav__icon" aria-hidden="true">&#128140;</span>
+                <span class="love-nav__label">Memory Timeline</span>
+            </a>
+            <a class="love-nav__link" href="#gallery">
+                <span class="love-nav__icon" aria-hidden="true">&#128158;</span>
+                <span class="love-nav__label">Future Section</span>
+            </a>
+            <a class="love-nav__link" href="#last">
+                <span class="love-nav__icon" aria-hidden="true">&#128221;</span>
+                <span class="love-nav__label">Poem &amp; ASCII Artwork</span>
+            </a>
+        </nav>
 
-    <div id="emoji-rain" class="emoji-rain" aria-hidden="true"></div>
+        <div id="emoji-rain" class="emoji-rain" aria-hidden="true"></div>
 
-    <!-- Section 1: Tree Animation (existing markup, unchanged) -->
-    <section id="greetings" class="section section--tree">
-      <div class="tree-stage">
-        <div class="tree-scaler">
-    <div id="main">
-        <div id="error"><a
-                href="http://www.google.cn/chrome/intl/zh-CN/landing_chrome.html?hl=zh-CN&brand=CHMI">Chrome</a> (<a
-                href="http://firefox.com.cn/download/">Firefox</a>)</div>
-        <audio autoplay="autoplay" height="100" width="100" id="myAudio">
-            <source src="aud.mp3" type="audio/mp3" />
-            <embed height="100" width="100" src="aud.mp3" />
-        </audio>
-        <div id="wrap">
-            <div id="text">
-                <div id="code">
-                    <span class="say">Hi baby 💞</span><br>
-                    <span class="say">I love you 🎈</span><br>
-                    <span class="say">My handsome boy🍀</span><br>
-                    <span class="say">My honeybunch 💕</span><br>
-                    <span class="say">Sending good hugs & kisses 😏</span><br>
-                    <span class="say">Plus points na me? mwheheh ❤️</span><br>
-                    <span class="say">- From your lablab ❤️😘</span><br>
+        <!-- Section 1: Tree Animation (existing markup, unchanged) -->
+        <section id="greetings" class="section section--tree">
+            <div class="tree-stage">
+                <div class="tree-scaler">
+                    <div id="main">
+                        <div id="error"><a
+                                href="http://www.google.cn/chrome/intl/zh-CN/landing_chrome.html?hl=zh-CN&brand=CHMI">Chrome</a>
+                            (<a href="http://firefox.com.cn/download/">Firefox</a>)</div>
+                        <div id="wrap">
+                            <div id="text">
+                                <div id="code">
+                                    <span class="say">Hi baby 💞</span><br>
+                                    <span class="say">I love you 🎈</span><br>
+                                    <span class="say">My handsome boy🍀</span><br>
+                                    <span class="say">My honeybunch 💕</span><br>
+                                    <span class="say">Sending good hugs & kisses 😏</span><br>
+                                    <span class="say">Plus points na me? mwheheh ❤️</span><br>
+                                    <span class="say">- From your lablab ❤️😘</span><br>
+                                </div>
+                            </div>
+                            <div id="clock-box">
+                                <span id="clock">577 days 0 hours 0 minutes 0 seconds</span>
+                            </div>
+                            <canvas id="canvas" width="1100" height="680"></canvas>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div id="clock-box">
-                <span id="clock">577 days 0 hours 0 minutes 0 seconds</span>
-            </div>
-            <canvas id="canvas" width="1100" height="680"></canvas>
-        </div>
-    </div>
-        </div>
-      </div>
-    </section>
+        </section>
 
-    <!-- Section 2: Memory Timeline - intentionally empty -->
-    <section id="story" class="section section--memory" aria-label="Memory Timeline"></section>
+        <!-- Section 2: Memory Timeline - intentionally empty -->
+        <section id="story" class="section section--memory" aria-label="Memory Timeline"></section>
 
-    <!-- Section 3: Future Section - intentionally empty -->
-    <section id="gallery" class="section section--future" aria-label="Future Section"></section>
+        <!-- Section 3: Future Section - intentionally empty -->
+        <section id="gallery" class="section section--future" aria-label="Future Section"></section>
 
-    <!-- Section 4: Poem (left) + Image-to-ASCII (right) -->
-    <section id="last" class="section section--poem" aria-label="Poem and ASCII Artwork">
-      <div class="poem-layout">
-        <div class="poem-col poem-col--text">
-          <div class="poem-panel">
-            <!-- Empty on purpose: poem / essay goes here later -->
-          </div>
-        </div>
-        <div class="poem-col poem-col--art">
-          <div class="ascii-panel">
-            <div class="ascii-controls">
-              <label class="ascii-file-label">
-                <input type="file" id="imageInput" accept="image/*" class="ascii-file-input">
-                <span class="ascii-file-btn">Choose image</span>
-              </label>
-              <label class="ascii-pixel-label">
-                Pixel size
-                <span class="ascii-slider-wrap">
-                  <input type="range" id="pixelSize" min="1" max="40" value="10">
-                  <span id="dangerBar" class="ascii-danger-bar"></span>
-                </span>
-              </label>
-              <span id="warning" class="ascii-warning"></span>
-              <div class="ascii-zoom-btns">
-                <button type="button" id="zoomOut" class="ascii-zoom-btn" title="Zoom out" aria-label="Zoom out">&#8722;</button>
-                <button type="button" id="zoomReset" class="ascii-zoom-btn" title="Reset zoom" aria-label="Reset zoom">1:1</button>
-                <button type="button" id="zoomIn" class="ascii-zoom-btn" title="Zoom in" aria-label="Zoom in">+</button>
-              </div>
+        <!-- Section 4: Poem (left) + Image-to-ASCII (right) -->
+        <section id="last" class="section section--poem" aria-label="Poem and ASCII Artwork">
+            <div class="poem-layout">
+                <div class="poem-col poem-col--text">
+                    <div class="poem-panel">
+                        <!-- Empty on purpose: poem / essay goes here later -->
+                    </div>
+                </div>
+                <div class="poem-col poem-col--art">
+                    <div class="ascii-panel">
+                        <div class="ascii-controls">
+                            <label class="ascii-pixel-label">
+                                Pixel size
+                                <span class="ascii-slider-wrap">
+                                    <input type="range" id="pixelSize" min="1" max="40" value="10">
+                                    <span id="dangerBar" class="ascii-danger-bar"></span>
+                                </span>
+                            </label>
+                            <span id="warning" class="ascii-warning"></span>
+                            <div class="ascii-zoom-btns">
+                                <button type="button" id="zoomOut" class="ascii-zoom-btn" title="Zoom out"
+                                    aria-label="Zoom out">&#8722;</button>
+                                <button type="button" id="zoomReset" class="ascii-zoom-btn" title="Reset zoom"
+                                    aria-label="Reset zoom">1:1</button>
+                                <button type="button" id="zoomIn" class="ascii-zoom-btn" title="Zoom in"
+                                    aria-label="Zoom in">+</button>
+                            </div>
+                        </div>
+                        <div class="ascii-frame">
+                            <div id="asciiViewport" class="ascii-viewport" tabindex="0"
+                                aria-label="ASCII artwork. Scroll to zoom.">
+                                <div id="asciiStage" class="ascii-stage">
+                                    <div id="output" class="ascii-output"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <canvas id="sourceCanvas" class="ascii-source-canvas"></canvas>
+                    </div>
+                </div>
             </div>
-            <div id="asciiViewport" class="ascii-viewport" tabindex="0" aria-label="ASCII artwork. Scroll to zoom.">
-              <div id="asciiStage" class="ascii-stage">
-                <div id="output" class="ascii-output"></div>
-              </div>
-            </div>
-            <canvas id="sourceCanvas" class="ascii-source-canvas"></canvas>
-          </div>
-        </div>
-      </div>
-    </section>
+        </section>
     </div><!-- /#site-content -->
-
-    <script type="text/javascript" src="file/fit-tree.js"></script>
-    <script type="text/javascript" src="file/emoji-rain.js" charset="utf-8"></script>
-    <script type="text/javascript" src="file/sidebar.js"></script>
-    <script type="text/javascript" src="file/ascii-art.js" charset="utf-8"></script>
-    <script type="text/javascript" src="file/password-gate.js" charset="utf-8"></script>
+    <script type="text/javascript" src="js/function.js" charset="utf-8"></script>
+    <script type="text/javascript" src="js/love.js" charset="utf-8"></script>
+    <script type="text/javascript" src="js/fit-tree.js"></script>
+    <script type="text/javascript" src="js/emoji-rain.js" charset="utf-8"></script>
+    <script type="text/javascript" src="js/sidebar.js"></script>
+    <script type="text/javascript" src="js/password-gate.js" charset="utf-8"></script>
+    <script type="text/javascript" src="js/ascii-art.js" charset="utf-8"></script>
 
     <script>
         (function () {

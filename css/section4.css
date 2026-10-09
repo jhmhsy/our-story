@@ -273,28 +273,38 @@
 .ascii-zoom-btn:hover { background: #fff; }
 .ascii-zoom-btn:active { transform: scale(0.96); }
 
-/* Viewport isolates zoom; stage is tilted slightly clockwise */
-.ascii-viewport {
+/* Parent frame is tilted slightly clockwise; viewport inside isolates zoom */
+.ascii-frame {
   position: relative;
   flex: 1;
   min-height: 320px;
+  display: flex;
+  /* room so the rotated frame is not clipped by the column */
+  padding: 18px 22px 28px;
+  overflow: visible;
+}
+
+.ascii-frame .ascii-viewport {
+  flex: 1;
+  min-height: 280px;
+  width: 100%;
   overflow: auto;
   border-radius: 20px;
   background: rgba(255, 255, 255, 0.4);
   border: 1px solid rgba(255, 255, 255, 0.65);
   box-shadow: 0 12px 32px rgba(190, 40, 100, 0.12);
-  /* extra padding so rotated content is not clipped */
-  padding: 28px;
+  padding: 24px;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   touch-action: none; /* pinch handled in JS */
+  /* tilt the parent viewport, not only the inner text */
+  transform: rotate(3deg);
+  transform-origin: center center;
 }
 
 .ascii-stage {
   display: inline-block;
-  transform: rotate(3deg);
-  transform-origin: center center;
-  transition: transform 0.05s linear;
+  transform-origin: 0 0;
   will-change: transform;
 }
 
@@ -326,8 +336,12 @@
   .poem-panel {
     min-height: 180px;
   }
-  .ascii-viewport {
+  .ascii-frame {
     min-height: 280px;
+    padding: 12px 10px 20px;
+  }
+  .ascii-frame .ascii-viewport {
+    min-height: 260px;
   }
   .section--poem {
     padding: 20px 16px 28px;

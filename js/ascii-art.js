@@ -1,6 +1,5 @@
-/* ascii-art.js - image-to-ILOVEYOU ASCII for section 4, with isolated zoom */
+/* ascii-art.js - static image → ILOVEYOU ASCII for section 4, with isolated zoom */
 (function () {
-    var imageInput = document.getElementById('imageInput');
     var output = document.getElementById('output');
     var canvas = document.getElementById('sourceCanvas');
     var pixelSize = document.getElementById('pixelSize');
@@ -14,17 +13,17 @@
     var ctx = canvas.getContext('2d');
     var MAX_WORDS = 30000;
     var safeStep = 1;
-    var STATIC_IMAGE = 'file/test.jpg';
+    // Static image at site root (same folder as index.html)
+    var STATIC_IMAGE = 'image.jpg';
     var currentImage = null;
 
-    /* ---- Zoom state (isolated to stage; base tilt is 3deg) ---- */
+    /* ---- Zoom state (scale only; parent .ascii-viewport holds the tilt) ---- */
     var zoom = 1;
     var MIN_ZOOM = 0.25;
     var MAX_ZOOM = 12;
-    var BASE_ROTATE = 3; // degrees, matches CSS
 
     function applyZoom() {
-        stage.style.transform = 'rotate(' + BASE_ROTATE + 'deg) scale(' + zoom + ')';
+        stage.style.transform = 'scale(' + zoom + ')';
     }
 
     function setZoom(z, anchorX, anchorY) {
@@ -32,7 +31,6 @@
         zoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, z));
         if (zoom === prev) return;
 
-        // Keep point under cursor stable when zooming with wheel
         if (typeof anchorX === 'number' && typeof anchorY === 'number') {
             var rect = viewport.getBoundingClientRect();
             var relX = anchorX - rect.left + viewport.scrollLeft;
@@ -51,14 +49,12 @@
         viewport.scrollTop = 0;
     }
 
-    // Mouse wheel zoom (confined to viewport)
     viewport.addEventListener('wheel', function (e) {
         e.preventDefault();
         var factor = e.deltaY < 0 ? 1.12 : 1 / 1.12;
         setZoom(zoom * factor, e.clientX, e.clientY);
     }, { passive: false });
 
-    // Buttons
     var btnIn = document.getElementById('zoomIn');
     var btnOut = document.getElementById('zoomOut');
     var btnReset = document.getElementById('zoomReset');
@@ -66,7 +62,6 @@
     if (btnOut) btnOut.addEventListener('click', function () { setZoom(zoom / 1.25); });
     if (btnReset) btnReset.addEventListener('click', resetZoom);
 
-    // Pinch-to-zoom (touch)
     var pinchDist = 0;
     viewport.addEventListener('touchstart', function (e) {
         if (e.touches.length === 2) {
@@ -93,9 +88,8 @@
         if (e.touches.length < 2) pinchDist = 0;
     });
 
-    /* ---- Image → ILOVEYOU rendering (from main.html) ---- */
+    /* ---- Static image → ILOVEYOU rendering ---- */
     function loadImage() {
-        var file = imageInput && imageInput.files[0];
         var image = new Image();
         image.onload = function () {
             currentImage = image;
@@ -107,9 +101,9 @@
             resetZoom();
         };
         image.onerror = function () {
-            console.error('Could not load image');
+            console.error('Could not load static image:', STATIC_IMAGE);
         };
-        image.src = file ? URL.createObjectURL(file) : STATIC_IMAGE;
+        image.src = STATIC_IMAGE;
     }
 
     function rerender() {
@@ -118,9 +112,6 @@
         }
     }
 
-    if (imageInput) {
-        imageInput.addEventListener('change', loadImage);
-    }
     pixelSize.addEventListener('input', function () {
         updateDangerUI();
         if (!isDanger()) rerender();
@@ -129,10 +120,9 @@
         if (isDanger()) rerender();
     });
 
-    // Defer initial load until site is visible (after password)
     function tryInitialLoad() {
-        if (document.getElementById('site-content') &&
-            !document.getElementById('site-content').hasAttribute('hidden')) {
+        var site = document.getElementById('site-content');
+        if (site && !site.hasAttribute('hidden')) {
             loadImage();
         } else {
             setTimeout(tryInitialLoad, 200);
