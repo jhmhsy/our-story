@@ -168,8 +168,8 @@
             ctx.moveTo(0, 0);
             ctx.scale(0.75, 0.75);
             ctx.font = "12px,Verdana";
-            //ctx.fillText("Click Me:) ", 30, -5);
-            ctx.fillText("For my favorite person \u{1F618}", 28, 10);
+            ctx.fillText("Press me :) ", 30, -5);
+            ctx.fillText("This is for my favorite person \u{1F618}", 28, 10);
             ctx.restore();
         },
         clear: function() {

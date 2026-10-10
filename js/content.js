@@ -30,33 +30,33 @@
                 {
                     year: '2023',
                     date: 'February 2023',
-                    title: 'The first hello',
-                    caption: 'That quiet little moment when everything suddenly felt brighter.',
-                    image: 'images/image2.jpg',
-                    alt: 'The first hello'
+                    title: 'The first kiss',
+                    caption: 'Our first kiss, a little moment that turned into one of my favorite memories with you.',
+                    image: 'images/image23.jpg',
+                    alt: 'Our first kiss, the beginning of a beautiful love story'
                 },
                 {
                     year: '2024',
-                    date: 'Summer 2024',
-                    title: 'Little adventures',
-                    caption: 'New places, laughter, and the kind of memories we still smile about.',
-                    image: 'images/image3.jpg',
-                    alt: 'Little adventures'
+                    date: 'April 2024',
+                    title: 'Our little family',
+                    caption: 'Me, you, and our little fur baby. Three hearts, one little family, and countless memories to cherish.',
+                    image: 'images/image14.jpg',
+                    alt: 'Me, my partner, and our beloved cat together'
                 },
                 {
                     year: '2025',
-                    date: 'March 2025',
-                    title: 'Our favorite rhythm',
-                    caption: 'The ordinary days that turned into our favorite story.',
-                    image: 'images/image4.jpg',
-                    alt: 'Our favorite rhythm'
+                    date: 'Summer 2025',
+                    title: 'Little adventures',
+                    caption: 'New places, laughter, and the kind of memories we still smile about.',
+                    image: 'images/image8.jpg',
+                    alt: 'Little adventures'
                 },
                 {
                     year: '2026',
                     date: 'Now',
                     title: 'Still choosing us',
                     caption: 'Every day with you feels like a small love letter we get to keep.',
-                    image: 'images/image5.jpg',
+                    image: 'images/image9.jpg',
                     alt: 'Still choosing us'
                 }
             ],
@@ -71,16 +71,38 @@
         },
 
         /* ---------- SECTION 3: PHOTO BOOTH GALLERY ---------- */
+        //8, 9, 14, 23
         gallery: {
             title: 'Photo Booth',
             subtitle: 'Drag, swipe or use the arrows',
             photos: [
-                { src: 'images/image5.jpg', caption: 'Us in bloom' },
-                { src: 'images/image6.jpg', caption: 'Sweet little moments' },
-                { src: 'images/image7.jpg', caption: 'Golden hour' },
-                { src: 'images/image8.jpg', caption: 'Happy us' },
-                { src: 'images/image9.jpg', caption: 'Always together' },
-                { src: 'images/image10.jpg', caption: 'Forever favorite' }
+                { src: 'images/image1.jpg', caption: 'Beach days with you' },
+                { src: 'images/image2.jpg', caption: 'Prom night' },
+                { src: 'images/image3.jpg', caption: 'Painting our hands' },
+                { src: 'images/image4.jpg', caption: 'Crying over movies' },
+                { src: 'images/image5.jpg', caption: 'Our first date, again' },
+                { src: 'images/image6.jpg', caption: 'Golden Hour' },
+                { src: 'images/image7.jpg', caption: 'Photobooth memories' },
+                { src: 'images/image10.jpg', caption: 'Outside the photobooth' },
+                { src: 'images/image16.jpg', caption: 'Meeting my best friend' },
+                { src: 'images/image17.jpg', caption: 'Beach days, again' },
+                { src: 'images/image18.jpg', caption: 'Time with your friends' },
+                { src: 'images/image19.jpg', caption: 'You and our little fur baby' },
+                { src: 'images/image20.jpg', caption: 'Time with your family' },
+                { src: 'images/image25.jpg', caption: 'School dates' },
+                { src: 'images/image22.jpg', caption: 'City adventures' },
+                { src: 'images/image24.jpg', caption: 'Picnic dates' },
+                { src: 'images/image26.jpg', caption: 'Online dates' },
+                { src: 'images/image27.jpg', caption: 'Spontaneous dates' },
+                { src: 'images/image28.jpg', caption: 'Oval dates' },
+                { src: 'images/image29.jpg', caption: 'My first flower' },
+                { src: 'images/image30.jpg', caption: 'School event dates' },
+                { src: 'images/image31.jpg', caption: 'Holding your hand' },
+                { src: 'images/image32.jpg', caption: 'Mall dates' },
+                { src: 'images/image33.jpg', caption: 'Christmas together' },
+                { src: 'images/image34.jpg', caption: 'Museum escapades' },
+                { src: 'images/image35.jpg', caption: 'Oval dates, again' },
+                { src: 'images/image36.jpg', caption: 'My first bouquet' },
             ]
         },
 

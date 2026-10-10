@@ -11,6 +11,11 @@
 
     var reduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
     var photos = cfg.photos;
+
+    for (var i = photos.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        [photos[i], photos[j]] = [photos[j], photos[i]];
+    }
     var N = photos.length;
     var MAX_VISIBLE = 3;           // prints further than this many slots from centre are hidden
 
