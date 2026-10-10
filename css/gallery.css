@@ -9,13 +9,14 @@
 }
 
 #gallery .pb {
-  --pb-w: clamp(150px, 24vw, 250px);       /* width of one photo-booth print */
+  --pb-w: clamp(150px, 24vw, 250px); /* width of one photo-booth print */
   position: relative;
-  z-index: 2;                               /* above the emoji layer */
+  z-index: 2; /* above the emoji layer */
   width: 100%;
   max-width: 1200px;
   text-align: center;
-  font-family: "Caveat", "Segoe Script", "Bradley Hand", "Brush Script MT", cursive;
+  font-family:
+    "Caveat", "Segoe Script", "Bradley Hand", "Brush Script MT", cursive;
 }
 #gallery .pb__title {
   margin: 0;
@@ -24,7 +25,11 @@
   color: #9c1f58;
   text-shadow: 2px 2px 0 rgba(255, 255, 255, 0.7);
 }
-#gallery .pb__subtitle { margin: 4px 0 0; font-size: clamp(20px, 2.6vw, 26px); color: #b44a78; }
+#gallery .pb__subtitle {
+  margin: 4px 0 0;
+  font-size: clamp(20px, 2.6vw, 26px);
+  color: #b44a78;
+}
 
 /* ---- Stage: the 3D viewport (perspective is set by gallery.js) ---- */
 #gallery .pb__stage {
@@ -33,38 +38,67 @@
   margin-top: 6px;
   overflow: hidden;
   perspective: 800px;
-  touch-action: pan-y;                      /* vertical swipes still scroll the page */
+  touch-action: pan-y; /* vertical swipes still scroll the page */
   cursor: grab;
   user-select: none;
   -webkit-user-select: none;
   outline: none;
-  -webkit-mask-image: linear-gradient(to right, transparent, #000 7%, #000 93%, transparent);
-  mask-image: linear-gradient(to right, transparent, #000 7%, #000 93%, transparent);
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 7%,
+    #000 93%,
+    transparent
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 7%,
+    #000 93%,
+    transparent
+  );
 }
-#gallery .pb__stage.is-dragging { cursor: grabbing; }
-#gallery .pb__stage:focus-visible { outline: 3px solid rgba(229, 69, 127, 0.6); outline-offset: -3px; border-radius: 24px; }
+#gallery .pb__stage.is-dragging {
+  cursor: grabbing;
+}
+#gallery .pb__stage:focus-visible {
+  outline: 3px solid rgba(229, 69, 127, 0.6);
+  outline-offset: -3px;
+  border-radius: 24px;
+}
 
 #gallery .pb__ring {
   position: absolute;
-  top: 0; right: 0; bottom: 0; left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   transform-style: preserve-3d;
 }
 
 /* ---- One photo-booth print ---- */
 #gallery .pb-card {
   position: absolute;
-  top: 50%; left: 50%;
+  top: 50%;
+  left: 50%;
   box-sizing: border-box;
   width: var(--pb-w);
   margin: 0;
-  padding: 10px 10px 0;                     /* thin sides/top ... */
+  padding: 10px 10px 0; /* thin sides/top ... */
   border-radius: 4px;
   background: #fff;
-  box-shadow: 0 10px 24px rgba(120, 20, 70, 0.28), 0 2px 4px rgba(0, 0, 0, 0.12);
+  box-shadow:
+    0 10px 24px rgba(120, 20, 70, 0.28),
+    0 2px 4px rgba(0, 0, 0, 0.12);
   will-change: transform;
   cursor: pointer;
 }
-#gallery .pb-card.is-active { cursor: default; box-shadow: 0 16px 34px rgba(120, 20, 70, 0.38), 0 2px 5px rgba(0, 0, 0, 0.14); }
+#gallery .pb-card.is-active {
+  cursor: default;
+  box-shadow:
+    0 16px 34px rgba(120, 20, 70, 0.38),
+    0 2px 5px rgba(0, 0, 0, 0.14);
+}
 #gallery .pb-card img {
   display: block;
   width: 100%;
@@ -75,7 +109,8 @@
   pointer-events: none;
   -webkit-user-drag: none;
 }
-#gallery .pb-card__caption {                /* ... thick bottom margin, like a booth print */
+#gallery .pb-card__caption {
+  /* ... thick bottom margin, like a booth print */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -88,32 +123,70 @@
 }
 
 /* ---- Controls ---- */
-#gallery .pb__controls { display: flex; align-items: center; justify-content: center; gap: 18px; margin-top: 8px; }
-#gallery .pb__count { min-width: 64px; font-size: 26px; color: #9c1f58; }
+#gallery .pb__controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  margin-top: 8px;
+}
+#gallery .pb__count {
+  min-width: 64px;
+  font-size: 26px;
+  color: #9c1f58;
+}
 #gallery .pb__btn {
   display: grid;
   place-items: center;
-  width: 48px; height: 48px;
+  width: 48px;
+  height: 48px;
   padding: 0 0 4px;
   border: none;
   border-radius: 50%;
   background: linear-gradient(135deg, #ff7aa8, #e5457f);
   color: #fff;
-  font: 700 30px/1 "Segoe UI", sans-serif;
+  font:
+    700 30px/1 "Segoe UI",
+    sans-serif;
   cursor: pointer;
   box-shadow: 0 6px 16px rgba(229, 69, 127, 0.4);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
 }
-#gallery .pb__btn:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(229, 69, 127, 0.5); }
-#gallery .pb__btn:active { transform: scale(0.95); }
-#gallery .pb__btn:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
-#gallery .pb__btn:disabled { opacity: 0.4; cursor: default; }
+#gallery .pb__btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(229, 69, 127, 0.5);
+}
+#gallery .pb__btn:active {
+  transform: scale(0.95);
+}
+#gallery .pb__btn:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 2px;
+}
+#gallery .pb__btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
 
 /* Mobile / tablet: no side padding, so the stage is full-bleed and the active photo sits on the
    exact viewport centre. Bottom padding lifts the carousel above the fixed bottom nav. */
 @media (max-width: 900px) {
-  #gallery.section--future { padding: 28px 0 calc(28px + var(--nav-space)); }
+  #gallery.section--future {
+    padding: 28px 0 calc(28px + var(--nav-space));
+  }
+
+  #gallery .pb-card__caption {
+    padding: 0 2px;
+    font-size: 20px;
+    line-height: 1.05;
+    white-space: normal;
+    text-align: center;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
-  #gallery .pb__btn { transition: none; }
+  #gallery .pb__btn {
+    transition: none;
+  }
 }
