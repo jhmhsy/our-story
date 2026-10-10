@@ -1,5 +1,6 @@
-/* sidebar.css - floating love-themed navigation on the left edge.
-   Icon-only at rest; labels slide out on hover / keyboard focus. */
+/* sidebar.css - floating love-themed navigation.
+   Desktop (>900px): floating pill on the left edge, icon-only at rest; labels slide out on hover / keyboard focus.
+   Mobile  (<=900px): fixed bar along the bottom, four items in one row, icon above label. */
 
 .love-nav {
   position: fixed;
@@ -27,10 +28,19 @@
   animation: love-beat 1.4s ease-in-out infinite;
 }
 @keyframes love-beat {
-  0%, 100% { transform: scale(1); }
-  15%      { transform: scale(1.25); }
-  30%      { transform: scale(1); }
-  45%      { transform: scale(1.18); }
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  15% {
+    transform: scale(1.25);
+  }
+  30% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.18);
+  }
 }
 
 .love-nav__link {
@@ -42,13 +52,25 @@
   padding: 0 11px;
   border-radius: 22px;
   color: #9c1f58;
-  font: 600 14px/1 "Segoe UI", Tahoma, Verdana, sans-serif;
+  font:
+    600 14px/1 "Segoe UI",
+    Tahoma,
+    Verdana,
+    sans-serif;
   text-decoration: none;
   overflow: hidden;
-  transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
 }
-.love-nav__link:hover { background: rgba(255, 255, 255, 0.75); }
-.love-nav__link:focus-visible { outline: 2px solid #e5457f; outline-offset: 2px; }
+.love-nav__link:hover {
+  background: rgba(255, 255, 255, 0.75);
+}
+.love-nav__link:focus-visible {
+  outline: 2px solid #e5457f;
+  outline-offset: 2px;
+}
 
 .love-nav__link[aria-current="true"] {
   background: linear-gradient(135deg, #ff7aa8, #e5457f);
@@ -70,14 +92,22 @@
   opacity: 0;
   white-space: nowrap;
   overflow: hidden;
-  transition: max-width 0.28s ease, margin-left 0.28s ease, opacity 0.2s ease;
+  transition:
+    max-width 0.28s ease,
+    margin-left 0.28s ease,
+    opacity 0.2s ease;
 }
-.love-nav__link:focus-visible .love-nav__label {
-  max-width: 140px;
-  margin-left: 10px;
-  opacity: 1;
+
+/* Desktop only: slide the labels out. Scoped to >900px so these (higher-specificity)
+   rules can never fight the mobile bottom-bar styles below. */
+@media (min-width: 901px) {
+  .love-nav__link:focus-visible .love-nav__label {
+    max-width: 140px;
+    margin-left: 10px;
+    opacity: 1;
+  }
 }
-@media (hover: hover) and (pointer: fine) {
+@media (min-width: 901px) and (hover: hover) and (pointer: fine) {
   .love-nav:hover .love-nav__label {
     max-width: 140px;
     margin-left: 10px;
@@ -85,12 +115,82 @@
   }
 }
 
-@media (max-width: 600px) {
-  .love-nav { left: 6px; padding: 8px 5px 6px; gap: 4px; }
-  .love-nav__link { height: 40px; min-width: 40px; padding: 0 9px; }
+/* ---- Mobile / tablet: fixed bottom bar, one row, icon over label ---- */
+@media (max-width: 900px) {
+  .love-nav {
+    top: auto;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    box-sizing: border-box;
+    transform: none;
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: space-around;
+    gap: 4px;
+    /* bottom padding clears the iPhone home indicator; side padding clears a landscape notch */
+    padding: 6px max(8px, env(safe-area-inset-right, 0px))
+      calc(6px + env(safe-area-inset-bottom, 0px))
+      max(8px, env(safe-area-inset-left, 0px));
+    border-width: 1px 0 0;
+    border-radius: 22px 22px 0 0;
+    box-shadow: 0 -6px 22px rgba(190, 40, 100, 0.25);
+  }
+
+  .love-nav__heart {
+    display: none;
+  } /* decoration only; frees room for the four items */
+
+  .love-nav__link {
+    flex: 1 1 0; /* four equal columns, no overflow */
+    min-width: 0;
+    height: calc(var(--nav-h) - 12px); /* nav height = 6px + link + 6px */
+    padding: 0 2px;
+    flex-direction: column;
+    justify-content: center;
+    gap: 3px;
+    border-radius: 16px;
+    text-align: center;
+  }
+
+  .love-nav__icon {
+    width: auto;
+    font-size: 21px;
+  }
+
+  .love-nav__label {
+    max-width: 100%;
+    margin: 0;
+    opacity: 1;
+    font-size: 11px;
+    line-height: 1.1;
+    text-overflow: ellipsis;
+    transition: none;
+  }
+}
+
+/* Very narrow phones: icons only. The label text stays in the DOM (visually hidden),
+   so screen readers still announce it; the link `title` shows a tooltip. */
+@media (max-width: 340px) {
+  .love-nav__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    max-width: none;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+  }
+  .love-nav__icon {
+    font-size: 24px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .love-nav__heart { animation: none; }
-  .love-nav__label { transition: none; }
+  .love-nav__heart {
+    animation: none;
+  }
+  .love-nav__label {
+    transition: none;
+  }
 }

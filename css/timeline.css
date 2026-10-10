@@ -272,7 +272,7 @@
 /* ---- Mobile: single column, line on the left ---- */
 @media (max-width: 760px) {
   #story.section--memory {
-    padding: 40px 12px 56px var(--nav-gutter);
+    padding: 40px 12px 56px;
   }
   #story .tl__list::before {
     left: 22px;

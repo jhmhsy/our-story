@@ -109,10 +109,11 @@
 #gallery .pb__btn:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
 #gallery .pb__btn:disabled { opacity: 0.4; cursor: default; }
 
-@media (max-width: 600px) {
-  #gallery.section--future { padding: 28px 8px 28px var(--nav-gutter); }
+/* Mobile / tablet: no side padding, so the stage is full-bleed and the active photo sits on the
+   exact viewport centre. Bottom padding lifts the carousel above the fixed bottom nav. */
+@media (max-width: 900px) {
+  #gallery.section--future { padding: 28px 0 calc(28px + var(--nav-space)); }
 }
-
 @media (prefers-reduced-motion: reduce) {
   #gallery .pb__btn { transition: none; }
 }

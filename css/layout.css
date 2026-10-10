@@ -12,8 +12,14 @@
   --pink-3: #f8a3c2;
   --pink-4: #f48fb1;
 
-  /* Horizontal room kept free for the floating sidebar */
+  /* Horizontal room kept free for the floating sidebar (desktop).
+     On mobile the sidebar moves to the bottom, so this becomes a small, equal page margin. */
   --nav-gutter: 84px;
+
+  /* Height of the bottom nav bar (mobile) and the space the page reserves for it.
+     --nav-space is 0 on desktop and is set in the mobile media query below. */
+  --nav-h: 64px;
+  --nav-space: 0px;
 
   /* Written by fit-tree.js; 1 = original 1100x680 size */
   --tree-scale: 1;
@@ -72,11 +78,42 @@ html {
 /* Sections 2 and 3 are intentionally empty containers. The emoji layer is
    z-index 1, so give any future content position: relative; z-index: 2. */
 
+/* ---- Mobile / tablet: the sidebar becomes a fixed bottom bar (see sidebar.css) ---- */
 @media (max-width: 900px) {
   :root {
-    --nav-gutter: 64px;
+    --nav-gutter: 16px; /* equal on both sides: content is centred on the viewport */
+    --nav-space: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
   }
+
+  /* Reserve room under the last section so the bottom nav never covers content.
+     The background matches the last section so no white strip shows behind the bar.
+     Left/right insets keep content clear of a landscape notch (needs viewport-fit=cover). */
+  .site-content {
+    padding-bottom: var(--nav-space);
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+    background: var(--pink-4);
+  }
+
+  /* Symmetric side padding; bottom padding lifts the tree into the visible area above the bar.
+     fit-tree.js already subtracts this padding when it computes the scale. */
   .section--tree {
-    padding-right: 8px;
+    padding: 12px 8px calc(12px + var(--nav-space));
+  }
+}
+
+/* ---- Small phones: enlarge Section 1 text ----
+   The text lives inside the scaled tree stage (about 0.33x on a phone), so it needs a larger
+   base size. #text is widened to the left (the area left of the tree is empty) and lines
+   never wrap, so the typewriter effect keeps its layout. */
+@media (max-width: 600px) {
+  #text {
+    left: 20px;
+    width: 520px;
+  }
+  #code {
+    font-size: 25px;
+    line-height: 34px;
+    white-space: nowrap;
   }
 }

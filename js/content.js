@@ -40,7 +40,7 @@
                     date: 'April 2024',
                     title: 'Our little family',
                     caption: 'Me, you, and our little fur baby. Three hearts, one little family, and countless memories to cherish.',
-                    image: 'images/image14.jpg',
+                    image: 'images/image5.jpg',
                     alt: 'Me, my partner, and our beloved cat together'
                 },
                 {
@@ -80,7 +80,6 @@
                 { src: 'images/image2.jpg', caption: 'Prom night' },
                 { src: 'images/image3.jpg', caption: 'Painting our hands' },
                 { src: 'images/image4.jpg', caption: 'Crying over movies' },
-                { src: 'images/image5.jpg', caption: 'Our first date, again' },
                 { src: 'images/image6.jpg', caption: 'Golden Hour' },
                 { src: 'images/image7.jpg', caption: 'Photobooth memories' },
                 { src: 'images/image10.jpg', caption: 'Outside the photobooth' },
