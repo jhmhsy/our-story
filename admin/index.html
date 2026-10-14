@@ -618,7 +618,15 @@
             function photoCard(list, p, i) {
                 var fields = h('div', null, [
                     field('Caption', p.caption, bind(p, 'caption')),
+                    field('Photo description (alt text, optional)', p.alt, bind(p, 'alt')),
                     h('div', { class: 'actions' }, [
+                        fileButton('Replace photo', false, function (files) {
+                            stageImage(files[0]).then(function (path) {
+                                p.src = path;
+                                markDirty();
+                                rerender();
+                            }).catch(showError);
+                        }),
                         h('button', { type: 'button', class: 'btn btn--danger', text: 'Delete', onclick: function () { removeItem(list, i); } })
                     ])
                 ]);
