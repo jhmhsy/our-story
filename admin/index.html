@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Our Story · Admin</title>
+    <link rel="icon" href="data:,">
+    <style>
+        :root {
+            --pink-1: #fde3ee;
+            --accent: #e5457f;
+            --ink: #6b2040;
+            --title: #9c1f58;
+            --err: #c6284a;
+            --ok: #2e7d4f;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: linear-gradient(160deg, #fde3ee 0%, #f8a9c6 100%);
+            background-attachment: fixed;
+            color: var(--ink);
+            font: 16px/1.5 "Segoe UI", Tahoma, Verdana, sans-serif;
+        }
+
+        main {
+            max-width: 820px;
+            margin: 0 auto;
+            padding: 20px 14px 120px;
+        }
+
+        h1 {
+            margin: 8px 0;
+            font-size: 26px;
+            color: var(--title);
+        }
+
+        h2 {
+            margin: 30px 0 10px;
+            font-size: 20px;
+            color: var(--title);
+        }
+
+        p {
+            margin: 0 0 12px;
+        }
+
+        .hint {
+            font-size: 14px;
+            color: #b44a78;
+        }
+
+        .card {
+            margin: 0 0 14px;
+            padding: 16px;
+            border: 1px solid #fff;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.78);
+            box-shadow: 0 8px 22px rgba(190, 40, 100, 0.12);
+        }
+
+        .screen {
+            max-width: 460px;
+            margin: 6vh auto 0;
+        }
+
+        label {
+            display: block;
+            margin: 10px 0 4px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--title);
+        }
+
+        input[type="text"],
+        input[type="password"],
+        textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid rgba(229, 69, 127, 0.3);
+            border-radius: 12px;
+            background: #fff;
+            color: var(--ink);
+            font: 16px/1.4 "Segoe UI", Tahoma, Verdana, sans-serif;
+        }
+
+        textarea {
+            resize: vertical;
+        }
+
+        input:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .row>* {
+            flex: 1 1 140px;
+        }
+
+        .remember {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 12px 0;
+            font-size: 14px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 16px;
+            border: 0;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #ff7aa8, #e5457f);
+            color: #fff;
+            font: 600 15px/1.2 "Segoe UI", Tahoma, Verdana, sans-serif;
+            text-decoration: none;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(229, 69, 127, 0.35);
+        }
+
+        .btn--ghost {
+            background: #fff;
+            color: var(--title);
+            box-shadow: 0 2px 6px rgba(190, 40, 100, 0.15);
+        }
+
+        .btn--danger {
+            background: #fff;
+            color: var(--err);
+            box-shadow: 0 2px 6px rgba(190, 40, 100, 0.15);
+        }
+
+        .btn[disabled] {
+            opacity: 0.45;
+            cursor: default;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .top {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .item {
+            display: grid;
+            grid-template-columns: 96px 1fr;
+            gap: 14px;
+        }
+
+        .thumb {
+            display: block;
+            width: 96px;
+            height: 120px;
+            border-radius: 10px;
+            background: #f8c3d6;
+            object-fit: cover;
+        }
+
+        .thumb--empty {
+            display: grid;
+            place-items: center;
+            font-size: 12px;
+            color: #b44a78;
+        }
+
+        .msg {
+            min-height: 1.3em;
+            margin: 12px 0 0;
+            font-size: 14px;
+        }
+
+        .msg--err,
+        .status--err {
+            color: var(--err);
+        }
+
+        .status--ok {
+            color: var(--ok);
+        }
+
+        .savebar {
+            position: fixed;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+            border-top: 1px solid #fff;
+            background: rgba(255, 255, 255, 0.93);
+            box-shadow: 0 -6px 20px rgba(190, 40, 100, 0.15);
+            -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(8px);
+        }
+
+        .status {
+            font-size: 14px;
+        }
+
+        @media (max-width: 520px) {
+            .item {
+                grid-template-columns: 72px 1fr;
+                gap: 10px;
+            }
+
+            .thumb {
+                width: 72px;
+                height: 90px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main id="app">
+        <p>Loading…</p>
+    </main>
+    <noscript>This page needs JavaScript.</noscript>
+
+    <script>
+        /* admin/index.html - edit data/content.json and upload photos by committing to GitHub.
+           Auth: a fine-grained GitHub token, encrypted with your passphrase and stored in data/admin.json. */
+        (function () {
+            'use strict';
+
+            /* ---------- Config ---------- */
+            var OWNER = 'jhmhsy';
+            var REPO = 'our-story';
+            var BRANCH = '';                      // leave empty to use the repo's default branch
+            var CONTENT_PATH = 'data/content.json';
+            var ADMIN_PATH = 'data/admin.json';
+            var TOKEN_KEY = 'ourStoryAdminToken';
+            var PBKDF2_ITER = 600000;
+            var MAX_SIDE = 1600;                  // uploaded photos are scaled so the long side is at most this many px
+            var API = 'https://api.github.com/repos/' + OWNER + '/' + REPO;
+
+            var app = document.getElementById('app');
+            var token = '';
+            var branch = BRANCH;
+            var state = null;
+            var contentSha = '';
+            var pending = {};                     // path -> { b64, url, saved }
+            var seq = 0;
+            var dirty = false;
+            var statusEl = null;
+            var saveBtn = null;
+
+            /* ---------- Small DOM helpers ---------- */
+            function h(tag, attrs, children) {
+                var n = document.createElement(tag);
+                var a = attrs || {};
+                Object.keys(a).forEach(function (k) {
+                    var v = a[k];
+                    if (k === 'class') n.className = v;
+                    else if (k === 'text') n.textContent = v;
+                    else if (k.slice(0, 2) === 'on') n.addEventListener(k.slice(2), v);
+                    else if (v !== false && v != null) n.setAttribute(k, v);
+                });
+                [].concat(children || []).forEach(function (c) {
+                    if (c == null) return;
+                    n.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
+                });
+                return n;
+            }
+            function mount(nodes) {
+                app.textContent = '';
+                [].concat(nodes).forEach(function (n) { app.appendChild(n); });
+            }
+            function setStatus(text, kind) {
+                if (!statusEl) return;
+                statusEl.textContent = text;
+                statusEl.className = 'status' + (kind ? ' status--' + kind : '');
+            }
+            function markDirty() { dirty = true; setStatus('Unsaved changes'); }
+            function bind(obj, key) { return function (v) { obj[key] = v; }; }
+
+            function field(label, value, onInput, rows) {
+                var input = rows ? h('textarea', { rows: rows }) : h('input', { type: 'text' });
+                input.value = value == null ? '' : value;
+                input.setAttribute('aria-label', label);
+                input.addEventListener('input', function () { onInput(input.value); markDirty(); });
+                return h('div', null, [h('label', { text: label }), input]);
+            }
+
+            function fileButton(label, multiple, onFiles) {
+                var input = h('input', { type: 'file', accept: 'image/*', class: 'hidden' });
+                if (multiple) input.multiple = true;
+                input.addEventListener('change', function () {
+                    var files = Array.prototype.slice.call(input.files);
+                    input.value = '';
+                    if (files.length) onFiles(files);
+                });
+                return h('label', { class: 'btn btn--ghost' }, [label, input]);
+            }
+
+            /* ---------- Base64 + crypto (token encryption) ---------- */
+            /* crypto:start */
+            function bytesToB64(bytes) {
+                var s = '', chunk = 0x8000;
+                for (var i = 0; i < bytes.length; i += chunk) {
+                    s += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+                }
+                return btoa(s);
+            }
+            function b64ToBytes(b64) {
+                var bin = atob(String(b64).replace(/\s/g, ''));
+                var out = new Uint8Array(bin.length);
+                for (var i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+                return out;
+            }
+            function textToB64(t) { return bytesToB64(new TextEncoder().encode(t)); }
+            function b64ToText(b) { return new TextDecoder().decode(b64ToBytes(b)); }
+
+            function deriveKey(pass, salt, iter) {
+                return crypto.subtle.importKey('raw', new TextEncoder().encode(pass), 'PBKDF2', false, ['deriveKey'])
+                    .then(function (base) {
+                        return crypto.subtle.deriveKey(
+                            { name: 'PBKDF2', salt: salt, iterations: iter, hash: 'SHA-256' },
+                            base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+                    });
+            }
+            function encryptToken(tok, pass) {
+                var salt = crypto.getRandomValues(new Uint8Array(16));
+                var iv = crypto.getRandomValues(new Uint8Array(12));
+                return deriveKey(pass, salt, PBKDF2_ITER).then(function (key) {
+                    return crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, key, new TextEncoder().encode(tok));
+                }).then(function (buf) {
+                    return {
+                        v: 1, kdf: 'PBKDF2-SHA256', iter: PBKDF2_ITER,
+                        salt: bytesToB64(salt), iv: bytesToB64(iv), data: bytesToB64(new Uint8Array(buf))
+                    };
+                });
+            }
+            function decryptToken(blob, pass) {
+                return deriveKey(pass, b64ToBytes(blob.salt), blob.iter).then(function (key) {
+                    return crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64ToBytes(blob.iv) }, key, b64ToBytes(blob.data));
+                }).then(function (buf) { return new TextDecoder().decode(buf); });
+            }
+            /* crypto:end */
+
+            /* ---------- GitHub API ---------- */
+            function gh(path, opts) {
+                opts = opts || {};
+                var headers = {
+                    'Accept': 'application/vnd.github+json',
+                    'Authorization': 'Bearer ' + token,
+                    'X-GitHub-Api-Version': '2022-11-28'
+                };
+                if (opts.body) headers['Content-Type'] = 'application/json';
+                return fetch(API + path, {
+                    method: opts.method || 'GET',
+                    cache: 'no-store',
+                    headers: headers,
+                    body: opts.body ? JSON.stringify(opts.body) : undefined
+                }).then(function (res) {
+                    if (res.ok) return res.json();
+                    return res.json().catch(function () { return {}; }).then(function (j) {
+                        var err = new Error(j.message || ('HTTP ' + res.status));
+                        err.status = res.status;
+                        throw err;
+                    });
+                });
+            }
+            function loadRepo() {
+                if (branch) return Promise.resolve();
+                return gh('').then(function (r) { branch = r.default_branch; });
+            }
+            function getFile(path) {
+                return gh('/contents/' + path + '?ref=' + encodeURIComponent(branch));
+            }
+            function putFile(path, b64, message, sha) {
+                var body = { message: message, content: b64, branch: branch };
+                if (sha) body.sha = sha;
+                return gh('/contents/' + path, { method: 'PUT', body: body });
+            }
+            function describe(err) {
+                if (err.status === 401) return 'GitHub rejected the token. Check that it is correct and has not expired.';
+                if (err.status === 403) return 'GitHub refused the request. The token needs Contents: Read and write on ' + OWNER + '/' + REPO + '.';
+                if (err.status === 404) return 'Not found on GitHub (repo, branch or file). The token may not have access to ' + OWNER + '/' + REPO + '.';
+                if (err.status === 409) return 'The file changed on GitHub since this page loaded. Reload the page and re-apply your edits.';
+                return err.message || 'Something went wrong.';
+            }
+            function forgetStored() { try { localStorage.removeItem(TOKEN_KEY); } catch (e) { } }
+
+            /* ---------- Images: resize in the browser, upload on save ---------- */
+            function resizeToJpeg(file) {
+                return new Promise(function (resolve, reject) {
+                    var url = URL.createObjectURL(file);
+                    var img = new Image();
+                    img.onload = function () {
+                        var s = Math.min(1, MAX_SIDE / Math.max(img.naturalWidth, img.naturalHeight));
+                        var c = document.createElement('canvas');
+                        c.width = Math.max(1, Math.round(img.naturalWidth * s));
+                        c.height = Math.max(1, Math.round(img.naturalHeight * s));
+                        var ctx = c.getContext('2d');
+                        ctx.fillStyle = '#fff';
+                        ctx.fillRect(0, 0, c.width, c.height);
+                        ctx.drawImage(img, 0, 0, c.width, c.height);
+                        URL.revokeObjectURL(url);
+                        c.toBlob(function (b) { b ? resolve(b) : reject(new Error('Could not process ' + file.name)); }, 'image/jpeg', 0.85);
+                    };
+                    img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('Could not read ' + file.name)); };
+                    img.src = url;
+                });
+            }
+            function blobToB64(blob) {
+                return new Promise(function (resolve, reject) {
+                    var r = new FileReader();
+                    r.onload = function () { resolve(String(r.result).split(',')[1]); };
+                    r.onerror = function () { reject(new Error('Could not read the image.')); };
+                    r.readAsDataURL(blob);
+                });
+            }
+            function stageImage(file) {
+                return resizeToJpeg(file).then(function (blob) {
+                    return blobToB64(blob).then(function (b64) {
+                        var path = 'images/upload-' + Date.now().toString(36) + '-' + (seq++) + '.jpg';
+                        pending[path] = { b64: b64, url: URL.createObjectURL(blob), saved: false };
+                        return path;
+                    });
+                });
+            }
+            function previewSrc(path) { return pending[path] ? pending[path].url : '../' + path; }
+
+            /* ---------- Screens: setup, unlock, fatal ---------- */
+            function showFatal(err) {
+                mount(h('div', { class: 'card screen' }, [
+                    h('h1', { text: 'Something went wrong' }),
+                    h('p', { class: 'msg msg--err', text: describe(err) }),
+                    h('button', { type: 'button', class: 'btn', text: 'Reload', onclick: function () { location.reload(); } })
+                ]));
+            }
+
+            function showSetup() {
+                var tok = h('input', { type: 'password', autocomplete: 'off', 'aria-label': 'GitHub token' });
+                var p1 = h('input', { type: 'password', autocomplete: 'new-password', 'aria-label': 'New passphrase' });
+                var p2 = h('input', { type: 'password', autocomplete: 'new-password', 'aria-label': 'Repeat passphrase' });
+                var msg = h('p', { class: 'msg' });
+                var btn = h('button', { type: 'submit', class: 'btn', text: 'Encrypt and save setup' });
+
+                function say(text, isErr) { msg.textContent = text; msg.className = 'msg' + (isErr ? ' msg--err' : ''); }
+
+                var form = h('form', {
+                    onsubmit: function (e) {
+                        e.preventDefault();
+                        var t = tok.value.trim();
+                        if (!t) return say('Paste your GitHub token.', true);
+                        if (p1.value.length < 12) return say('Use a passphrase of at least 12 characters, e.g. four random words.', true);
+                        if (p1.value !== p2.value) return say('The passphrases do not match.', true);
+
+                        btn.disabled = true;
+                        token = t;
+                        branch = BRANCH;
+                        say('Checking the token…');
+                        loadRepo().then(function () {
+                            say('Encrypting…');
+                            return encryptToken(t, p1.value);
+                        }).then(function (blob) {
+                            say('Saving data/admin.json to GitHub…');
+                            return putFile(ADMIN_PATH, textToB64(JSON.stringify(blob, null, 2) + '\n'), 'Add admin setup');
+                        }).then(function () {
+                            try { localStorage.setItem(TOKEN_KEY, t); } catch (err) { }
+                            return start();
+                        }).catch(function (err) {
+                            btn.disabled = false;
+                            token = '';
+                            say(describe(err), true);
+                        });
+                    }
+                }, [
+                    h('label', { text: 'GitHub token (Contents: Read and write on this repo)' }), tok,
+                    h('label', { text: 'Choose an admin passphrase (12+ characters)' }), p1,
+                    h('label', { text: 'Repeat the passphrase' }), p2,
+                    h('div', { class: 'actions' }, [btn]),
+                    msg
+                ]);
+
+                mount(h('div', { class: 'card screen' }, [
+                    h('h1', { text: 'Admin setup' }),
+                    h('p', { text: 'One-time setup. Your token is encrypted in this browser with your passphrase, then saved as data/admin.json in the repo. The token itself is never stored in plain text.' }),
+                    form
+                ]));
+                tok.focus();
+            }
+
+            function showUnlock(blob) {
+                var pass = h('input', { type: 'password', autocomplete: 'current-password', 'aria-label': 'Admin passphrase' });
+                var remember = h('input', { type: 'checkbox' });
+                remember.checked = true;
+                var msg = h('p', { class: 'msg' });
+                var btn = h('button', { type: 'submit', class: 'btn', text: 'Unlock' });
+
+                var form = h('form', {
+                    onsubmit: function (e) {
+                        e.preventDefault();
+                        if (!pass.value) return;
+                        btn.disabled = true;
+                        msg.className = 'msg';
+                        msg.textContent = 'Unlocking…';
+                        decryptToken(blob, pass.value).then(function (tok) {
+                            token = tok;
+                            if (remember.checked) { try { localStorage.setItem(TOKEN_KEY, tok); } catch (err) { } }
+                            return start();
+                        }).catch(function (err) {
+                            btn.disabled = false;
+                            msg.className = 'msg msg--err';
+                            msg.textContent = err && err.name === 'OperationError' ? 'Wrong passphrase.' : describe(err);
+                        });
+                    }
+                }, [
+                    h('label', { text: 'Admin passphrase' }), pass,
+                    h('label', { class: 'remember' }, [remember, 'Remember this device']),
+                    h('div', { class: 'actions' }, [btn]),
+                    msg
+                ]);
+
+                mount(h('div', { class: 'card screen' }, [h('h1', { text: 'Our Story · Admin' }), form]));
+                pass.focus();
+            }
+
+            /* ---------- Editor ---------- */
+            function normalize() {
+                state.timeline = state.timeline || {};
+                state.timeline.entries = state.timeline.entries || [];
+                state.gallery = state.gallery || {};
+                state.gallery.photos = state.gallery.photos || [];
+                state.letter = state.letter || {};
+            }
+
+            function rerender() {
+                var y = window.scrollY;
+                renderEditor();
+                window.scrollTo(0, y);
+            }
+            function moveItem(list, i, d) {
+                var j = i + d;
+                if (j < 0 || j >= list.length) return;
+                var tmp = list[i]; list[i] = list[j]; list[j] = tmp;
+                markDirty();
+                rerender();
+            }
+            function removeItem(list, i) {
+                if (!confirm('Remove this item? (The photo file itself stays in the repo.)')) return;
+                list.splice(i, 1);
+                markDirty();
+                rerender();
+            }
+            function showError(err) { setStatus(describe(err), 'err'); }
+
+            function moveBtn(list, i, d) {
+                var atEdge = (d < 0 && i === 0) || (d > 0 && i === list.length - 1);
+                return h('button', {
+                    type: 'button', class: 'btn btn--ghost', text: d < 0 ? '↑' : '↓',
+                    title: d < 0 ? 'Move up' : 'Move down', 'aria-label': d < 0 ? 'Move up' : 'Move down',
+                    disabled: atEdge ? 'disabled' : false,
+                    onclick: function () { moveItem(list, i, d); }
+                });
+            }
+
+            function timelineCard(list, e, i) {
+                var photo = e.image
+                    ? h('img', { class: 'thumb', alt: '', src: previewSrc(e.image) })
+                    : h('div', { class: 'thumb thumb--empty', text: 'No photo' });
+
+                var fields = h('div', null, [
+                    h('div', { class: 'row' }, [
+                        field('Year', e.year, bind(e, 'year')),
+                        field('Date label', e.date, bind(e, 'date'))
+                    ]),
+                    field('Title', e.title, bind(e, 'title')),
+                    field('Caption', e.caption, bind(e, 'caption'), 3),
+                    field('Photo description (alt text)', e.alt, bind(e, 'alt')),
+                    h('div', { class: 'actions' }, [
+                        moveBtn(list, i, -1),
+                        moveBtn(list, i, 1),
+                        fileButton(e.image ? 'Replace photo' : 'Add photo', false, function (files) {
+                            stageImage(files[0]).then(function (path) {
+                                e.image = path;
+                                markDirty();
+                                rerender();
+                            }).catch(showError);
+                        }),
+                        h('button', { type: 'button', class: 'btn btn--danger', text: 'Delete', onclick: function () { removeItem(list, i); } })
+                    ])
+                ]);
+                return h('div', { class: 'card item' }, [h('div', null, [photo]), fields]);
+            }
+
+            function photoCard(list, p, i) {
+                var fields = h('div', null, [
+                    field('Caption', p.caption, bind(p, 'caption')),
+                    h('div', { class: 'actions' }, [
+                        h('button', { type: 'button', class: 'btn btn--danger', text: 'Delete', onclick: function () { removeItem(list, i); } })
+                    ])
+                ]);
+                return h('div', { class: 'card item' }, [
+                    h('div', null, [h('img', { class: 'thumb', alt: '', loading: 'lazy', src: previewSrc(p.src) })]),
+                    fields
+                ]);
+            }
+
+            function renderEditor() {
+                var t = state.timeline, g = state.gallery, l = state.letter;
+                var root = h('div');
+
+                root.appendChild(h('div', { class: 'top' }, [
+                    h('h1', { text: 'Our Story · Admin' }),
+                    h('div', { class: 'actions' }, [
+                        h('a', { class: 'btn btn--ghost', href: '../', text: 'View site' }),
+                        h('button', {
+                            type: 'button', class: 'btn btn--ghost', text: 'Forget this device',
+                            onclick: function () {
+                                if (!confirm('Forget this device? You will need your passphrase to unlock the admin again.')) return;
+                                forgetStored();
+                                location.reload();
+                            }
+                        })
+                    ])
+                ]));
+
+                /* Timeline */
+                root.appendChild(h('h2', { text: 'Timeline' }));
+                root.appendChild(h('div', { class: 'card' }, [
+                    field('Section title', t.title, bind(t, 'title')),
+                    field('Subtitle', t.subtitle, bind(t, 'subtitle'))
+                ]));
+                t.entries.forEach(function (e, i) { root.appendChild(timelineCard(t.entries, e, i)); });
+                root.appendChild(h('button', {
+                    type: 'button', class: 'btn', text: '+ Add memory',
+                    onclick: function () {
+                        t.entries.push({ year: '', date: '', title: '', caption: '', image: '', alt: '' });
+                        markDirty();
+                        rerender();
+                    }
+                }));
+
+                /* Gallery */
+                root.appendChild(h('h2', { text: 'Photo Booth' }));
+                root.appendChild(h('p', { class: 'hint', text: 'The carousel shuffles its photos on every visit, so their order here does not matter. New photos are added at the top.' }));
+                root.appendChild(h('div', { class: 'card' }, [
+                    field('Section title', g.title, bind(g, 'title')),
+                    field('Subtitle', g.subtitle, bind(g, 'subtitle'))
+                ]));
+                root.appendChild(h('div', { class: 'actions' }, [
+                    fileButton('+ Add photos', true, function (files) {
+                        Promise.all(files.map(stageImage)).then(function (paths) {
+                            paths.slice().reverse().forEach(function (path) { g.photos.unshift({ src: path, caption: '' }); });
+                            markDirty();
+                            rerender();
+                            setStatus(paths.length + ' photo(s) added at the top. Add captions, then save.');
+                        }).catch(showError);
+                    })
+                ]));
+                g.photos.forEach(function (p, i) { root.appendChild(photoCard(g.photos, p, i)); });
+
+                /* Letter */
+                root.appendChild(h('h2', { text: 'Love letter' }));
+                root.appendChild(h('div', { class: 'card' }, [
+                    field('Greeting', l.to, bind(l, 'to')),
+                    field('Paragraphs (leave a blank line between paragraphs)', (l.paragraphs || []).join('\n\n'), function (v) {
+                        l.paragraphs = v.split(/\n\s*\n/).map(function (s) { return s.trim(); }).filter(Boolean);
+                    }, 10),
+                    field('Closing', l.closing, bind(l, 'closing')),
+                    field('Signature', l.from, bind(l, 'from'))
+                ]));
+
+                /* Save bar */
+                statusEl = h('span', { class: 'status', role: 'status' });
+                saveBtn = h('button', { type: 'button', class: 'btn', text: 'Save changes', onclick: save });
+                root.appendChild(h('div', { class: 'savebar' }, [statusEl, saveBtn]));
+
+                mount(root);
+                if (dirty) setStatus('Unsaved changes');
+            }
+
+            /* ---------- Save ---------- */
+            function referencedPaths() {
+                var used = {};
+                state.timeline.entries.forEach(function (e) { if (e.image) used[e.image] = true; });
+                state.gallery.photos.forEach(function (p) { if (p.src) used[p.src] = true; });
+                return used;
+            }
+            function validate() {
+                var entries = state.timeline.entries;
+                for (var i = 0; i < entries.length; i++) {
+                    if (!String(entries[i].year || '').trim() || !entries[i].image) {
+                        return 'Timeline memory #' + (i + 1) + ' needs a year and a photo.';
+                    }
+                }
+                return '';
+            }
+
+            function save() {
+                var problem = validate();
+                if (problem) { setStatus(problem, 'err'); return; }
+
+                var used = referencedPaths();
+                var uploads = Object.keys(pending).filter(function (p) { return used[p] && !pending[p].saved; });
+                saveBtn.disabled = true;
+
+                // Photos first, so the site never references a file that is not in the repo yet.
+                uploads.reduce(function (chain, path, i) {
+                    return chain.then(function () {
+                        setStatus('Uploading photo ' + (i + 1) + ' of ' + uploads.length + '…');
+                        return putFile(path, pending[path].b64, 'Add photo ' + path).then(function () { pending[path].saved = true; });
+                    });
+                }, Promise.resolve()).then(function () {
+                    setStatus('Saving content…');
+                    return putFile(CONTENT_PATH, textToB64(JSON.stringify(state, null, 2) + '\n'), 'Update site content', contentSha);
+                }).then(function (res) {
+                    contentSha = res.content.sha;
+                    dirty = false;
+                    saveBtn.disabled = false;
+                    setStatus('Saved. The live site updates within a couple of minutes.', 'ok');
+                }).catch(function (err) {
+                    saveBtn.disabled = false;
+                    showError(err);
+                });
+            }
+
+            window.addEventListener('beforeunload', function (e) {
+                if (dirty) { e.preventDefault(); e.returnValue = ''; }
+            });
+
+            /* ---------- Start / boot ---------- */
+            function start() {
+                return loadRepo().then(function () {
+                    return getFile(CONTENT_PATH);
+                }).then(function (f) {
+                    contentSha = f.sha;
+                    state = JSON.parse(b64ToText(f.content));
+                    normalize();
+                    renderEditor();
+                });
+            }
+
+            function boot() {
+                if (!window.crypto || !crypto.subtle) {
+                    showFatal(new Error('This page needs a secure (https) connection.'));
+                    return;
+                }
+                fetch('../' + ADMIN_PATH, { cache: 'no-cache' }).then(function (res) {
+                    if (res.status === 404) return null;
+                    if (!res.ok) throw new Error('Could not load ' + ADMIN_PATH + ' (HTTP ' + res.status + ').');
+                    return res.json();
+                }).then(function (blob) {
+                    if (!blob) { showSetup(); return; }
+                    var saved = '';
+                    try { saved = localStorage.getItem(TOKEN_KEY) || ''; } catch (e) { }
+                    if (!saved) { showUnlock(blob); return; }
+                    token = saved;
+                    return start().catch(function (err) {
+                        if (err.status !== 401) throw err;
+                        forgetStored();
+                        token = '';
+                        showUnlock(blob);
+                    });
+                }).catch(showFatal);
+            }
+
+            boot();
+        })();
+    </script>
+</body>
+
+</html>
