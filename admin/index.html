@@ -273,6 +273,7 @@
             var dirty = false;
             var statusEl = null;
             var saveBtn = null;
+            var MIN_PASS = 6;
 
             /* ---------- Small DOM helpers ---------- */
             function h(tag, attrs, children) {
@@ -474,7 +475,7 @@
                         e.preventDefault();
                         var t = tok.value.trim();
                         if (!t) return say('Paste your GitHub token.', true);
-                        if (p1.value.length < 12) return say('Use a passphrase of at least 12 characters, e.g. four random words.', true);
+                        if (p1.value.length < 12) return say('Use a passphrase of at least ' + MIN_PASS + ' characters, e.g. four random words.', true);
                         if (p1.value !== p2.value) return say('The passphrases do not match.', true);
 
                         btn.disabled = true;
@@ -498,7 +499,7 @@
                     }
                 }, [
                     h('label', { text: 'GitHub token (Contents: Read and write on this repo)' }), tok,
-                    h('label', { text: 'Choose an admin passphrase (12+ characters)' }), p1,
+                    h('label', { text: 'Choose an admin passphrase (' + MIN_PASS + '+ characters)' }), p1,
                     h('label', { text: 'Repeat the passphrase' }), p2,
                     h('div', { class: 'actions' }, [btn]),
                     msg
