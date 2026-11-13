@@ -2,7 +2,7 @@
     'use strict';
 
     var CONTENT_URL = 'data/content.json';
-    var DEPENDENTS = ['js/timeline.js', 'js/gallery.js', 'js/letter.js'];
+    var DEPENDENTS = ['js/timeline.js', 'js/gallery.js', 'js/jar.js', 'js/letter.js'];
 
     function loadScript(src) {
         return new Promise(function (resolve, reject) {

@@ -90,5 +90,17 @@
     ],
     "closing": "Forever yours,",
     "from": "Your lablab ❤️"
-  }
+  },
+  "jar": {
+  "title": "Things I Love About You",
+  "subtitle": "Pull one out, any time you need it",
+  "hint": "Tap the jar to pull out a note \ud83d\udc8c",
+  "moreLabel": "Another one \ud83d\udc8c",
+  "closeLabel": "Close \u2715",
+  "notes": [
+    "Sample note: the way you laugh.",
+    "Sample note: how you remember the small things.",
+    "Sample note: you make ordinary days feel special."
+  ]
+}
 }
