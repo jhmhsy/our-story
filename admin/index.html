@@ -555,6 +555,10 @@
                 state.gallery = state.gallery || {};
                 state.gallery.photos = state.gallery.photos || [];
                 state.letter = state.letter || {};
+                state.jar = state.jar || {};
+                state.jar.notes = (state.jar.notes || []).map(function (n) {
+                    return typeof n === 'string' ? n : (n && n.text) || '';
+                });
             }
 
             function rerender() {
@@ -569,8 +573,8 @@
                 markDirty();
                 rerender();
             }
-            function removeItem(list, i) {
-                if (!confirm('Remove this item? (The photo file itself stays in the repo.)')) return;
+            function removeItem(list, i, msg) {
+                if (!confirm(msg || 'Remove this item? (The photo file itself stays in the repo.)')) return;
                 list.splice(i, 1);
                 markDirty();
                 rerender();
@@ -637,8 +641,19 @@
                 ]);
             }
 
+            function noteCard(list, n, i) {
+                return h('div', { class: 'card' }, [
+                    field('Note ' + (i + 1), n, function (v) { list[i] = v; }, 2),
+                    h('div', { class: 'actions' }, [
+                        moveBtn(list, i, -1),
+                        moveBtn(list, i, 1),
+                        h('button', { type: 'button', class: 'btn btn--danger', text: 'Delete', onclick: function () { removeItem(list, i, 'Delete this note?'); } })
+                    ])
+                ]);
+            }
+
             function renderEditor() {
-                var t = state.timeline, g = state.gallery, l = state.letter;
+                var t = state.timeline, g = state.gallery, l = state.letter, j = state.jar;
                 var root = h('div');
 
                 root.appendChild(h('div', { class: 'top' }, [
@@ -690,6 +705,23 @@
                     })
                 ]));
                 g.photos.forEach(function (p, i) { root.appendChild(photoCard(g.photos, p, i)); });
+
+                /* Love jar */
+                root.appendChild(h('h2', { text: 'Love Jar' }));
+                root.appendChild(h('p', { class: 'hint', text: 'Each note is one folded paper in the jar. Tapping the jar on the site shows a random one, so order does not matter. Empty notes are skipped when saving.' }));
+                root.appendChild(h('div', { class: 'card' }, [
+                    field('Section title', j.title, bind(j, 'title')),
+                    field('Subtitle', j.subtitle, bind(j, 'subtitle'))
+                ]));
+                j.notes.forEach(function (n, i) { root.appendChild(noteCard(j.notes, n, i)); });
+                root.appendChild(h('button', {
+                    type: 'button', class: 'btn', text: '+ Add note',
+                    onclick: function () {
+                        j.notes.push('');
+                        markDirty();
+                        rerender();
+                    }
+                }));
 
                 /* Letter */
                 root.appendChild(h('h2', { text: 'Love letter' }));
@@ -744,7 +776,9 @@
                     });
                 }, Promise.resolve()).then(function () {
                     setStatus('Saving content…');
-                    return putFile(CONTENT_PATH, textToB64(JSON.stringify(state, null, 2) + '\n'), 'Update site content', contentSha);
+                    var out = JSON.parse(JSON.stringify(state));
+                    out.jar.notes = out.jar.notes.filter(function (n) { return String(n).trim(); });
+                    return putFile(CONTENT_PATH, textToB64(JSON.stringify(out, null, 2) + '\n'), 'Update site content', contentSha);
                 }).then(function (res) {
                     contentSha = res.content.sha;
                     dirty = false;
