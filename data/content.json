@@ -37,47 +37,150 @@
       }
     ],
     "stickers": [
-      { "emoji": "🎀", "top": "5%", "left": "12%", "size": 58, "rotate": -16 },
-      { "emoji": "⭐", "top": "27%", "right": "4%", "size": 46, "rotate": 14 },
-      { "emoji": "🧸", "top": "58%", "left": "9%", "size": 64, "rotate": -8 },
-      { "emoji": "🌸", "bottom": "5%", "right": "9%", "size": 52, "rotate": 20 }
+      {
+        "emoji": "🎀",
+        "top": "5%",
+        "left": "12%",
+        "size": 58,
+        "rotate": -16
+      },
+      {
+        "emoji": "⭐",
+        "top": "27%",
+        "right": "4%",
+        "size": 46,
+        "rotate": 14
+      },
+      {
+        "emoji": "🧸",
+        "top": "58%",
+        "left": "9%",
+        "size": 64,
+        "rotate": -8
+      },
+      {
+        "emoji": "🌸",
+        "bottom": "5%",
+        "right": "9%",
+        "size": 52,
+        "rotate": 20
+      }
     ]
   },
-
   "gallery": {
     "title": "Photo Booth",
     "subtitle": "Drag, swipe or use the arrows",
     "photos": [
-      { "src": "images/image1.jpg", "caption": "Beach days with you" },
-      { "src": "images/image2.jpg", "caption": "Prom night" },
-      { "src": "images/image3.jpg", "caption": "Painting our hands" },
-      { "src": "images/image4.jpg", "caption": "Crying over movies" },
-      { "src": "images/image5.jpg", "caption": "Our first date, again" },
-      { "src": "images/image6.jpg", "caption": "Golden Hour" },
-      { "src": "images/image7.jpg", "caption": "Photobooth memories" },
-      { "src": "images/image10.jpg", "caption": "Outside the photobooth" },
-      { "src": "images/image16.jpg", "caption": "Meeting my best friend" },
-      { "src": "images/image17.jpg", "caption": "Beach days, again" },
-      { "src": "images/image18.jpg", "caption": "Time with your friends" },
-      { "src": "images/image19.jpg", "caption": "You and our little fur baby" },
-      { "src": "images/image20.jpg", "caption": "Time with your family" },
-      { "src": "images/image25.jpg", "caption": "School dates" },
-      { "src": "images/image22.jpg", "caption": "City adventures" },
-      { "src": "images/image24.jpg", "caption": "Picnic dates" },
-      { "src": "images/image26.jpg", "caption": "Online dates" },
-      { "src": "images/image27.jpg", "caption": "Spontaneous dates" },
-      { "src": "images/image28.jpg", "caption": "Oval dates" },
-      { "src": "images/image29.jpg", "caption": "My first flower" },
-      { "src": "images/image30.jpg", "caption": "School event dates" },
-      { "src": "images/image31.jpg", "caption": "Holding your hand" },
-      { "src": "images/image32.jpg", "caption": "Mall dates" },
-      { "src": "images/image33.jpg", "caption": "Christmas together" },
-      { "src": "images/image34.jpg", "caption": "Museum escapades" },
-      { "src": "images/image35.jpg", "caption": "Oval dates, again" },
-      { "src": "images/image36.jpg", "caption": "My first bouquet" }
+      {
+        "src": "images/image1.jpg",
+        "caption": "Beach days with you"
+      },
+      {
+        "src": "images/image2.jpg",
+        "caption": "Prom night"
+      },
+      {
+        "src": "images/image3.jpg",
+        "caption": "Painting our hands"
+      },
+      {
+        "src": "images/image4.jpg",
+        "caption": "Crying over movies"
+      },
+      {
+        "src": "images/image5.jpg",
+        "caption": "Our first date, again"
+      },
+      {
+        "src": "images/image6.jpg",
+        "caption": "Golden Hour"
+      },
+      {
+        "src": "images/image7.jpg",
+        "caption": "Photobooth memories"
+      },
+      {
+        "src": "images/image10.jpg",
+        "caption": "Outside the photobooth"
+      },
+      {
+        "src": "images/image16.jpg",
+        "caption": "Meeting my best friend"
+      },
+      {
+        "src": "images/image17.jpg",
+        "caption": "Beach days, again"
+      },
+      {
+        "src": "images/image18.jpg",
+        "caption": "Time with your friends"
+      },
+      {
+        "src": "images/image19.jpg",
+        "caption": "You and our little fur baby"
+      },
+      {
+        "src": "images/image20.jpg",
+        "caption": "Time with your family"
+      },
+      {
+        "src": "images/image25.jpg",
+        "caption": "School dates"
+      },
+      {
+        "src": "images/image22.jpg",
+        "caption": "City adventures"
+      },
+      {
+        "src": "images/image24.jpg",
+        "caption": "Picnic dates"
+      },
+      {
+        "src": "images/image26.jpg",
+        "caption": "Online dates"
+      },
+      {
+        "src": "images/image27.jpg",
+        "caption": "Spontaneous dates"
+      },
+      {
+        "src": "images/image28.jpg",
+        "caption": "Oval dates"
+      },
+      {
+        "src": "images/image29.jpg",
+        "caption": "My first flower"
+      },
+      {
+        "src": "images/image30.jpg",
+        "caption": "School event dates"
+      },
+      {
+        "src": "images/image31.jpg",
+        "caption": "Holding your hand"
+      },
+      {
+        "src": "images/image32.jpg",
+        "caption": "Mall dates"
+      },
+      {
+        "src": "images/image33.jpg",
+        "caption": "Christmas together"
+      },
+      {
+        "src": "images/image34.jpg",
+        "caption": "Museum escapades"
+      },
+      {
+        "src": "images/image35.jpg",
+        "caption": "Oval dates, again"
+      },
+      {
+        "src": "images/image36.jpg",
+        "caption": "My first bouquet"
+      }
     ]
   },
-
   "letter": {
     "hint": "Tap the envelope to open 💌",
     "openLabel": "Open the love letter",
@@ -92,15 +195,17 @@
     "from": "Your lablab ❤️"
   },
   "jar": {
-  "title": "Things I Love About You",
-  "subtitle": "Pull one out, any time you need it",
-  "hint": "Tap the jar to pull out a note \ud83d\udc8c",
-  "moreLabel": "Another one \ud83d\udc8c",
-  "closeLabel": "Close \u2715",
-  "notes": [
-    "Sample note: the way you laugh.",
-    "Sample note: how you remember the small things.",
-    "Sample note: you make ordinary days feel special."
-  ]
-}
+    "title": "Things I Love about us",
+    "subtitle": "Pull one out, any time you need it",
+    "hint": "Tap the jar to pull out a note 💌",
+    "moreLabel": "Another one 💌",
+    "closeLabel": "Close ✕",
+    "notes": [
+      "Your smile",
+      "How you remember the small things",
+      "Your patience",
+      "Your laugh",
+      "Your love for sunsets"
+    ]
+  }
 }
