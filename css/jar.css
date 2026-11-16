@@ -299,6 +299,35 @@
   outline-offset: 2px;
 }
 
+/* ---- NSFW notes: blurred until tapped ---- */
+#jar .jn-text.is-nsfw .jn-text__p {
+  transition: filter 0.3s ease;
+}
+#jar .jn-text.is-blurred {
+  cursor: pointer;
+}
+#jar .jn-text.is-blurred .jn-text__p {
+  filter: blur(9px);
+  user-select: none;
+  -webkit-user-select: none;
+}
+#jar .jn-nsfw {
+  display: none;
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  padding: 3px 10px 4px;
+  border-radius: 999px;
+  background: #c6284a;
+  color: #fff;
+  font: 700 12px/1.2 "Segoe UI", Tahoma, Verdana, sans-serif;
+  letter-spacing: 0.04em;
+  pointer-events: none;
+}
+#jar .jn-text.is-nsfw .jn-nsfw {
+  display: block;
+}
+
 @media (max-width: 600px) {
   #jar.section--jar {
     padding: 28px 8px 28px var(--nav-gutter);

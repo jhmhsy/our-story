@@ -554,11 +554,11 @@
                 state.timeline.entries = state.timeline.entries || [];
                 state.gallery = state.gallery || {};
                 state.gallery.photos = state.gallery.photos || [];
-                state.letter = state.letter || {};
                 state.jar = state.jar || {};
                 state.jar.notes = (state.jar.notes || []).map(function (n) {
-                    return typeof n === 'string' ? n : (n && n.text) || '';
+                    return typeof n === 'string' ? { text: n, nsfw: false } : { text: n.text || '', nsfw: !!n.nsfw };
                 });
+                state.letter = state.letter || {};
             }
 
             function rerender() {
@@ -642,18 +642,22 @@
             }
 
             function noteCard(list, n, i) {
+                var cb = h('input', { type: 'checkbox' });
+                cb.checked = !!n.nsfw;
+                cb.addEventListener('change', function () { n.nsfw = cb.checked; markDirty(); });
                 return h('div', { class: 'card' }, [
-                    field('Note ' + (i + 1), n, function (v) { list[i] = v; }, 2),
+                    field('Note', n.text, bind(n, 'text'), 3),
+                    h('label', { class: 'remember' }, [cb, 'NSFW: blur for family-friendly viewers']),
                     h('div', { class: 'actions' }, [
                         moveBtn(list, i, -1),
                         moveBtn(list, i, 1),
-                        h('button', { type: 'button', class: 'btn btn--danger', text: 'Delete', onclick: function () { removeItem(list, i, 'Delete this note?'); } })
+                        h('button', { type: 'button', class: 'btn btn--danger', text: 'Delete', onclick: function () { removeItem(list, i); } })
                     ])
                 ]);
             }
 
             function renderEditor() {
-                var t = state.timeline, g = state.gallery, l = state.letter, j = state.jar;
+                var t = state.timeline, g = state.gallery, j = state.jar, l = state.letter;
                 var root = h('div');
 
                 root.appendChild(h('div', { class: 'top' }, [
@@ -706,9 +710,9 @@
                 ]));
                 g.photos.forEach(function (p, i) { root.appendChild(photoCard(g.photos, p, i)); });
 
-                /* Love jar */
+                /* Love Jar */
                 root.appendChild(h('h2', { text: 'Love Jar' }));
-                root.appendChild(h('p', { class: 'hint', text: 'Each note is one folded paper in the jar. Tapping the jar on the site shows a random one, so order does not matter. Empty notes are skipped when saving.' }));
+                root.appendChild(h('p', { class: 'hint', text: 'Notes marked NSFW appear blurred with a tag until the viewer taps them.' }));
                 root.appendChild(h('div', { class: 'card' }, [
                     field('Section title', j.title, bind(j, 'title')),
                     field('Subtitle', j.subtitle, bind(j, 'subtitle'))
@@ -717,7 +721,7 @@
                 root.appendChild(h('button', {
                     type: 'button', class: 'btn', text: '+ Add note',
                     onclick: function () {
-                        j.notes.push('');
+                        j.notes.push({ text: '', nsfw: false });
                         markDirty();
                         rerender();
                     }

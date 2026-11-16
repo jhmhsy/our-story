@@ -11,9 +11,16 @@
     var reduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
     // Accept plain strings or { text: '...' } objects (handy for an admin editor)
+    var seenText = {};
     var notes = (cfg.notes || []).map(function (n) {
-        return typeof n === 'string' ? n : (n && n.text) || '';
-    }).filter(function (t) { return t.trim(); });
+        if (typeof n === 'string') return { text: n, nsfw: false };
+        return { text: (n && n.text) || '', nsfw: !!(n && n.nsfw) };
+    }).filter(function (n) {
+        var k = n.text.trim();
+        if (!k || seenText[k]) return false;
+        seenText[k] = true;
+        return true;
+    });
 
     function el(tag, cls, text) {
         var n = document.createElement(tag);
@@ -127,6 +134,8 @@
     text.setAttribute('aria-live', 'polite');
     var tp = el('p', 'jn-text__p');
     text.appendChild(tp);
+    var tag = el('span', 'jn-nsfw');
+    text.appendChild(tag);
     stage.appendChild(text);
     inner.appendChild(stage);
 
@@ -146,15 +155,32 @@
     function later(fn, ms) { timers.push(setTimeout(fn, ms)); }
     function clearTimers() { timers.forEach(clearTimeout); timers = []; }
 
+    var deck = [];
     function pick() {
         if (notes.length === 1) return 0;
-        var i;
-        do { i = Math.floor(Math.random() * notes.length); } while (i === last);
-        return i;
+        if (!deck.length) {
+            for (var i = 0; i < notes.length; i++) deck.push(i);
+            for (var a = deck.length - 1; a > 0; a--) {      // Fisher-Yates shuffle
+                var b = Math.floor(Math.random() * (a + 1));
+                var t = deck[a]; deck[a] = deck[b]; deck[b] = t;
+            }
+            var end = deck.length - 1;                       // the next pick is deck[end]; never equal to the previous note
+            if (deck[end] === last) { var s = deck[0]; deck[0] = deck[end]; deck[end] = s; }
+        }
+        return deck.pop();
+    }
+
+    function syncTag() {
+        var flagged = text.classList.contains('is-nsfw');
+        tag.textContent = text.classList.contains('is-blurred') ? 'NSFW · tap to reveal' : (flagged ? 'NSFW' : '');
     }
     function setNote() {
         last = pick();
-        tp.textContent = notes[last];
+        var n = notes[last];
+        tp.textContent = n.text;
+        text.classList.toggle('is-nsfw', n.nsfw);
+        text.classList.toggle('is-blurred', n.nsfw);
+        syncTag();
     }
     function unfoldAfter(ms) {
         later(function () {
@@ -188,6 +214,7 @@
         if (!shown) return;
         shown = false;
         busy = false;
+        deck = [];
         clearTimers();
         modal.classList.remove('is-shown');
         modal.setAttribute('aria-hidden', 'true');
@@ -208,6 +235,11 @@
         }, reduce ? 0 : 650);
     });
     moreBtn.addEventListener('click', another);
+    text.addEventListener('click', function () {
+        if (!text.classList.contains('is-blurred')) return;
+        text.classList.remove('is-blurred');
+        syncTag();
+    });
     closeBtn.addEventListener('click', closeModal);
     modal.addEventListener('click', function (e) {
         if (e.target === modal || e.target === inner) closeModal();
