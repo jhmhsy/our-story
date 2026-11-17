@@ -201,31 +201,106 @@
     "moreLabel": "Another one 💌",
     "closeLabel": "Close ✕",
     "notes": [
-      "Your smile, no matter how many times I keep saying it",
-      "How you remember the small things",
-      "Your patience when mine runs thin",
-      "The way you giggle when you laugh",
-      "Your love for sunsets",
-      "Those yearning look when we see each other",
-      "Your package hehe <3 ",
-      "Our long hugs",
-      "Our very long cuddle sessions",
-      "Makeout sesh (˶ᵔ ᵕ ᵔ˶)",
-      "Love making  :>",
-      "Our random meme references",
-      "\"Sakto ko permi\" bisag dili gud",
-      "\"Astig man ko\" bisag dili gud",
-      "Your cute belly",
-      "The way you're loved by my family",
-      "The way you yearn for my embrace when times are rough",
-      "The way you stare at me as you're savoring it O⁠_⁠o",
-      "How submissive you look when I ride it 🫥",
-      "When you hold my hand randomly",
-      "When you hold my hand as you get me pregnant",
-      "When we get sucked into our little world when we fanboy about something we both love",
-      "Your clinginess",
-      "Our little transactional \"suyo\" when neither of us are paying attention to the other",
-      "The comfortable silence between us"
+      {
+        "text": "Your smile, no matter how many times I keep saying it",
+        "nsfw": false
+      },
+      {
+        "text": "How you remember the small things",
+        "nsfw": false
+      },
+      {
+        "text": "Your patience when mine runs thin",
+        "nsfw": false
+      },
+      {
+        "text": "The way you giggle when you laugh",
+        "nsfw": false
+      },
+      {
+        "text": "Your love for sunsets",
+        "nsfw": false
+      },
+      {
+        "text": "Those yearning look when we see each other",
+        "nsfw": false
+      },
+      {
+        "text": "Your package hehe <3 ",
+        "nsfw": true
+      },
+      {
+        "text": "Our long hugs",
+        "nsfw": false
+      },
+      {
+        "text": "Our very long cuddle sessions",
+        "nsfw": false
+      },
+      {
+        "text": "Makeout sesh (˶ᵔ ᵕ ᵔ˶)",
+        "nsfw": true
+      },
+      {
+        "text": "Love making  :>",
+        "nsfw": true
+      },
+      {
+        "text": "Our random meme references",
+        "nsfw": false
+      },
+      {
+        "text": "\"Sakto ko permi\" bisag dili gud",
+        "nsfw": false
+      },
+      {
+        "text": "\"Astig man ko\" bisag dili gud",
+        "nsfw": false
+      },
+      {
+        "text": "Your cute belly",
+        "nsfw": false
+      },
+      {
+        "text": "The way you're loved by my family",
+        "nsfw": false
+      },
+      {
+        "text": "The way you yearn for my embrace when times are rough",
+        "nsfw": false
+      },
+      {
+        "text": "The way you stare at me as you're savoring it O⁠_⁠o",
+        "nsfw": true
+      },
+      {
+        "text": "How submissive you look when I ride it 🫥",
+        "nsfw": true
+      },
+      {
+        "text": "When you hold my hand randomly",
+        "nsfw": false
+      },
+      {
+        "text": "When you hold my hand as you get me pregnant",
+        "nsfw": true
+      },
+      {
+        "text": "When we get sucked into our little world when we fanboy about something we both love",
+        "nsfw": false
+      },
+      {
+        "text": "Your clinginess",
+        "nsfw": false
+      },
+      {
+        "text": "Our little transactional \"suyo\" when neither of us are paying attention to the other",
+        "nsfw": false
+      },
+      {
+        "text": "The comfortable silence between us",
+        "nsfw": false
+      }
     ]
   }
 }
