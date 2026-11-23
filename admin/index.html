@@ -312,8 +312,8 @@
                 return h('div', null, [h('label', { text: label }), input]);
             }
 
-            function fileButton(label, multiple, onFiles) {
-                var input = h('input', { type: 'file', accept: 'image/*', class: 'hidden' });
+            function fileButton(label, multiple, onFiles, accept) {
+                            var input = h('input', { type: 'file', accept: accept || 'image/*', class: 'hidden' });
                 if (multiple) input.multiple = true;
                 input.addEventListener('change', function () {
                     var files = Array.prototype.slice.call(input.files);
@@ -450,6 +450,24 @@
                     });
                 });
             }
+
+            /* ---------- Videos: upload as-is (no resize) ---------- */
+            function blobToB64(blob) {
+                return new Promise(function (resolve, reject) {
+                    var r = new FileReader();
+                    r.onload = function () { resolve(String(r.result).split(',')[1]); };
+                    r.onerror = function () { reject(new Error('Could not read the file.')); };
+                    r.readAsDataURL(blob);
+                });
+            }
+            function stageVideo(file) {
+                return blobToB64(file).then(function (b64) {
+                    var ext = file.name.split('.').pop().toLowerCase();
+                    var path = 'videos/upload-' + Date.now().toString(36) + '-' + (seq++) + '.' + ext;
+                    pending[path] = { b64: b64, url: URL.createObjectURL(file), saved: false };
+                    return path;
+                });
+            }
             function previewSrc(path) { return pending[path] ? pending[path].url : '../' + path; }
 
             /* ---------- Screens: setup, unlock, fatal ---------- */
@@ -554,12 +572,13 @@
                 state.timeline.entries = state.timeline.entries || [];
                 state.gallery = state.gallery || {};
                 state.gallery.photos = state.gallery.photos || [];
-                state.jar = state.jar || {};
-                state.jar.notes = (state.jar.notes || []).map(function (n) {
-                    return typeof n === 'string' ? { text: n, nsfw: false } : { text: n.text || '', nsfw: !!n.nsfw };
-                });
-                state.letter = state.letter || {};
-            }
+                            state.videos = state.videos || [];
+                            state.jar = state.jar || {};
+                            state.jar.notes = (state.jar.notes || []).map(function (n) {
+                                return typeof n === 'string' ? { text: n, nsfw: false } : { text: n.text || '', nsfw: !!n.nsfw };
+                            });
+                            state.letter = state.letter || {};
+                        }
 
             function rerender() {
                 var y = window.scrollY;
@@ -641,6 +660,28 @@
                 ]);
             }
 
+            function videoCard(list, v, i) {
+                var fields = h('div', null, [
+                    field('Video path (relative to root)', v.src, bind(v, 'src')),
+                    h('div', { class: 'actions' }, [
+                        fileButton('Upload video', false, function (files) {
+                            stageVideo(files[0]).then(function (path) {
+                                v.src = path;
+                                markDirty();
+                                rerender();
+                            }).catch(showError);
+                                            }, 'video/*'),
+                        h('button', { type: 'button', class: 'btn btn--danger', text: 'Delete', onclick: function () { removeItem(list, i); } })
+                    ])
+                ]);
+                return h('div', { class: 'card item' }, [
+                    h('div', null, [
+                        h('video', { class: 'thumb', controls: true, preload: 'metadata', src: previewSrc(v.src) })
+                    ]),
+                    fields
+                ]);
+            }
+
             function noteCard(list, n, i) {
                 var cb = h('input', { type: 'checkbox' });
                 cb.checked = !!n.nsfw;
@@ -710,6 +751,21 @@
                 ]));
                 g.photos.forEach(function (p, i) { root.appendChild(photoCard(g.photos, p, i)); });
 
+                /* ASCII Videos */
+                root.appendChild(h('h2', { text: 'ASCII Video Compilation' }));
+                root.appendChild(h('p', { class: 'hint', text: 'Videos play randomly in the ASCII art section. Upload MP4 files. They will be shuffled and looped.' }));
+                root.appendChild(h('div', { class: 'actions' }, [
+                    fileButton('+ Add videos', true, function (files) {
+                        Promise.all(files.map(stageVideo)).then(function (paths) {
+                            paths.slice().reverse().forEach(function (path) { state.videos.unshift({ src: path }); });
+                            markDirty();
+                            rerender();
+                            setStatus(paths.length + ' video(s) added at the top.');
+                        }).catch(showError);
+                                    }, 'video/*')
+                ]));
+                (state.videos || []).forEach(function (v, i) { root.appendChild(videoCard(state.videos, v, i)); });
+
                 /* Love Jar */
                 root.appendChild(h('h2', { text: 'Love Jar' }));
                 root.appendChild(h('p', { class: 'hint', text: 'Notes marked NSFW appear blurred with a tag until the viewer taps them.' }));
@@ -752,8 +808,9 @@
                 var used = {};
                 state.timeline.entries.forEach(function (e) { if (e.image) used[e.image] = true; });
                 state.gallery.photos.forEach(function (p) { if (p.src) used[p.src] = true; });
-                return used;
-            }
+                            (state.videos || []).forEach(function (v) { if (v.src) used[v.src] = true; });
+                            return used;
+                        }
             function validate() {
                 var entries = state.timeline.entries;
                 for (var i = 0; i < entries.length; i++) {

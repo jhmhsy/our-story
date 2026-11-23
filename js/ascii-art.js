@@ -1,5 +1,11 @@
-/* ascii-art.js - static image → ILOVEYOU ASCII for section 4, with isolated zoom */
+/* ascii-art.js - random mp4 compilation rendered as live ASCII (section 5, right column).
+   Videos are loaded from data/content.json. Zoom / pinch / buttons behave as before. */
 (function () {
+    'use strict';
+
+    /* ---- Playlist: loaded from content.json ---- */
+    var VIDEOS = [];
+
     var output = document.getElementById('output');
     var canvas = document.getElementById('sourceCanvas');
     var pixelSize = document.getElementById('pixelSize');
@@ -7,31 +13,58 @@
     var dangerBar = document.getElementById('dangerBar');
     var viewport = document.getElementById('asciiViewport');
     var stage = document.getElementById('asciiStage');
-
-    pixelSize.addEventListener('change', (e) => {
-        console.log(e.value);
-    });
+    var section = document.getElementById('last');
 
     if (!output || !canvas || !pixelSize || !viewport || !stage) return;
 
-    var ctx = canvas.getContext('2d');
-    var MAX_WORDS = 30000;
+    var ctx = canvas.getContext('2d', { willReadFrequently: true });
 
-    var safeStep = 1;
-    // Static image at site root (same folder as index.html)
-    var STATIC_IMAGE = './images/image1.jpg';
-    var currentImage = null;
-    var PREFERRED_STEP = 16;
-
-    /* ---- Zoom state (scale only; parent .ascii-viewport holds the tilt) ---- */
-    var BASE_FONT = 4;
-    var zoom = 0.3923;
+    /* ---- Settings ---- */
+    var RAMP = ' .\'`^",:;Il!i><~+_-?][}{1)(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$'; // light -> dense
+    var INK = '#9c1f58';         // text colour (dense chars = dark pixels, on the white viewport)
+    var CONTRAST = 1.15;
+    var FPS = 24;
+    var COL_BASE = 1200;         // columns = COL_BASE / slider value
+    var MAX_COLS = 300;          // detail cap, keeps frames fast
+    var MIN_COLS = 20;
+    var BASE_FONT = 10;
     var MIN_ZOOM = 0.15;
     var MAX_ZOOM = 12;
 
-    function applyFont() {
-        output.style.fontSize = (BASE_FONT * zoom) + 'px';
-    }
+    /* ---- Luminance -> char code lookup ---- */
+    var LUT = new Uint16Array(256);
+    (function () {
+        for (var i = 0; i < 256; i++) {
+            var l = i / 255;
+            l = Math.max(0, Math.min(1, (l - 0.5) * CONTRAST + 0.5));
+            LUT[i] = RAMP.charCodeAt(Math.round((1 - l) * (RAMP.length - 1)));
+        }
+    })();
+
+    /* ---- State ---- */
+    var zoom = 1;
+    var userZoomed = false;
+    var cols = 100, rows = 56;
+    var charAspect = 0.6;        // char width / char height for the monospace font
+    var lastVW = 0, lastVH = 0, lastCols = 0, lastTime = -1, lastDraw = 0;
+    var inView = false, running = false, started = false;
+    var failCount = 0, bag = [], lastSrc = '';
+
+    output.style.color = INK;
+
+    /* ---- Video element (hidden, muted so autoplay is allowed) ---- */
+    var video = document.createElement('video');
+    video.muted = true;
+    video.defaultMuted = true;
+    video.playsInline = true;
+    video.setAttribute('playsinline', '');
+    video.setAttribute('muted', '');
+    video.preload = 'auto';
+
+    function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+
+    /* ---- Zoom ---- */
+    function applyFont() { output.style.fontSize = (BASE_FONT * zoom) + 'px'; }
 
     function centerScroll() {
         requestAnimationFrame(function () {
@@ -40,67 +73,40 @@
         });
     }
 
-    function fitZoomToViewport() {
-        if (!output.firstChild) return 1;
-
-        // temporarily set zoom=1 so we can measure true size
-        var oldZoom = zoom;
-        zoom = 1;
+    function fit() {
+        var availW = viewport.clientWidth - 56;
+        var availH = Math.min(viewport.clientHeight, window.innerHeight - 160) - 56;
+        var stageW = cols * charAspect * BASE_FONT;
+        var stageH = rows * BASE_FONT;
+        if (availW <= 0 || availH <= 0 || !stageW || !stageH) return;
+        zoom = clamp(Math.min(availW / stageW, availH / stageH), MIN_ZOOM, MAX_ZOOM);
         applyFont();
-
-        var stageW = stage.scrollWidth || stage.offsetWidth;
-        var stageH = stage.scrollHeight || stage.offsetHeight;
-        var viewW = viewport.clientWidth - 24;   // small padding
-        var viewH = viewport.clientHeight - 24;
-
-        if (stageW === 0 || stageH === 0) {
-            zoom = oldZoom;
-            applyFont();
-            return oldZoom;
-        }
-
-        var scale = Math.min(viewW / stageW, viewH / stageH, 1); // never enlarge past 1
-        scale = Math.max(MIN_ZOOM, scale);
-
-        zoom = scale;
-        applyFont();
-        console.log('[ascii-art] fitZoomToViewport →', zoom.toFixed(4));
-        return scale;
+        centerScroll();
     }
 
-    function clamp01(v) { return Math.max(0, Math.min(1, v)); }
-
     function setZoom(z, anchorX, anchorY) {
-        z = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, z));
+        z = clamp(z, MIN_ZOOM, MAX_ZOOM);
         if (z === zoom) return;
+        userZoomed = true;
 
-        // Default anchor = viewport center (used by the +/- buttons)
         var vr = viewport.getBoundingClientRect();
         if (typeof anchorX !== 'number' || typeof anchorY !== 'number') {
             anchorX = vr.left + vr.width / 2;
             anchorY = vr.top + vr.height / 2;
         }
-
-        // Which fraction of the image is under the anchor right now?
         var sr = stage.getBoundingClientRect();
-        var fx = sr.width ? clamp01((anchorX - sr.left) / sr.width) : 0.5;
-        var fy = sr.height ? clamp01((anchorY - sr.top) / sr.height) : 0.5;
+        var fx = sr.width ? clamp((anchorX - sr.left) / sr.width, 0, 1) : 0.5;
+        var fy = sr.height ? clamp((anchorY - sr.top) / sr.height, 0, 1) : 0.5;
 
         zoom = z;
         applyFont();
-        console.log('[ascii-art] zoom =', zoom.toFixed(4));   // ← add this
 
-        // Keep that same point under the anchor. If the image now fits inside
-        // the viewport, scroll clamps to 0 and margin:auto centers it.
         var nr = stage.getBoundingClientRect();
         viewport.scrollLeft += (nr.left + fx * nr.width) - anchorX;
         viewport.scrollTop += (nr.top + fy * nr.height) - anchorY;
     }
 
-    function resetZoom() {
-        fitZoomToViewport();          // ← auto zoom-out so everything is visible
-        centerScroll();
-    }
+    function resetZoom() { userZoomed = false; fit(); }
 
     viewport.addEventListener('wheel', function (e) {
         e.preventDefault();
@@ -122,7 +128,6 @@
             pinchDist = Math.sqrt(dx * dx + dy * dy);
         }
     }, { passive: true });
-
     viewport.addEventListener('touchmove', function (e) {
         if (e.touches.length === 2 && pinchDist > 0) {
             e.preventDefault();
@@ -135,191 +140,174 @@
             pinchDist = dist;
         }
     }, { passive: false });
-
     viewport.addEventListener('touchend', function (e) {
         if (e.touches.length < 2) pinchDist = 0;
     });
 
-    function loadImage() {
-        var image = new Image();
-        image.onload = function () {
-            currentImage = image;
-
-            // Calculate the absolute minimum allowed by word-count
-            safeStep = findSafeStep(image);
-
-            // Prefer the fixed quality, but never go below the safe limit
-            var step = Math.max(PREFERRED_STEP, safeStep);
-
-            // Still let the slider go higher if the user wants coarser
-            var fitted = fitPixelSize(image);          // updates pixelSize.max
-            pixelSize.max = Math.max(pixelSize.max, step * 2);
-            pixelSize.value = step;
-            updateDangerUI();
-            renderTextImage(image, step);
-
-            //console.log('[ascii-art] default step =', step,
-            //    '| safeStep =', safeStep,
-            //    '| fitted-for-viewport =', fitted);
-
-            requestAnimationFrame(function () {
-                zoom = 0.3923;
-                applyFont();
-                centerScroll();             // now uses the smart fitZoomToViewport
-            });
-        };
-        image.onerror = function () {
-            console.error('Could not load static image:', STATIC_IMAGE);
-        };
-        image.src = STATIC_IMAGE;
+    /* ---- Grid (columns / rows) ---- */
+    function measureCharAspect() {
+        var probe = document.createElement('span');
+        probe.textContent = 'MMMMMMMMMM';
+        probe.style.cssText = 'position:absolute;visibility:hidden;white-space:pre;font-family:monospace;font-size:' + BASE_FONT + 'px;';
+        document.body.appendChild(probe);
+        var w = probe.getBoundingClientRect().width;
+        document.body.removeChild(probe);
+        if (w > 0) charAspect = w / 10 / BASE_FONT;
     }
 
-    function rerender() {
-        if (currentImage) {
-            renderTextImage(currentImage, parseInt(pixelSize.value, 10));
-            centerScroll();
+    function setGrid() {
+        var vw = video.videoWidth, vh = video.videoHeight;
+        if (!vw || !vh) return;
+        var step = Math.max(1, parseInt(pixelSize.value, 10) || 10);
+        cols = clamp(Math.round(COL_BASE / step), MIN_COLS, MAX_COLS);
+        rows = Math.max(1, Math.round(cols * (vh / vw) * charAspect));
+        canvas.width = cols;
+        canvas.height = rows;
+        lastVW = vw; lastVH = vh; lastCols = cols;
+        lastTime = -1;
+        if (!userZoomed) fit();
+        updateDangerUI();
+    }
+
+    /* ---- Frame -> ASCII ---- */
+    function drawFrame() {
+        var vw = video.videoWidth, vh = video.videoHeight;
+        if (!vw || !vh || video.readyState < 2) return;
+        if (vw !== lastVW || vh !== lastVH) setGrid();
+        if (video.currentTime === lastTime) return;   // nothing new to draw
+        lastTime = video.currentTime;
+
+        ctx.drawImage(video, 0, 0, cols, rows);
+        var d = ctx.getImageData(0, 0, cols, rows).data;
+        var lines = new Array(rows);
+        var codes = new Array(cols);
+        var p = 0;
+        for (var y = 0; y < rows; y++) {
+            for (var x = 0; x < cols; x++) {
+                var lum = (77 * d[p] + 150 * d[p + 1] + 29 * d[p + 2]) >> 8;
+                codes[x] = LUT[lum];
+                p += 4;
+            }
+            lines[y] = String.fromCharCode.apply(null, codes);
+        }
+        output.textContent = lines.join('\n');
+    }
+
+    function loop(now) {
+        if (!inView || document.hidden) { running = false; return; }
+        if (now - lastDraw >= 1000 / FPS) {
+            lastDraw = now;
+            drawFrame();
+        }
+        requestAnimationFrame(loop);
+    }
+
+    function startLoop() {
+        if (running) return;
+        running = true;
+        requestAnimationFrame(loop);
+    }
+
+    /* ---- Random playlist (shuffle bag, no immediate repeat) ---- */
+    function nextSrc() {
+        if (!bag.length) {
+            bag = VIDEOS.slice();
+            for (var i = bag.length - 1; i > 0; i--) {
+                var j = Math.floor(Math.random() * (i + 1));
+                var t = bag[i]; bag[i] = bag[j]; bag[j] = t;
+            }
+            if (bag.length > 1 && bag[bag.length - 1] === lastSrc) {
+                var s = bag[bag.length - 1]; bag[bag.length - 1] = bag[0]; bag[0] = s;
+            }
+        }
+        lastSrc = bag.pop();
+        return lastSrc;
+    }
+
+    function shouldPlay() { return inView && !document.hidden; }
+
+    function play() {
+        var pr = video.play();
+        if (pr && pr.catch) pr.catch(function () { });
+    }
+
+    function playNext() {
+        video.src = nextSrc();
+        lastTime = -1;
+        if (shouldPlay()) play();
+    }
+
+    video.addEventListener('loadedmetadata', setGrid);
+    video.addEventListener('playing', function () { failCount = 0; });
+    video.addEventListener('ended', playNext);
+    video.addEventListener('error', function () {
+        failCount++;
+        if (failCount < VIDEOS.length) playNext();
+        else console.error('[ascii-art] none of the videos could be loaded:', VIDEOS);
+    });
+
+    function updatePlayback() {
+        if (!started) return;
+        if (shouldPlay()) { play(); startLoop(); }
+        else video.pause();
+    }
+
+    document.addEventListener('visibilitychange', updatePlayback);
+
+    /* ---- Slider = detail level (bigger value = fewer, coarser characters) ---- */
+    var safeStep = Math.ceil(COL_BASE / MAX_COLS);
+
+    function updateDangerUI() {
+        var min = parseInt(pixelSize.min, 10) || 1;
+        var max = parseInt(pixelSize.max, 10) || 40;
+        var pct = clamp((safeStep - min) / (max - min) * 100, 0, 100);
+        if (dangerBar) dangerBar.style.width = pct + '%';
+        if (warning) {
+            warning.textContent = (parseInt(pixelSize.value, 10) < safeStep) ? 'Max detail reached' : '';
         }
     }
 
     pixelSize.addEventListener('input', function () {
+        setGrid();
         updateDangerUI();
-        if (!isDanger()) rerender();
     });
-    pixelSize.addEventListener('change', function () {
-        if (isDanger()) rerender();
-    });
+
+    /* ---- Init: wait for the password gate, then start ---- */
+    function init() {
+        // Load videos from content.json
+        fetch('./data/content.json')
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
+                VIDEOS = data.videos || [];
+                if (!VIDEOS.length) {
+                    output.textContent = 'Add mp4 videos in the Admin panel';
+                    return;
+                }
+                measureCharAspect();
+                started = true;
+                updateDangerUI();
+                playNext();
+
+                if ('IntersectionObserver' in window && section) {
+                    new IntersectionObserver(function (entries) {
+                        inView = entries[0].isIntersecting;
+                        updatePlayback();
+                    }, { threshold: 0.15 }).observe(section);
+                } else {
+                    inView = true;
+                    updatePlayback();
+                }
+            })
+            .catch(function (err) {
+                console.error('[ascii-art] Failed to load videos:', err);
+                output.textContent = 'Failed to load video playlist';
+            });
+    }
 
     function tryInitialLoad() {
         var site = document.getElementById('site-content');
-        if (site && !site.hasAttribute('hidden')) {
-            loadImage();
-        } else {
-            setTimeout(tryInitialLoad, 200);
-        }
+        if (site && !site.hasAttribute('hidden')) init();
+        else setTimeout(tryInitialLoad, 200);
     }
     tryInitialLoad();
-
-    function measureWord() {
-        var probe = document.createElement('span');
-        probe.className = 'word';
-        probe.textContent = 'ILOVEYOU';
-        output.appendChild(probe);
-        var rect = probe.getBoundingClientRect();
-        output.removeChild(probe);
-        return rect;
-    }
-
-    function fitPixelSize(image) {
-        output.innerHTML = '';
-        var rect = measureWord();
-        var ratio = rect.width / rect.height;
-        var FIT = 0.9;
-        var availableW = Math.max(200, (viewport.clientWidth - 56) * FIT);
-        var availableH = Math.max(160, (viewport.clientHeight - 56) * FIT);
-        var wordsPerRow = Math.max(1, Math.floor(availableW / rect.width));
-        var rowsFit = Math.max(1, Math.floor(availableH / rect.height));
-        var stepX = Math.max(
-            1,
-            Math.ceil(image.width / wordsPerRow),
-            Math.ceil((image.height * ratio) / rowsFit)
-        );
-        pixelSize.max = Math.max(40, stepX * 2);
-        return stepX;
-    }
-
-    function renderTextImage(image, stepX) {
-        var width = image.width;
-        var height = image.height;
-        canvas.width = width;
-        canvas.height = height;
-        ctx.drawImage(image, 0, 0, width, height);
-        var data = ctx.getImageData(0, 0, width, height).data;
-        output.innerHTML = '';
-        var rect = measureWord();
-        var ratio = rect.width / rect.height;
-        var stepY = Math.max(1, Math.round(stepX / ratio));
-
-        // helpful logging
-        //console.log('[ascii-art] image:', width + '×' + height,
-        //    '| stepX:', stepX, '| stepY:', stepY,
-        //    '| ~words:', wordCount(image, stepX, ratio).toLocaleString(),
-        //    '| safeStep:', safeStep);
-
-        for (var y = 0; y < height; y += stepY) {
-            var line = document.createElement('div');
-            for (var x = 0; x < width; x += stepX) {
-                var col = averageColor(data, width, x, y, stepX, stepY, width, height);
-                if (!col) continue;                 // skip transparent blocks
-
-                var word = document.createElement('span');
-                word.className = 'word';
-                word.textContent = 'ILOVEYOU';
-                word.style.color = 'rgb(' + col.r + ',' + col.g + ',' + col.b + ')';
-                // optional: also respect alpha if you want soft edges
-                // word.style.opacity = (col.a / 255).toFixed(2);
-                line.appendChild(word);
-            }
-            if (line.childNodes.length) output.appendChild(line);
-        }
-    }
-
-    function averageColor(data, width, x0, y0, stepX, stepY, imgW, imgH) {
-        var r = 0, g = 0, b = 0, a = 0, count = 0;
-        var xEnd = Math.min(x0 + stepX, imgW);
-        var yEnd = Math.min(y0 + stepY, imgH);
-
-        for (var y = y0; y < yEnd; y++) {
-            for (var x = x0; x < xEnd; x++) {
-                var i = (y * width + x) * 4;
-                var alpha = data[i + 3];
-                if (alpha === 0) continue;          // skip fully transparent
-                r += data[i];
-                g += data[i + 1];
-                b += data[i + 2];
-                a += alpha;
-                count++;
-            }
-        }
-        if (count === 0) return null;               // completely transparent block
-        return {
-            r: Math.round(r / count),
-            g: Math.round(g / count),
-            b: Math.round(b / count),
-            a: Math.round(a / count)
-        };
-    }
-
-    function getRatio() {
-        var rect = measureWord();
-        return rect.width / rect.height;
-    }
-
-    function wordCount(image, step, ratio) {
-        var stepY = Math.max(1, Math.round(step / ratio));
-        return Math.ceil(image.width / step) * Math.ceil(image.height / stepY);
-    }
-
-    function findSafeStep(image) {
-        var ratio = getRatio();
-        var step = 1;
-        while (wordCount(image, step, ratio) > MAX_WORDS) step++;
-        return step;
-    }
-
-    function isDanger() {
-        return parseInt(pixelSize.value, 10) < safeStep;
-    }
-
-    function updateDangerUI() {
-        var min = parseInt(pixelSize.min, 10);
-        var max = parseInt(pixelSize.max, 10);
-        var pct = Math.min(100, Math.max(0, (safeStep - min) / (max - min) * 100));
-        if (dangerBar) dangerBar.style.width = pct + '%';
-        if (currentImage && isDanger()) {
-            var count = wordCount(currentImage, parseInt(pixelSize.value, 10), getRatio());
-            if (warning) warning.textContent = '⚠ ~' + count.toLocaleString() + ' words, release to render (may lag)';
-        } else if (warning) {
-            warning.textContent = '';
-        }
-    }
 })();
