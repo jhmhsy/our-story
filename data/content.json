@@ -1,5 +1,12 @@
 {
-  "videos": [],
+  "videos": [
+    {
+      "src": "videos/upload-mwt11oxq-3.mp4"
+    },
+    {
+      "src": "videos/upload-mwt10mtv-1.mp4"
+    }
+  ],
   "timeline": {
     "title": "Our Story",
     "subtitle": "Little moments we keep forever",
