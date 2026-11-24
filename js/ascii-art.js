@@ -24,7 +24,7 @@
     /* ---- Settings ---- */
     var RAMP = ' .\'`^",:;Il!i><~+_-?][}{1)(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$'; // light -> dense
     var INK = '#9c1f58';         // text colour (dense chars = dark pixels, on the white viewport)
-    var CONTRAST = 1.0;
+    var CONTRAST = 1;
     var FPS = 24;
     var COL_BASE = 1200;         // columns = COL_BASE / slider value
     var MAX_COLS = 300;          // detail cap, keeps frames fast
