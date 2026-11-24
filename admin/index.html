@@ -624,28 +624,29 @@
                 state.gallery = state.gallery || {};
                 state.gallery.photos = state.gallery.photos || [];
                 state.videos = state.videos || [];
-                state.jar = state.jar || {};
-                state.jar.notes = (state.jar.notes || []).map(function (n) {
-                    return typeof n === 'string' ? { text: n, nsfw: false } : { text: n.text || '', nsfw: !!n.nsfw };
-                });
-                state.letter = state.letter || {};
-                if (!state.greetings) dirty = true;
-                state.greetings = state.greetings || {
-                    subtitle: '',
-                    typingSpeed: 80,
-                    startDelay: 600,
-                    holdDelay: 2200,
-                    messages: [
-                        'Hi baby \uD83D\uDC9E\nMy handsome boy \uD83C\uDF40\nMy honeybunch \uD83D\uDC95\nI love youuuu \uD83C\uDF88',
-                        'Sending hugs & kisses \uD83D\uDE0F\nPlus points na me? mwheheh \u2764\uFE0F\n- From your lablab \u2764\uFE0F\uD83D\uDE18'
-                    ]
-                };
-                var gr = state.greetings;
-                gr.subtitle = gr.subtitle || '';
-                if (gr.typingSpeed == null) gr.typingSpeed = 80;
-                if (gr.startDelay == null) gr.startDelay = 600;
-                if (gr.holdDelay == null) gr.holdDelay = 2200;
-                gr.messages = (gr.messages || []).map(function (m) {
+                            state.asciiMode = state.asciiMode !== undefined ? state.asciiMode : true; // true = ASCII art, false = actual video
+                            state.jar = state.jar || {};
+                            state.jar.notes = (state.jar.notes || []).map(function (n) {
+                                return typeof n === 'string' ? { text: n, nsfw: false } : { text: n.text || '', nsfw: !!n.nsfw };
+                            });
+                            state.letter = state.letter || {};
+                            if (!state.greetings) dirty = true;
+                            state.greetings = state.greetings || {
+                                subtitle: '',
+                                typingSpeed: 80,
+                                startDelay: 600,
+                                holdDelay: 2200,
+                                messages: [
+                                    'Hi baby \uD83D\uDC9E\nMy handsome boy \uD83C\uDF40\nMy honeybunch \uD83D\uDC95\nI love youuuu \uD83C\uDF88',
+                                    'Sending hugs & kisses \uD83D\uDE0F\nPlus points na me? mwheheh \u2764\uFE0F\n- From your lablab \u2764\uFE0F\uD83D\uDE18'
+                                ]
+                            };
+                            var gr = state.greetings;
+                            gr.subtitle = gr.subtitle || '';
+                            if (gr.typingSpeed == null) gr.typingSpeed = 80;
+                            if (gr.startDelay == null) gr.startDelay = 600;
+                            if (gr.holdDelay == null) gr.holdDelay = 2200;
+                            gr.messages = (gr.messages || []).map(function (m) {
                     return { text: typeof m === 'string' ? m : (m && m.text) || '' };
                 });
                 state.backgrounds = state.backgrounds || {};
@@ -888,6 +889,12 @@
                 /* ASCII Videos */
                 root.appendChild(h('h2', { text: 'ASCII Video Compilation' }));
                 root.appendChild(h('p', { class: 'hint', text: 'Videos play randomly in the ASCII art section. Upload MP4 files. They will be shuffled and looped.' }));
+                root.appendChild(h('div', { class: 'card' }, [
+                    h('label', { class: 'remember' }, [
+                        h('input', { type: 'checkbox', checked: state.asciiMode, onchange: function (e) { state.asciiMode = e.target.checked; markDirty(); } }),
+                        ' Show as ASCII art (unchecked = show actual video)'
+                    ])
+                ]));
                 root.appendChild(h('div', { class: 'actions' }, [
                     fileButton('+ Add videos', true, function (files) {
                         Promise.all(files.map(stageVideo)).then(function (paths) {

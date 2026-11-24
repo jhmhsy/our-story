@@ -7,6 +7,8 @@
         .map(function (v) { return typeof v === 'string' ? v : (v && v.src) || ''; })
         .filter(function (s) { return s; });
 
+    var asciiMode = window.SITE_CONTENT && window.SITE_CONTENT.asciiMode !== undefined ? window.SITE_CONTENT.asciiMode : true;
+
     var output = document.getElementById('output');
     var canvas = document.getElementById('sourceCanvas');
     var pixelSize = document.getElementById('pixelSize');
@@ -17,6 +19,12 @@
     var section = document.getElementById('last');
 
     if (!output || !canvas || !pixelSize || !viewport || !stage) return;
+
+    // If not in ASCII mode, show actual video instead
+    if (!asciiMode) {
+        showActualVideo();
+        return;
+    }
 
     /* ---- Settings ---- */
     var DARK = true;             // true: bright colours on a dark viewport (best colour fidelity). false: white viewport
@@ -33,7 +41,9 @@
     var COLOR_SCALE = 4;         // source pixels per cell side (exact box average, no overlap)
     var GAMMA = 2.2;
     var SATURATION = 1.3;
-    var COLOR_GAIN = DARK ? 1.3 : 0.95;   // glyphs only cover part of a cell, so colour is pushed brighter
+    var COLOR_GAIN = DARK ? 1.45 : 0.95;  // glyphs only cover part of a cell, so colour is pushed brighter
+    var LIFT = 0.6;              // < 1 brightens shadows (1 = off, lower = brighter)
+    var MIN_COLOR = 90;    // glyphs only cover part of a cell, so colour is pushed brighter
     var LEVEL_CUT = 0.02;        // auto-levels: ignore darkest/brightest 2%
     var LEVEL_SMOOTH = 0.15;     // auto-levels: how fast it follows the scene (0..1)
 
@@ -312,11 +322,12 @@
         for (y = 0; y < rows; y++) {
             for (x = 0; x < cols; x++) {
                 var lum = cellL[id];
-                var ln = clamp((lum - lvLo) / span, 0, 1);
-                codes[x] = RAMP_CODES[Math.round((DARK ? ln : 1 - ln) * maxIdx)];
+                var ln = Math.pow(clamp((lum - lvLo) / span, 0, 1), LIFT);
+                var ci = Math.round((DARK ? ln : 1 - ln) * maxIdx);
+                codes[x] = RAMP_CODES[DARK ? Math.max(1, ci) : Math.min(maxIdx - 1, ci)];   // never a blank cell
 
                 if (COLOR) {
-                    var ratio = lum > 0.001 ? clamp(ln / lum, 0.7, 2) : 1;
+                    var ratio = lum > 0.001 ? clamp(ln / lum, 0.7, 4) : 1;
                     var dr = INV_GAMMA_LUT[Math.min(255, Math.round(cellR[id] * 255))] * 255 * ratio * COLOR_GAIN;
                     var dg = INV_GAMMA_LUT[Math.min(255, Math.round(cellG[id] * 255))] * 255 * ratio * COLOR_GAIN;
                     var db = INV_GAMMA_LUT[Math.min(255, Math.round(cellB[id] * 255))] * 255 * ratio * COLOR_GAIN;
@@ -324,6 +335,13 @@
                     dr = gray + (dr - gray) * SATURATION;
                     dg = gray + (dg - gray) * SATURATION;
                     db = gray + (db - gray) * SATURATION;
+                    if (DARK) {
+                        var mx = Math.max(dr, dg, db);
+                        if (mx < MIN_COLOR) {
+                            if (mx < 1) { dr = dg = db = MIN_COLOR; }
+                            else { var k = MIN_COLOR / mx; dr *= k; dg *= k; db *= k; }
+                        }
+                    }
                     colorMap[cm++] = clamp(Math.round(dr), 0, 255);
                     colorMap[cm++] = clamp(Math.round(dg), 0, 255);
                     colorMap[cm++] = clamp(Math.round(db), 0, 255);
@@ -444,10 +462,78 @@
         }
     }
 
-    function tryInitialLoad() {
-        var site = document.getElementById('site-content');
-        if (site && !site.hasAttribute('hidden')) init();
-        else setTimeout(tryInitialLoad, 200);
-    }
-    tryInitialLoad();
-})();
+    /* ---- Show actual video instead of ASCII ---- */
+        function showActualVideo() {
+            // Hide ASCII controls
+            var controls = document.querySelector('.ascii-controls');
+            if (controls) controls.style.display = 'none';
+
+            // Create video element
+            var videoContainer = document.createElement('div');
+            videoContainer.style.width = '100%';
+            videoContainer.style.height = '100%';
+            videoContainer.style.display = 'flex';
+            videoContainer.style.alignItems = 'center';
+            videoContainer.style.justifyContent = 'center';
+            videoContainer.style.background = '#2b1020';
+
+            var videoEl = document.createElement('video');
+            videoEl.controls = true;
+            videoEl.muted = true;
+            videoEl.defaultMuted = true;
+            videoEl.playsInline = true;
+            videoEl.setAttribute('playsinline', '');
+            videoEl.setAttribute('muted', '');
+            videoEl.style.maxWidth = '100%';
+            videoEl.style.maxHeight = '100%';
+            videoEl.style.borderRadius = '8px';
+            videoEl.style.boxShadow = '0 8px 32px rgba(0,0,0,0.3)';
+
+            // Play videos in sequence
+            var currentVideoIndex = 0;
+            var bag = [];
+
+            function shuffleBag() {
+                bag = VIDEOS.slice();
+                for (var i = bag.length - 1; i > 0; i--) {
+                    var j = Math.floor(Math.random() * (i + 1));
+                    var t = bag[i]; bag[i] = bag[j]; bag[j] = t;
+                }
+            }
+
+            function playNextVideo() {
+                if (!bag.length) shuffleBag();
+                var src = bag.pop();
+                videoEl.src = src;
+                videoEl.load();
+                videoEl.play().catch(function() {
+                    // Autoplay might be blocked, user can click play
+                });
+            }
+
+            videoEl.addEventListener('ended', playNextVideo);
+            videoEl.addEventListener('error', function() {
+                // Try next video on error
+                playNextVideo();
+            });
+
+            videoContainer.appendChild(videoEl);
+
+            // Replace the ASCII output with video container
+            var asciiFrame = document.querySelector('.ascii-frame');
+            if (asciiFrame) {
+                asciiFrame.innerHTML = '';
+                asciiFrame.appendChild(videoContainer);
+            }
+
+            // Start playing
+            playNextVideo();
+        }
+
+        function tryInitialLoad() {
+            var site = document.getElementById('site-content');
+            if (site && !site.hasAttribute('hidden')) init();
+            else setTimeout(tryInitialLoad, 200);
+        }
+        tryInitialLoad();
+    })();
