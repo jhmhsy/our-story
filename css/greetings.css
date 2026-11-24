@@ -1,0 +1,132 @@
+/* greetings.css - Section 1 (#greetings). Scoped to #greetings and .gr-*. */
+
+#greetings.section--tree {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  align-items: stretch;
+  padding: 0 0 0 var(--nav-gutter);
+  overflow: hidden;
+  background: var(--pink-1);
+}
+
+/* ---- Left: typed greeting (transparent, so the emoji rain still shows) ---- */
+#greetings .gr-text-col {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: 48px clamp(24px, 4vw, 64px);
+}
+#greetings .gr-block {
+  width: 100%;
+  max-width: 560px;
+}
+#greetings .gr-msg {
+  display: grid;
+  margin: 0;
+  font-family:
+    "Caveat", "Segoe Script", "Bradley Hand", "Brush Script MT", cursive;
+  font-weight: 700;
+  font-size: clamp(32px, 4.2vw, 60px);
+  line-height: 1.18;
+  color: #9c1f58;
+  text-shadow: 2px 2px 0 rgba(255, 255, 255, 0.7);
+  overflow-wrap: anywhere;
+}
+#greetings .gr-ghost,
+#greetings .gr-typed-wrap {
+  grid-area: 1 / 1;
+  white-space: pre-wrap;
+}
+#greetings .gr-ghost {
+  visibility: hidden;
+}
+#greetings .gr-cursor {
+  display: inline-block;
+  width: 3px;
+  height: 0.85em;
+  margin-left: 3px;
+  vertical-align: -0.08em;
+  background: #e5457f;
+  animation: gr-blink 1s steps(1) infinite;
+}
+@keyframes gr-blink {
+  50% {
+    opacity: 0;
+  }
+}
+#greetings .gr-sub {
+  margin: 22px 0 0;
+  font:
+    600 clamp(13px, 1.3vw, 16px) / 1.5 "Segoe UI",
+    Tahoma,
+    Verdana,
+    sans-serif;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #b44a78;
+}
+
+/* ---- Right: pure black stage for the bouquet and stars ---- */
+#greetings .gr-art {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  min-width: 0;
+  box-sizing: border-box;
+  background: #000;
+}
+#greetings .gr-stage {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  min-height: 420px;
+}
+#greetings .gr-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ---- Tablet + mobile: nav is a bottom bar, so no left gutter; keep content above it ---- */
+@media (max-width: 900px) {
+  #greetings.section--tree {
+    padding: 0;
+  }
+  #greetings .gr-text-col {
+    padding: 40px 20px calc(40px + var(--nav-space));
+  }
+  #greetings .gr-art {
+    padding-bottom: var(--nav-space);
+  }
+  #greetings .gr-stage {
+    min-height: 480px;
+  }
+}
+
+/* ---- Mobile: stack ---- */
+@media (max-width: 760px) {
+  #greetings.section--tree {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  #greetings .gr-text-col {
+    padding: 48px 24px 36px;
+  }
+  #greetings .gr-msg {
+    font-size: clamp(30px, 9vw, 44px);
+  }
+  #greetings .gr-stage {
+    min-height: clamp(380px, 100vw, 560px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #greetings .gr-cursor {
+    animation: none;
+  }
+}

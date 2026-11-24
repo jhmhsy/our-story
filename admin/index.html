@@ -313,7 +313,7 @@
             }
 
             function fileButton(label, multiple, onFiles, accept) {
-                            var input = h('input', { type: 'file', accept: accept || 'image/*', class: 'hidden' });
+                var input = h('input', { type: 'file', accept: accept || 'image/*', class: 'hidden' });
                 if (multiple) input.multiple = true;
                 input.addEventListener('change', function () {
                     var files = Array.prototype.slice.call(input.files);
@@ -572,13 +572,31 @@
                 state.timeline.entries = state.timeline.entries || [];
                 state.gallery = state.gallery || {};
                 state.gallery.photos = state.gallery.photos || [];
-                            state.videos = state.videos || [];
-                            state.jar = state.jar || {};
-                            state.jar.notes = (state.jar.notes || []).map(function (n) {
-                                return typeof n === 'string' ? { text: n, nsfw: false } : { text: n.text || '', nsfw: !!n.nsfw };
-                            });
-                            state.letter = state.letter || {};
-                        }
+                state.videos = state.videos || [];
+                state.jar = state.jar || {};
+                state.jar.notes = (state.jar.notes || []).map(function (n) {
+                    return typeof n === 'string' ? { text: n, nsfw: false } : { text: n.text || '', nsfw: !!n.nsfw };
+                });
+                state.letter = state.letter || {};
+                state.greetings = state.greetings || {
+                    subtitle: '',
+                    typingSpeed: 80,
+                    startDelay: 600,
+                    holdDelay: 2200,
+                    messages: [
+                        'Hi baby \uD83D\uDC9E\nMy handsome boy \uD83C\uDF40\nMy honeybunch \uD83D\uDC95\nI love youuuu \uD83C\uDF88',
+                        'Sending hugs & kisses \uD83D\uDE0F\nPlus points na me? mwheheh \u2764\uFE0F\n- From your lablab \u2764\uFE0F\uD83D\uDE18'
+                    ]
+                };
+                var gr = state.greetings;
+                gr.subtitle = gr.subtitle || '';
+                if (gr.typingSpeed == null) gr.typingSpeed = 80;
+                if (gr.startDelay == null) gr.startDelay = 600;
+                if (gr.holdDelay == null) gr.holdDelay = 2200;
+                gr.messages = (gr.messages || []).map(function (m) {
+                    return { text: typeof m === 'string' ? m : (m && m.text) || '' };
+                });
+            }
 
             function rerender() {
                 var y = window.scrollY;
@@ -670,7 +688,7 @@
                                 markDirty();
                                 rerender();
                             }).catch(showError);
-                                            }, 'video/*'),
+                        }, 'video/*'),
                         h('button', { type: 'button', class: 'btn btn--danger', text: 'Delete', onclick: function () { removeItem(list, i); } })
                     ])
                 ]);
@@ -698,7 +716,7 @@
             }
 
             function renderEditor() {
-                var t = state.timeline, g = state.gallery, j = state.jar, l = state.letter;
+                var t = state.timeline, g = state.gallery, j = state.jar, l = state.letter, gr = state.greetings;
                 var root = h('div');
 
                 root.appendChild(h('div', { class: 'top' }, [
@@ -715,6 +733,29 @@
                         })
                     ])
                 ]));
+
+                /* Greetings */
+                root.appendChild(h('h2', { text: 'Greetings' }));
+                root.appendChild(h('p', { class: 'hint', text: 'Messages type out one after another in the first section, in the order below. Times are in milliseconds.' }));
+                root.appendChild(h('div', { class: 'card' }, [
+                    field('Subtitle (optional)', gr.subtitle, bind(gr, 'subtitle')),
+                    h('div', { class: 'row' }, [
+                        numField('Typing speed (ms per character)', gr.typingSpeed, bind(gr, 'typingSpeed'), 10),
+                        numField('Delay before typing starts (ms)', gr.startDelay, bind(gr, 'startDelay'), 0),
+                        numField('Delay before deleting / restarting (ms)', gr.holdDelay, bind(gr, 'holdDelay'), 0)
+                    ])
+                ]));
+                gr.messages.forEach(function (m, i) { root.appendChild(greetingMessageCard(gr.messages, m, i)); });
+                root.appendChild(h('button', {
+                    type: 'button', class: 'btn', text: '+ Add message',
+                    onclick: function () {
+                        gr.messages.push({ text: '' });
+                        markDirty();
+                        rerender();
+                    }
+                }));
+
+                /* Timeline */
 
                 /* Timeline */
                 root.appendChild(h('h2', { text: 'Timeline' }));
@@ -762,7 +803,7 @@
                             rerender();
                             setStatus(paths.length + ' video(s) added at the top.');
                         }).catch(showError);
-                                    }, 'video/*')
+                    }, 'video/*')
                 ]));
                 (state.videos || []).forEach(function (v, i) { root.appendChild(videoCard(state.videos, v, i)); });
 
@@ -808,10 +849,13 @@
                 var used = {};
                 state.timeline.entries.forEach(function (e) { if (e.image) used[e.image] = true; });
                 state.gallery.photos.forEach(function (p) { if (p.src) used[p.src] = true; });
-                            (state.videos || []).forEach(function (v) { if (v.src) used[v.src] = true; });
-                            return used;
-                        }
+                (state.videos || []).forEach(function (v) { if (v.src) used[v.src] = true; });
+                return used;
+            }
             function validate() {
+                var gr = state.greetings;
+                if (!(gr.typingSpeed >= 10)) return 'Typing speed must be a number of at least 10 ms.';
+                if (!(gr.startDelay >= 0) || !(gr.holdDelay >= 0)) return 'Delays must be numbers of 0 or more.';
                 var entries = state.timeline.entries;
                 for (var i = 0; i < entries.length; i++) {
                     if (!String(entries[i].year || '').trim() || !entries[i].image) {
@@ -838,7 +882,7 @@
                 }, Promise.resolve()).then(function () {
                     setStatus('Saving content…');
                     var out = JSON.parse(JSON.stringify(state));
-                    out.jar.notes = out.jar.notes.filter(function (n) { return String(n).trim(); });
+                    out.greetings.messages = out.greetings.messages.filter(function (m) { return String(m.text).trim(); });
                     return putFile(CONTENT_PATH, textToB64(JSON.stringify(out, null, 2) + '\n'), 'Update site content', contentSha);
                 }).then(function (res) {
                     contentSha = res.content.sha;

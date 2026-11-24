@@ -12,6 +12,7 @@
     <link type="text/css" rel="stylesheet" href="css/sidebar.css">
     <link type="text/css" rel="stylesheet" href="css/emoji-rain.css">
     <link type="text/css" rel="stylesheet" href="css/section4.css">
+    <link type="text/css" rel="stylesheet" href="css/greetings.css">
     <link type="text/css" rel="stylesheet" href="css/timeline.css">
     <link type="text/css" rel="stylesheet" href="css/gallery.css">
     <link type="text/css" rel="stylesheet" href="css/letter.css">
@@ -19,19 +20,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&display=swap">
-    <script type="text/javascript" src="assets/jquery.min.js"></script>
-    <script type="text/javascript" src="assets/jscex.min.js"></script>
-    <script type="text/javascript" src="assets/jscex-parser.js"></script>
-    <script type="text/javascript" src="assets/jscex-jit.js"></script>
-    <script type="text/javascript" src="assets/jscex-builderbase.min.js"></script>
-    <script type="text/javascript" src="assets/jscex-async.min.js"></script>
-    <script type="text/javascript" src="assets/jscex-async-powerpack.min.js"></script>
-    <script>
-        function playAudio() {
-            var audio = document.getElementById("myAudio");
-            if (audio) audio.play();
-        }
-    </script>
 </head>
 
 <body>
@@ -49,7 +37,7 @@
                 <label class="password-gate__label" for="password-input">Password</label>
                 <input type="password" id="password-input" class="password-gate__input" placeholder="******"
                     maxlength="20" inputmode="numeric" aria-describedby="password-error" autofocus>
-                <button type="submit" class="password-gate__btn">Open with love</button>
+                <button type="submit" class="password-gate__btn">Unlock 💝</button>
                 <p id="password-error" class="password-gate__error" role="alert" hidden>Not quite right, try again
                     &#128149;</p>
             </form>
@@ -74,7 +62,7 @@
 
             <a class="love-nav__link" href="#jar">
                 <span class="love-nav__icon" aria-hidden="true">&#128032;</span>
-                <span class="love-nav__label">Things I love about us</span>
+                <span class="love-nav__label">Love Jar</span>
             </a>
 
             <a class="love-nav__link" href="#last" title="Love Letter">
@@ -85,46 +73,19 @@
 
         <div id="emoji-rain" class="emoji-rain" aria-hidden="true"></div>
 
-        <!-- Section 1: Tree Animation (existing markup, unchanged) -->
-        <section id="greetings" class="section section--tree">
-            <div class="tree-stage">
-                <div class="tree-scaler">
-                    <div id="main">
-                        <div id="error"><a
-                                href="http://www.google.cn/chrome/intl/zh-CN/landing_chrome.html?hl=zh-CN&brand=CHMI">Chrome</a>
-                            (<a href="http://firefox.com.cn/download/">Firefox</a>)</div>
-                        <div id="wrap">
-                            <div id="text">
-                                <div id="code">
-                                    <span class="say">Hi baby 💞</span><br>
-                                    <span class="say">My handsome boy🍀</span><br>
-                                    <span class="say">My honeybunch 💕</span><br>
-                                    <span class="say">I love youuuu 🎈</span><br>
-                                    <span class="say">Sending hugs & kisses 😏</span><br>
-                                    <span class="say">Plus points na me? mwheheh ❤️</span><br>
-                                    <span class="say">- From your lablab ❤️😘</span><br>
-                                </div>
-                            </div>
-                            <div id="clock-box">
-                                <span id="clock">577 days 0 hours 0 minutes 0 seconds</span>
-                            </div>
-                            <canvas id="canvas" width="1100" height="680"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
+        <!-- Section 1: Greetings (built by js/greetings.js from data/content.json) -->
+        <section id="greetings" class="section section--tree" aria-label="Greetings"></section>
 
-        <!-- Section 2: Memory Timeline - intentionally empty -->
+        <!-- Section 2: Memory Timeline -->
         <section id="story" class="section section--memory" aria-label="Memory Timeline"></section>
 
         <!-- Section 3: Gallery -->
         <section id="gallery" class="section section--future" aria-label="Photo Booth Gallery"></section>
 
-        <!-- Section 4:  -->
+        <!-- Section 4: Love Jar -->
         <section id="jar" class="section section--jar" aria-label="Love Jar"></section>
 
-        <!-- Section 5: Poem (left) + Image-to-ASCII (right) -->
+        <!-- Section 5: Letter (left) + Image-to-ASCII (right) -->
         <section id="last" class="section section--poem" aria-label="Love Letter and ASCII Artwork">
             <div class="poem-layout">
                 <div class="poem-col poem-col--text">
@@ -142,13 +103,17 @@
                                 </span>
                             </label>
                             <span id="warning" class="ascii-warning"></span>
-                            <div class="ascii-zoom-btns">
-                                <button type="button" id="zoomOut" class="ascii-zoom-btn" title="Zoom out"
-                                    aria-label="Zoom out">&#8722;</button>
-                                <button type="button" id="zoomReset" class="ascii-zoom-btn" title="Reset zoom"
-                                    aria-label="Reset zoom">1:1</button>
-                                <button type="button" id="zoomIn" class="ascii-zoom-btn" title="Zoom in"
-                                    aria-label="Zoom in">+</button>
+                            <div class="ascii-zoom-group">
+                                <div id="zoomBtns" class="ascii-zoom-btns" hidden>
+                                    <button type="button" id="zoomOut" class="ascii-zoom-btn" title="Zoom out"
+                                        aria-label="Zoom out">&#8722;</button>
+                                    <button type="button" id="zoomReset" class="ascii-zoom-btn" title="Reset zoom"
+                                        aria-label="Reset zoom">1:1</button>
+                                    <button type="button" id="zoomIn" class="ascii-zoom-btn" title="Zoom in"
+                                        aria-label="Zoom in">+</button>
+                                </div>
+                                <button type="button" id="zoomToggle" class="ascii-toggle-btn" aria-expanded="false"
+                                    aria-controls="zoomBtns">Zoom</button>
                             </div>
                         </div>
                         <div class="ascii-frame">
@@ -165,179 +130,11 @@
             </div>
         </section>
 
-
     </div><!-- /#site-content -->
-    <script type="text/javascript" src="js/function.js" charset="utf-8"></script>
-    <script type="text/javascript" src="js/love.js" charset="utf-8"></script>
-    <script type="text/javascript" src="js/fit-tree.js"></script>
     <script type="text/javascript" src="js/emoji-rain.js" charset="utf-8"></script>
     <script type="text/javascript" src="js/sidebar.js"></script>
     <script type="text/javascript" src="js/content.js" charset="utf-8"></script>
-    <script type="text/javascript" src="js/timeline.js" charset="utf-8"></script>
-    <script type="text/javascript" src="js/gallery.js" charset="utf-8"></script>
-    <script type="text/javascript" src="js/jar.js" charset="utf-8"></script>
-    <script type="text/javascript" src="js/letter.js" charset="utf-8"></script>
     <script type="text/javascript" src="js/password-gate.js" charset="utf-8"></script>
-    <script type="text/javascript" src="js/ascii-art.js" charset="utf-8"></script>
-
-    <script>
-        (function () {
-            var canvas = $('#canvas');
-
-            if (!canvas[0] || !canvas[0].getContext) {
-                $("#error").show();
-                return false;
-            }
-
-            var width = canvas.width();
-            var height = canvas.height();
-            canvas.attr("width", width);
-            canvas.attr("height", height);
-
-            var sectionBg = (window.getComputedStyle(document.documentElement)
-                .getPropertyValue('--pink-1') || '').replace(/^\s+|\s+$/g, '') || '#fff';
-
-            function canvasPoint(e) {
-                var rect = canvas[0].getBoundingClientRect();
-                var k = rect.width / width || 1;
-                return { x: (e.clientX - rect.left) / k, y: (e.clientY - rect.top) / k };
-            }
-
-            var opts = {
-                seed: {
-                    x: width / 2 - 20,
-                    color: "rgb(190, 26, 37)",
-                    scale: 2
-                },
-                branch: [
-                    [535, 680, 570, 250, 500, 200, 30, 100, [
-                        [540, 500, 455, 417, 340, 400, 13, 100, [
-                            [450, 435, 434, 430, 394, 395, 2, 40]
-                        ]],
-                        [550, 445, 600, 356, 680, 345, 12, 100, [
-                            [578, 400, 648, 409, 661, 426, 3, 80]
-                        ]],
-                        [539, 281, 537, 248, 534, 217, 3, 40],
-                        [546, 397, 413, 247, 328, 244, 9, 80, [
-                            [427, 286, 383, 253, 371, 205, 2, 40],
-                            [498, 345, 435, 315, 395, 330, 4, 60]
-                        ]],
-                        [546, 357, 608, 252, 678, 221, 6, 100, [
-                            [590, 293, 646, 277, 648, 271, 2, 80]
-                        ]]
-                    ]]
-                ],
-                bloom: {
-                    num: 700,
-                    width: 1080,
-                    height: 650,
-                },
-                footer: {
-                    width: 1200,
-                    height: 5,
-                    speed: 10,
-                    color: sectionBg,
-                }
-            }
-
-            var tree = new Tree(canvas[0], width, height, opts);
-            var seed = tree.seed;
-            var foot = tree.footer;
-            var hold = 1;
-
-            canvas.click(function (e) {
-                playAudio();
-                var pt = canvasPoint(e), x = pt.x, y = pt.y;
-                if (seed.hover(x, y)) {
-                    hold = 0;
-                    canvas.unbind("click");
-                    canvas.unbind("mousemove");
-                    canvas.removeClass('hand');
-                }
-            }).mousemove(function (e) {
-                var pt = canvasPoint(e), x = pt.x, y = pt.y;
-                canvas.toggleClass('hand', seed.hover(x, y));
-            });
-
-            var seedAnimate = eval(Jscex.compile("async", function () {
-                seed.draw();
-                while (hold) {
-                    $await(Jscex.Async.sleep(10));
-                }
-                while (seed.canScale()) {
-                    seed.scale(0.95);
-                    $await(Jscex.Async.sleep(10));
-                }
-                while (seed.canMove()) {
-                    seed.move(0, 2);
-                    foot.draw();
-                    $await(Jscex.Async.sleep(10));
-                }
-            }));
-
-            var growAnimate = eval(Jscex.compile("async", function () {
-                do {
-                    tree.grow();
-                    $await(Jscex.Async.sleep(10));
-                } while (tree.canGrow());
-            }));
-
-            var flowAnimate = eval(Jscex.compile("async", function () {
-                do {
-                    tree.flower(2);
-                    $await(Jscex.Async.sleep(10));
-                } while (tree.canFlower());
-            }));
-
-            var moveAnimate = eval(Jscex.compile("async", function () {
-                tree.snapshot("p1", 240, 0, 610, 680);
-                while (tree.move("p1", 500, 0)) {
-                    foot.draw();
-                    $await(Jscex.Async.sleep(10));
-                }
-                foot.draw();
-                tree.snapshot("p2", 500, 0, 610, 680);
-
-                canvas.parent().css("background", "url(" + tree.toDataURL('image/png') + ")");
-                canvas.css("background", sectionBg);
-                $await(Jscex.Async.sleep(300));
-                canvas.css("background", "none");
-            }));
-
-            var textAnimate = eval(Jscex.compile("async", function () {
-                $("#code").show().typewriter();
-            }));
-
-            var runAsync = eval(Jscex.compile("async", function () {
-                $await(seedAnimate());
-                $await(growAnimate());
-                $await(flowAnimate());
-                $await(moveAnimate());
-                textAnimate().start();
-            }));
-
-            var seedBoosted = false;
-            function boostSeedForSmallScreens() {
-                if (seedBoosted) return;
-                seedBoosted = true;
-                var s = parseFloat(window.getComputedStyle(document.documentElement)
-                    .getPropertyValue('--tree-scale')) || 1;
-                if (s >= 0.55) return;
-                var k = Math.min(1.6, 0.55 / s);
-                seed.heart.scale *= k;
-                seed.cirle.scale *= k;
-                seed.textBoost = 1.5;
-            }
-
-            window.__startTreeAnimation = function () {
-                boostSeedForSmallScreens();
-                runAsync().start();
-            };
-            if (window.__siteUnlocked) {
-                window.__startTreeAnimation();
-            }
-        })();
-    </script>
 </body>
 
 </html>

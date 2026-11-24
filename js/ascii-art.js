@@ -130,6 +130,16 @@
     if (btnIn) btnIn.addEventListener('click', function () { setZoom(zoom * 1.25); });
     if (btnOut) btnOut.addEventListener('click', function () { setZoom(zoom / 1.25); });
     if (btnReset) btnReset.addEventListener('click', resetZoom);
+    var btnToggle = document.getElementById('zoomToggle');
+    var zoomBtns = document.getElementById('zoomBtns');
+    if (btnToggle && zoomBtns) {
+        btnToggle.addEventListener('click', function () {
+            var show = zoomBtns.hasAttribute('hidden');
+            if (show) zoomBtns.removeAttribute('hidden');
+            else zoomBtns.setAttribute('hidden', '');
+            btnToggle.setAttribute('aria-expanded', show ? 'true' : 'false');
+        });
+    }
 
     var pinchDist = 0;
     viewport.addEventListener('touchstart', function (e) {
