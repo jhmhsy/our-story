@@ -1,9 +1,8 @@
 /* ascii-art.js - random mp4 compilation rendered as live ASCII (section 5, right column).
-   Edit VIDEOS to change the playlist. Zoom / pinch / buttons behave as before. */
+   Videos come from SITE_CONTENT.videos. Zoom / pinch / buttons behave as before. */
 (function () {
     'use strict';
 
-    /* ---- Playlist: add your files here ---- */
     var VIDEOS = ((window.SITE_CONTENT && window.SITE_CONTENT.videos) || [])
         .map(function (v) { return typeof v === 'string' ? v : (v && v.src) || ''; })
         .filter(function (s) { return s; });
@@ -19,87 +18,81 @@
 
     if (!output || !canvas || !pixelSize || !viewport || !stage) return;
 
-    var ctx = canvas.getContext('2d', { willReadFrequently: true });
-
     /* ---- Settings ---- */
-    var RAMP = ' .\'`^",:;Il!i><~+_-?][}{1)(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$'; // light -> dense
-    var INK = '#9c1f58';         // text colour (dense chars = dark pixels, on the white viewport)
-    var CONTRAST = 1;
+    var DARK = true;             // true: bright colours on a dark viewport (best colour fidelity). false: white viewport
+    var RAMP = ' .:-=+*#%@';     // sparse -> dense. Dense = bright pixel when DARK, dark pixel otherwise
+    var INK = DARK ? '#ffd6e6' : '#9c1f58';   // mono fallback colour
     var FPS = 24;
     var COL_BASE = 1200;         // columns = COL_BASE / slider value
-    var MAX_COLS = 300;          // detail cap, keeps frames fast
+    var MAX_COLS = 300;
     var MIN_COLS = 20;
     var BASE_FONT = 10;
     var MIN_ZOOM = 0.15;
     var MAX_ZOOM = 12;
-        var COLOR_SCALE = 4;         // color canvas resolution multiplier (higher = better color accuracy)
-        var GAMMA = 2.2;             // sRGB gamma for accurate color reproduction
-        var SATURATION_BOOST = 1.15; // slight saturation boost for more vibrant colors
-        var COLOR_CONTRAST = 1.1;    // contrast boost for color map
 
-        /* ---- Luminance -> char code lookup ---- */
-        var LUT = new Uint16Array(256);
-        (function () {
-            for (var i = 0; i < 256; i++) {
-                var l = i / 255;
-                l = Math.max(0, Math.min(1, (l - 0.5) * CONTRAST + 0.5));
-                LUT[i] = RAMP.charCodeAt(Math.round((1 - l) * (RAMP.length - 1)));
-            }
-        })();
+    var COLOR_SCALE = 4;         // source pixels per cell side (exact box average, no overlap)
+    var GAMMA = 2.2;
+    var SATURATION = 1.3;
+    var COLOR_GAIN = DARK ? 1.3 : 0.95;   // glyphs only cover part of a cell, so colour is pushed brighter
+    var LEVEL_CUT = 0.02;        // auto-levels: ignore darkest/brightest 2%
+    var LEVEL_SMOOTH = 0.15;     // auto-levels: how fast it follows the scene (0..1)
 
-        /* ---- Gamma lookup tables for fast color processing ---- */
-        var GAMMA_LUT = new Float32Array(256);
-        var INV_GAMMA_LUT = new Float32Array(256);
-        (function () {
-            for (var i = 0; i < 256; i++) {
-                var v = i / 255;
-                GAMMA_LUT[i] = Math.pow(v, GAMMA);
-                INV_GAMMA_LUT[i] = Math.pow(v, 1 / GAMMA);
-            }
-        })();
+    var RAMP_CODES = [];
+    for (var rc = 0; rc < RAMP.length; rc++) RAMP_CODES.push(RAMP.charCodeAt(rc));
 
-        /* ---- Pre-computed sample offsets for color averaging ---- */
-        var SAMPLE_OFFSETS = [];
-        function buildSampleOffsets() {
-            SAMPLE_OFFSETS.length = 0;
-            var sampleSize = Math.max(1, Math.floor(COLOR_SCALE / 2));
-            for (var dy = -sampleSize; dy <= sampleSize; dy++) {
-                for (var dx = -sampleSize; dx <= sampleSize; dx++) {
-                    SAMPLE_OFFSETS.push({ dx: dx, dy: dy });
-                }
-            }
+    var GAMMA_LUT = new Float32Array(256);       // 8-bit -> linear
+    var INV_GAMMA_LUT = new Float32Array(256);   // linear (i/255) -> display 0..1
+    (function () {
+        for (var i = 0; i < 256; i++) {
+            var v = i / 255;
+            GAMMA_LUT[i] = Math.pow(v, GAMMA);
+            INV_GAMMA_LUT[i] = Math.pow(v, 1 / GAMMA);
         }
-        buildSampleOffsets();
+    })();
 
-        /* ---- State ---- */
-        var zoom = 1;
-        var userZoomed = false;
-        var cols = 100, rows = 56;
-        var charAspect = 0.6;        // char width / char height for the monospace font
-        var lastVW = 0, lastVH = 0, lastCols = 0, lastTime = -1, lastDraw = 0;
-        var inView = false, running = false, started = false;
-        var failCount = 0, bag = [], lastSrc = '';
+    /* ---- State ---- */
+    var zoom = 1;
+    var userZoomed = false;
+    var cols = 100, rows = 56;
+    var charAspect = 0.6;
+    var lastVW = 0, lastVH = 0, lastTime = -1, lastDraw = 0;
+    var inView = false, running = false, started = false;
+    var failCount = 0, bag = [], lastSrc = '';
 
-        var COLOR = true;            // false = single-colour text (INK)
-        if (COLOR) {
-            output.style.color = 'transparent';
-            output.style.webkitBackgroundClip = 'text';
-            output.style.backgroundClip = 'text';
-            output.style.backgroundSize = '100% 100%';
-            output.style.backgroundRepeat = 'no-repeat';
-        } else {
-            output.style.color = INK;
-        }
+    var COLOR = true;            // false = single-colour text (INK)
 
-        /* ---- Color canvas (higher resolution for accurate color sampling) ---- */
-        var colorCanvas = document.createElement('canvas');
-        var colorCtx = colorCanvas.getContext('2d', { willReadFrequently: true });
-        var colorCols = 0, colorRows = 0;
+    if (DARK) {
+        viewport.style.background = '#0b0610';
+        viewport.style.borderColor = 'rgba(255,255,255,0.15)';
+    }
+    output.style.fontWeight = '700';
 
-        /* ---- Reusable color map canvas (avoids allocation per frame) ---- */
-        var colorMapCanvas = document.createElement('canvas');
-        var colorMapCtx = colorMapCanvas.getContext('2d');
-        var colorMapData = null;
+    function applyColorStyles() {
+        output.style.color = 'transparent';
+        output.style.webkitBackgroundClip = 'text';
+        output.style.backgroundClip = 'text';
+        output.style.backgroundSize = '100% 100%';
+        output.style.backgroundRepeat = 'no-repeat';
+        output.style.backgroundPosition = '0 0';
+        output.style.imageRendering = 'pixelated';
+    }
+    if (COLOR) applyColorStyles();
+    else output.style.color = INK;
+
+    /* ---- Source canvas (video frame at COLOR_SCALE x the character grid) ---- */
+    var colorCanvas = document.createElement('canvas');
+    var colorCtx = colorCanvas.getContext('2d', { willReadFrequently: true });
+    var colorCols = 0, colorRows = 0;
+
+    /* ---- Per-cell colour map (one pixel per character) ---- */
+    var colorMapCanvas = document.createElement('canvas');
+    var colorMapCtx = colorMapCanvas.getContext('2d');
+    var colorMapData = null;
+
+    /* ---- Per-cell buffers, reused every frame ---- */
+    var cellR = null, cellG = null, cellB = null, cellL = null;
+    var hist = new Uint32Array(256);
+    var lvLo = 0, lvHi = 1, lvInit = false;
 
     /* ---- Video element (hidden, muted so autoplay is allowed) ---- */
     var video = document.createElement('video');
@@ -109,6 +102,7 @@
     video.setAttribute('playsinline', '');
     video.setAttribute('muted', '');
     video.preload = 'auto';
+    video.crossOrigin = 'anonymous';   // needed for getImageData
 
     function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
 
@@ -207,7 +201,7 @@
     function measureCharAspect() {
         var probe = document.createElement('span');
         probe.textContent = 'MMMMMMMMMM';
-        probe.style.cssText = 'position:absolute;visibility:hidden;white-space:pre;font-family:monospace;font-size:' + BASE_FONT + 'px;';
+        probe.style.cssText = 'position:absolute;visibility:hidden;white-space:pre;font-family:monospace;font-weight:700;font-size:' + BASE_FONT + 'px;';
         document.body.appendChild(probe);
         var w = probe.getBoundingClientRect().width;
         document.body.removeChild(probe);
@@ -220,117 +214,133 @@
         var step = Math.max(1, parseInt(pixelSize.value, 10) || 10);
         cols = clamp(Math.round(COL_BASE / step), MIN_COLS, MAX_COLS);
         rows = Math.max(1, Math.round(cols * (vh / vw) * charAspect));
-        canvas.width = cols;
-        canvas.height = rows;
 
-            // Color canvas at higher resolution for accurate color sampling
-            colorCols = cols * COLOR_SCALE;
-            colorRows = rows * COLOR_SCALE;
-            colorCanvas.width = colorCols;
-            colorCanvas.height = colorRows;
+        colorCols = cols * COLOR_SCALE;
+        colorRows = rows * COLOR_SCALE;
+        colorCanvas.width = colorCols;
+        colorCanvas.height = colorRows;
 
-            // Rebuild sample offsets when COLOR_SCALE changes
-            buildSampleOffsets();
-
-            lastVW = vw; lastVH = vh; lastCols = cols;
-            lastTime = -1;
-            if (!userZoomed) fit();
-            updateDangerUI();
-        }
+        lastVW = vw; lastVH = vh;
+        lastTime = -1;
+        if (!userZoomed) fit();
+        updateDangerUI();
+    }
 
     /* ---- Frame -> ASCII ---- */
-        function drawFrame() {
-            var vw = video.videoWidth, vh = video.videoHeight;
-            if (!vw || !vh || video.readyState < 2) return;
-            if (vw !== lastVW || vh !== lastVH) setGrid();
-            if (video.currentTime === lastTime) return;   // nothing new to draw
-            lastTime = video.currentTime;
+    function drawFrame() {
+        var vw = video.videoWidth, vh = video.videoHeight;
+        if (!vw || !vh || video.readyState < 2) return;
+        if (vw !== lastVW || vh !== lastVH) setGrid();
+        if (video.currentTime === lastTime) return;
+        lastTime = video.currentTime;
 
-            // Draw to main canvas for luminance (character selection)
-            ctx.drawImage(video, 0, 0, cols, rows);
-            var d = ctx.getImageData(0, 0, cols, rows).data;
+        colorCtx.drawImage(video, 0, 0, colorCols, colorRows);
 
-            // Draw to color canvas at higher resolution for accurate color sampling
-            colorCtx.drawImage(video, 0, 0, colorCols, colorRows);
-            var colorData = colorCtx.getImageData(0, 0, colorCols, colorRows).data;
+        var src;
+        try {
+            src = colorCtx.getImageData(0, 0, colorCols, colorRows).data;
+        } catch (err) {
+            console.warn('[ascii-art] getImageData failed (CORS?)', err);
+            output.style.color = INK;
+            output.style.backgroundImage = '';
+            output.style.webkitBackgroundClip = '';
+            output.style.backgroundClip = '';
+            return;
+        }
 
-            var lines = new Array(rows);
-            var codes = new Array(cols);
-            var p = 0;
-            var scale = COLOR_SCALE;
-            for (var y = 0; y < rows; y++) {
-                for (var x = 0; x < cols; x++) {
-                    var lum = (77 * d[p] + 150 * d[p + 1] + 29 * d[p + 2]) >> 8;
-                    codes[x] = LUT[lum];
-                    p += 4;
-                }
-                lines[y] = String.fromCharCode.apply(null, codes);
-            }
-            output.textContent = lines.join('\n');
+        var n = cols * rows;
+        if (!cellR || cellR.length !== n) {
+            cellR = new Float32Array(n);
+            cellG = new Float32Array(n);
+            cellB = new Float32Array(n);
+            cellL = new Float32Array(n);
+        }
 
-            if (COLOR) {
-                // Resize reusable color map canvas if needed
-                if (colorMapCanvas.width !== cols || colorMapCanvas.height !== rows) {
-                    colorMapCanvas.width = cols;
-                    colorMapCanvas.height = rows;
-                    colorMapData = colorMapCtx.createImageData(cols, rows);
-                }
-                // Build a color map by sampling average color per character cell from high-res canvas
-                var colorMap = colorMapData.data;
-                var cmIdx = 0;
-                for (var y = 0; y < rows; y++) {
-                    for (var x = 0; x < cols; x++) {
-                        // Sample a small region around the center of each character cell for smoother colors
-                        var cx = Math.floor((x + 0.5) * scale);
-                        var cy = Math.floor((y + 0.5) * scale);
-                        var r = 0, g = 0, b = 0, count = 0;
-                        // Use pre-computed sample offsets
-                        for (var i = 0; i < SAMPLE_OFFSETS.length; i++) {
-                            var off = SAMPLE_OFFSETS[i];
-                            var sx = cx + off.dx;
-                            var sy = cy + off.dy;
-                            if (sx >= 0 && sx < colorCols && sy >= 0 && sy < colorRows) {
-                                var ci = (sy * colorCols + sx) * 4;
-                                // Use lookup tables for fast gamma correction
-                                r += GAMMA_LUT[colorData[ci]];
-                                g += GAMMA_LUT[colorData[ci + 1]];
-                                b += GAMMA_LUT[colorData[ci + 2]];
-                                count++;
-                            }
-                        }
-                        if (count > 0) {
-                            var invCount = 1 / count;
-                            r = INV_GAMMA_LUT[Math.min(255, Math.round(r * invCount * 255))] * 255;
-                            g = INV_GAMMA_LUT[Math.min(255, Math.round(g * invCount * 255))] * 255;
-                            b = INV_GAMMA_LUT[Math.min(255, Math.round(b * invCount * 255))] * 255;
-                        }
-                        // Apply saturation boost
-                        var maxC = Math.max(r, g, b);
-                        if (maxC > 0 && SATURATION_BOOST !== 1) {
-                            var gray = (r + g + b) / 3;
-                            r = gray + (r - gray) * SATURATION_BOOST;
-                            g = gray + (g - gray) * SATURATION_BOOST;
-                            b = gray + (b - gray) * SATURATION_BOOST;
-                        }
-                        // Apply contrast boost
-                        if (COLOR_CONTRAST !== 1) {
-                            var mid = 127.5;
-                            r = mid + (r - mid) * COLOR_CONTRAST;
-                            g = mid + (g - mid) * COLOR_CONTRAST;
-                            b = mid + (b - mid) * COLOR_CONTRAST;
-                        }
-                        colorMap[cmIdx++] = Math.round(Math.max(0, Math.min(255, r)));
-                        colorMap[cmIdx++] = Math.round(Math.max(0, Math.min(255, g)));
-                        colorMap[cmIdx++] = Math.round(Math.max(0, Math.min(255, b)));
-                        colorMap[cmIdx++] = 255;
+        /* Pass 1: exact box average per cell (in linear light), luminance, histogram */
+        hist.fill(0);
+        var S = COLOR_SCALE, inv = 1 / (S * S), stride = colorCols * 4;
+        var x, y, i, j, p, id = 0;
+        for (y = 0; y < rows; y++) {
+            for (x = 0; x < cols; x++) {
+                var base = (y * S * colorCols + x * S) * 4;
+                var r = 0, g = 0, b = 0;
+                for (j = 0; j < S; j++) {
+                    p = base + j * stride;
+                    for (i = 0; i < S; i++) {
+                        r += GAMMA_LUT[src[p]];
+                        g += GAMMA_LUT[src[p + 1]];
+                        b += GAMMA_LUT[src[p + 2]];
+                        p += 4;
                     }
                 }
-                colorMapCtx.putImageData(colorMapData, 0, 0);
-                // Use PNG for lossless color, nearest-neighbor scaling via CSS
-                output.style.backgroundImage = 'url(' + colorMapCanvas.toDataURL('image/png') + ')';
-                output.style.imageRendering = 'pixelated';
+                r *= inv; g *= inv; b *= inv;
+                var lin = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+                var l = INV_GAMMA_LUT[Math.min(255, Math.round(lin * 255))];
+                cellR[id] = r; cellG[id] = g; cellB[id] = b; cellL[id] = l;
+                hist[Math.round(l * 255)]++;
+                id++;
             }
         }
+
+        /* Auto-levels: stretch between the 2nd and 98th percentile, smoothed over time */
+        var acc = 0, lo = 0, hi = 255, cut = n * LEVEL_CUT;
+        for (i = 0; i < 256; i++) { acc += hist[i]; if (acc >= cut) { lo = i; break; } }
+        acc = 0;
+        for (i = 255; i >= 0; i--) { acc += hist[i]; if (acc >= cut) { hi = i; break; } }
+        if (hi - lo < 40) hi = Math.min(255, lo + 40);
+        if (!lvInit) { lvLo = lo / 255; lvHi = hi / 255; lvInit = true; }
+        else {
+            lvLo += (lo / 255 - lvLo) * LEVEL_SMOOTH;
+            lvHi += (hi / 255 - lvHi) * LEVEL_SMOOTH;
+        }
+        var span = Math.max(0.05, lvHi - lvLo);
+
+        /* Pass 2: characters + colours */
+        if (COLOR) {
+            if (colorMapCanvas.width !== cols || colorMapCanvas.height !== rows) {
+                colorMapCanvas.width = cols;
+                colorMapCanvas.height = rows;
+                colorMapData = colorMapCtx.createImageData(cols, rows);
+            }
+        }
+        var colorMap = colorMapData ? colorMapData.data : null;
+        var cm = 0;
+        var maxIdx = RAMP_CODES.length - 1;
+        var lines = new Array(rows);
+        var codes = new Array(cols);
+        id = 0;
+        for (y = 0; y < rows; y++) {
+            for (x = 0; x < cols; x++) {
+                var lum = cellL[id];
+                var ln = clamp((lum - lvLo) / span, 0, 1);
+                codes[x] = RAMP_CODES[Math.round((DARK ? ln : 1 - ln) * maxIdx)];
+
+                if (COLOR) {
+                    var ratio = lum > 0.001 ? clamp(ln / lum, 0.7, 2) : 1;
+                    var dr = INV_GAMMA_LUT[Math.min(255, Math.round(cellR[id] * 255))] * 255 * ratio * COLOR_GAIN;
+                    var dg = INV_GAMMA_LUT[Math.min(255, Math.round(cellG[id] * 255))] * 255 * ratio * COLOR_GAIN;
+                    var db = INV_GAMMA_LUT[Math.min(255, Math.round(cellB[id] * 255))] * 255 * ratio * COLOR_GAIN;
+                    var gray = (dr + dg + db) / 3;
+                    dr = gray + (dr - gray) * SATURATION;
+                    dg = gray + (dg - gray) * SATURATION;
+                    db = gray + (db - gray) * SATURATION;
+                    colorMap[cm++] = clamp(Math.round(dr), 0, 255);
+                    colorMap[cm++] = clamp(Math.round(dg), 0, 255);
+                    colorMap[cm++] = clamp(Math.round(db), 0, 255);
+                    colorMap[cm++] = 255;
+                }
+                id++;
+            }
+            lines[y] = String.fromCharCode.apply(null, codes);
+        }
+        output.textContent = lines.join('\n');
+
+        if (COLOR) {
+            colorMapCtx.putImageData(colorMapData, 0, 0);
+            applyColorStyles();   // some browsers drop these between frames
+            output.style.backgroundImage = 'url(' + colorMapCanvas.toDataURL('image/png') + ')';
+        }
+    }
 
     function loop(now) {
         if (!inView || document.hidden) { running = false; return; }
@@ -373,6 +383,7 @@
     function playNext() {
         video.src = nextSrc();
         lastTime = -1;
+        lvInit = false;       // new clip: re-measure levels immediately
         if (shouldPlay()) play();
     }
 
@@ -393,7 +404,7 @@
 
     document.addEventListener('visibilitychange', updatePlayback);
 
-    /* ---- Slider = detail level (bigger value = fewer, coarser characters) ---- */
+    /* ---- Slider = detail level ---- */
     var safeStep = Math.ceil(COL_BASE / MAX_COLS);
 
     function updateDangerUI() {
@@ -411,7 +422,7 @@
         updateDangerUI();
     });
 
-    /* ---- Init: wait for the password gate, then start ---- */
+    /* ---- Init ---- */
     function init() {
         if (!VIDEOS.length) {
             output.textContent = 'Add videos in the admin page';
