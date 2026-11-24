@@ -2,7 +2,7 @@
     'use strict';
 
     var CONTENT_URL = 'data/content.json';
-    var DEPENDENTS = ['js/timeline.js', 'js/gallery.js', 'js/jar.js', 'js/letter.js', 'js/ascii-art.js'];
+    var DEPENDENTS = ['js/greetings.js', 'js/timeline.js', 'js/gallery.js', 'js/jar.js', 'js/letter.js', 'js/ascii-art.js'];
     var SECTION_IDS = ['greetings', 'story', 'gallery', 'jar', 'last'];
 
     function loadScript(src) {

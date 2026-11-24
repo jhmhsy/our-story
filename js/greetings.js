@@ -387,7 +387,9 @@
         else { typerStop(); loopStop(); }
     }
     if ('ResizeObserver' in window) new ResizeObserver(function () { resize(); sync(); }).observe(stage);
-    else window.addEventListener('resize', function () { resize(); sync(); });
+    // Also listen for window resize to handle cases like password gate unlock where
+    // the stage becomes visible but its size doesn't change (ResizeObserver won't fire)
+    window.addEventListener('resize', function () { resize(); sync(); });
     if ('IntersectionObserver' in window) {
         new IntersectionObserver(function (entries) { vis = entries[0].isIntersecting; sync(); }, { threshold: 0.1 }).observe(section);
     } else { vis = true; }

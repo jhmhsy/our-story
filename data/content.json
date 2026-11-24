@@ -1,4 +1,11 @@
 {
+  "backgrounds": {
+    "greetings": "#fde3ee",
+    "story": "#f8a9c6",
+    "gallery": "#f8a3c2",
+    "jar": "#f69bbc",
+    "last": "#f48fb1"
+  },
   "greetings": {
     "subtitle": "",
     "typingSpeed": 80,
