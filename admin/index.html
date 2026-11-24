@@ -226,6 +226,34 @@
             font-size: 14px;
         }
 
+        .bgrow {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 0 0 10px;
+        }
+
+        .bgrow label {
+            flex: 1;
+            margin: 0;
+        }
+
+        .bgrow input[type="color"] {
+            width: 56px;
+            height: 38px;
+            padding: 0;
+            border: 2px solid rgba(229, 69, 127, 0.3);
+            border-radius: 10px;
+            background: #fff;
+            cursor: pointer;
+        }
+
+        .bgrow .hint {
+            min-width: 66px;
+            margin: 0;
+            font-family: monospace;
+        }
+
         @media (max-width: 520px) {
             .item {
                 grid-template-columns: 72px 1fr;
@@ -274,6 +302,14 @@
             var statusEl = null;
             var saveBtn = null;
             var MIN_PASS = 6;
+            var BG_DEFAULTS = { greetings: '#000000', story: '#f8a9c6', gallery: '#f8a3c2', jar: '#f69bbc', last: '#f48fb1' };
+            var BG_LABELS = [
+                ['greetings', '1 · Greetings'],
+                ['story', '2 · Our Story'],
+                ['gallery', '3 · Our Gallery'],
+                ['jar', '4 · Love Jar'],
+                ['last', '5 · Love Letter']
+            ];
 
             /* ---------- Small DOM helpers ---------- */
             function h(tag, attrs, children) {
@@ -309,6 +345,21 @@
                 input.value = value == null ? '' : value;
                 input.setAttribute('aria-label', label);
                 input.addEventListener('input', function () { onInput(input.value); markDirty(); });
+                return h('div', null, [h('label', { text: label }), input]);
+            }
+
+            function numField(label, value, onInput, min) {
+                var input = h('input', { type: 'text', inputmode: 'numeric', 'aria-label': label });
+                input.value = value == null ? '' : value;
+                input.addEventListener('input', function () {
+                    var raw = input.value.trim();
+                    onInput(raw === '' ? NaN : Number(raw));
+                    markDirty();
+                });
+                input.addEventListener('blur', function () {
+                    var n = Number(input.value);
+                    if (isFinite(n) && n < min) { input.value = min; onInput(min); }
+                });
                 return h('div', null, [h('label', { text: label }), input]);
             }
 
@@ -493,7 +544,7 @@
                         e.preventDefault();
                         var t = tok.value.trim();
                         if (!t) return say('Paste your GitHub token.', true);
-                        if (p1.value.length < 12) return say('Use a passphrase of at least ' + MIN_PASS + ' characters, e.g. four random words.', true);
+                        if (p1.value.length < MIN_PASS) return say('Use a passphrase of at least ' + MIN_PASS + ' characters, e.g. four random words.', true);
                         if (p1.value !== p2.value) return say('The passphrases do not match.', true);
 
                         btn.disabled = true;
@@ -596,6 +647,10 @@
                 if (gr.holdDelay == null) gr.holdDelay = 2200;
                 gr.messages = (gr.messages || []).map(function (m) {
                     return { text: typeof m === 'string' ? m : (m && m.text) || '' };
+                });
+                state.backgrounds = state.backgrounds || {};
+                BG_LABELS.forEach(function (p) {
+                    if (!/^#[0-9a-f]{6}$/i.test(state.backgrounds[p[0]] || '')) state.backgrounds[p[0]] = BG_DEFAULTS[p[0]];
                 });
             }
 
@@ -701,6 +756,17 @@
                 ]);
             }
 
+            function greetingMessageCard(list, m, i) {
+                return h('div', { class: 'card' }, [
+                    field('Message ' + (i + 1) + ' (line breaks and emojis are kept)', m.text, bind(m, 'text'), 4),
+                    h('div', { class: 'actions' }, [
+                        moveBtn(list, i, -1),
+                        moveBtn(list, i, 1),
+                        h('button', { type: 'button', class: 'btn btn--danger', text: 'Delete', onclick: function () { removeItem(list, i, 'Remove this message?'); } })
+                    ])
+                ]);
+            }
+
             function noteCard(list, n, i) {
                 var cb = h('input', { type: 'checkbox' });
                 cb.checked = !!n.nsfw;
@@ -714,6 +780,28 @@
                         h('button', { type: 'button', class: 'btn btn--danger', text: 'Delete', onclick: function () { removeItem(list, i); } })
                     ])
                 ]);
+            }
+
+            function bgCard() {
+                var bg = state.backgrounds;
+                var card = h('div', { class: 'card' });
+                BG_LABELS.forEach(function (p) {
+                    var key = p[0];
+                    var input = h('input', { type: 'color', 'aria-label': p[1] });
+                    input.value = bg[key];
+                    var code = h('span', { class: 'hint', text: bg[key] });
+                    input.addEventListener('input', function () {
+                        bg[key] = input.value;
+                        code.textContent = input.value;
+                        markDirty();
+                    });
+                    var reset = h('button', {
+                        type: 'button', class: 'btn btn--ghost', text: 'Reset',
+                        onclick: function () { bg[key] = BG_DEFAULTS[key]; markDirty(); rerender(); }
+                    });
+                    card.appendChild(h('div', { class: 'bgrow' }, [h('label', { text: p[1] }), input, code, reset]));
+                });
+                return card;
             }
 
             function renderEditor() {
@@ -734,6 +822,10 @@
                         })
                     ])
                 ]));
+
+                root.appendChild(h('h2', { text: 'Section backgrounds' }));
+                root.appendChild(h('p', { class: 'hint', text: 'Pick a colour for each section. Reset restores the original pink.' }));
+                root.appendChild(bgCard());
 
                 /* Greetings */
                 root.appendChild(h('h2', { text: 'Greetings' }));
