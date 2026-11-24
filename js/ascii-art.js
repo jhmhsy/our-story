@@ -32,36 +32,74 @@
     var BASE_FONT = 10;
     var MIN_ZOOM = 0.15;
     var MAX_ZOOM = 12;
+        var COLOR_SCALE = 4;         // color canvas resolution multiplier (higher = better color accuracy)
+        var GAMMA = 2.2;             // sRGB gamma for accurate color reproduction
+        var SATURATION_BOOST = 1.15; // slight saturation boost for more vibrant colors
+        var COLOR_CONTRAST = 1.1;    // contrast boost for color map
 
-    /* ---- Luminance -> char code lookup ---- */
-    var LUT = new Uint16Array(256);
-    (function () {
-        for (var i = 0; i < 256; i++) {
-            var l = i / 255;
-            l = Math.max(0, Math.min(1, (l - 0.5) * CONTRAST + 0.5));
-            LUT[i] = RAMP.charCodeAt(Math.round((1 - l) * (RAMP.length - 1)));
+        /* ---- Luminance -> char code lookup ---- */
+        var LUT = new Uint16Array(256);
+        (function () {
+            for (var i = 0; i < 256; i++) {
+                var l = i / 255;
+                l = Math.max(0, Math.min(1, (l - 0.5) * CONTRAST + 0.5));
+                LUT[i] = RAMP.charCodeAt(Math.round((1 - l) * (RAMP.length - 1)));
+            }
+        })();
+
+        /* ---- Gamma lookup tables for fast color processing ---- */
+        var GAMMA_LUT = new Float32Array(256);
+        var INV_GAMMA_LUT = new Float32Array(256);
+        (function () {
+            for (var i = 0; i < 256; i++) {
+                var v = i / 255;
+                GAMMA_LUT[i] = Math.pow(v, GAMMA);
+                INV_GAMMA_LUT[i] = Math.pow(v, 1 / GAMMA);
+            }
+        })();
+
+        /* ---- Pre-computed sample offsets for color averaging ---- */
+        var SAMPLE_OFFSETS = [];
+        function buildSampleOffsets() {
+            SAMPLE_OFFSETS.length = 0;
+            var sampleSize = Math.max(1, Math.floor(COLOR_SCALE / 2));
+            for (var dy = -sampleSize; dy <= sampleSize; dy++) {
+                for (var dx = -sampleSize; dx <= sampleSize; dx++) {
+                    SAMPLE_OFFSETS.push({ dx: dx, dy: dy });
+                }
+            }
         }
-    })();
+        buildSampleOffsets();
 
-    /* ---- State ---- */
-    var zoom = 1;
-    var userZoomed = false;
-    var cols = 100, rows = 56;
-    var charAspect = 0.6;        // char width / char height for the monospace font
-    var lastVW = 0, lastVH = 0, lastCols = 0, lastTime = -1, lastDraw = 0;
-    var inView = false, running = false, started = false;
-    var failCount = 0, bag = [], lastSrc = '';
+        /* ---- State ---- */
+        var zoom = 1;
+        var userZoomed = false;
+        var cols = 100, rows = 56;
+        var charAspect = 0.6;        // char width / char height for the monospace font
+        var lastVW = 0, lastVH = 0, lastCols = 0, lastTime = -1, lastDraw = 0;
+        var inView = false, running = false, started = false;
+        var failCount = 0, bag = [], lastSrc = '';
 
-    var COLOR = true;            // false = single-colour text (INK)
-    if (COLOR) {
-        output.style.color = 'transparent';
-        output.style.webkitBackgroundClip = 'text';
-        output.style.backgroundClip = 'text';
-        output.style.backgroundSize = '100% 100%';
-        output.style.backgroundRepeat = 'no-repeat';
-    } else {
-        output.style.color = INK;
-    }
+        var COLOR = true;            // false = single-colour text (INK)
+        if (COLOR) {
+            output.style.color = 'transparent';
+            output.style.webkitBackgroundClip = 'text';
+            output.style.backgroundClip = 'text';
+            output.style.backgroundSize = '100% 100%';
+            output.style.backgroundRepeat = 'no-repeat';
+        } else {
+            output.style.color = INK;
+        }
+
+        /* ---- Color canvas (higher resolution for accurate color sampling) ---- */
+        var colorCanvas = document.createElement('canvas');
+        var colorCtx = colorCanvas.getContext('2d', { willReadFrequently: true });
+        var colorCols = 0, colorRows = 0;
+
+        /* ---- Reusable color map canvas (avoids allocation per frame) ---- */
+        var colorMapCanvas = document.createElement('canvas');
+        var colorMapCtx = colorMapCanvas.getContext('2d');
+        var colorMapData = null;
 
     /* ---- Video element (hidden, muted so autoplay is allowed) ---- */
     var video = document.createElement('video');
@@ -184,36 +222,115 @@
         rows = Math.max(1, Math.round(cols * (vh / vw) * charAspect));
         canvas.width = cols;
         canvas.height = rows;
-        lastVW = vw; lastVH = vh; lastCols = cols;
-        lastTime = -1;
-        if (!userZoomed) fit();
-        updateDangerUI();
-    }
+
+            // Color canvas at higher resolution for accurate color sampling
+            colorCols = cols * COLOR_SCALE;
+            colorRows = rows * COLOR_SCALE;
+            colorCanvas.width = colorCols;
+            colorCanvas.height = colorRows;
+
+            // Rebuild sample offsets when COLOR_SCALE changes
+            buildSampleOffsets();
+
+            lastVW = vw; lastVH = vh; lastCols = cols;
+            lastTime = -1;
+            if (!userZoomed) fit();
+            updateDangerUI();
+        }
 
     /* ---- Frame -> ASCII ---- */
-    function drawFrame() {
-        var vw = video.videoWidth, vh = video.videoHeight;
-        if (!vw || !vh || video.readyState < 2) return;
-        if (vw !== lastVW || vh !== lastVH) setGrid();
-        if (video.currentTime === lastTime) return;   // nothing new to draw
-        lastTime = video.currentTime;
+        function drawFrame() {
+            var vw = video.videoWidth, vh = video.videoHeight;
+            if (!vw || !vh || video.readyState < 2) return;
+            if (vw !== lastVW || vh !== lastVH) setGrid();
+            if (video.currentTime === lastTime) return;   // nothing new to draw
+            lastTime = video.currentTime;
 
-        ctx.drawImage(video, 0, 0, cols, rows);
-        var d = ctx.getImageData(0, 0, cols, rows).data;
-        var lines = new Array(rows);
-        var codes = new Array(cols);
-        var p = 0;
-        for (var y = 0; y < rows; y++) {
-            for (var x = 0; x < cols; x++) {
-                var lum = (77 * d[p] + 150 * d[p + 1] + 29 * d[p + 2]) >> 8;
-                codes[x] = LUT[lum];
-                p += 4;
+            // Draw to main canvas for luminance (character selection)
+            ctx.drawImage(video, 0, 0, cols, rows);
+            var d = ctx.getImageData(0, 0, cols, rows).data;
+
+            // Draw to color canvas at higher resolution for accurate color sampling
+            colorCtx.drawImage(video, 0, 0, colorCols, colorRows);
+            var colorData = colorCtx.getImageData(0, 0, colorCols, colorRows).data;
+
+            var lines = new Array(rows);
+            var codes = new Array(cols);
+            var p = 0;
+            var scale = COLOR_SCALE;
+            for (var y = 0; y < rows; y++) {
+                for (var x = 0; x < cols; x++) {
+                    var lum = (77 * d[p] + 150 * d[p + 1] + 29 * d[p + 2]) >> 8;
+                    codes[x] = LUT[lum];
+                    p += 4;
+                }
+                lines[y] = String.fromCharCode.apply(null, codes);
             }
-            lines[y] = String.fromCharCode.apply(null, codes);
+            output.textContent = lines.join('\n');
+
+            if (COLOR) {
+                // Resize reusable color map canvas if needed
+                if (colorMapCanvas.width !== cols || colorMapCanvas.height !== rows) {
+                    colorMapCanvas.width = cols;
+                    colorMapCanvas.height = rows;
+                    colorMapData = colorMapCtx.createImageData(cols, rows);
+                }
+                // Build a color map by sampling average color per character cell from high-res canvas
+                var colorMap = colorMapData.data;
+                var cmIdx = 0;
+                for (var y = 0; y < rows; y++) {
+                    for (var x = 0; x < cols; x++) {
+                        // Sample a small region around the center of each character cell for smoother colors
+                        var cx = Math.floor((x + 0.5) * scale);
+                        var cy = Math.floor((y + 0.5) * scale);
+                        var r = 0, g = 0, b = 0, count = 0;
+                        // Use pre-computed sample offsets
+                        for (var i = 0; i < SAMPLE_OFFSETS.length; i++) {
+                            var off = SAMPLE_OFFSETS[i];
+                            var sx = cx + off.dx;
+                            var sy = cy + off.dy;
+                            if (sx >= 0 && sx < colorCols && sy >= 0 && sy < colorRows) {
+                                var ci = (sy * colorCols + sx) * 4;
+                                // Use lookup tables for fast gamma correction
+                                r += GAMMA_LUT[colorData[ci]];
+                                g += GAMMA_LUT[colorData[ci + 1]];
+                                b += GAMMA_LUT[colorData[ci + 2]];
+                                count++;
+                            }
+                        }
+                        if (count > 0) {
+                            var invCount = 1 / count;
+                            r = INV_GAMMA_LUT[Math.min(255, Math.round(r * invCount * 255))] * 255;
+                            g = INV_GAMMA_LUT[Math.min(255, Math.round(g * invCount * 255))] * 255;
+                            b = INV_GAMMA_LUT[Math.min(255, Math.round(b * invCount * 255))] * 255;
+                        }
+                        // Apply saturation boost
+                        var maxC = Math.max(r, g, b);
+                        if (maxC > 0 && SATURATION_BOOST !== 1) {
+                            var gray = (r + g + b) / 3;
+                            r = gray + (r - gray) * SATURATION_BOOST;
+                            g = gray + (g - gray) * SATURATION_BOOST;
+                            b = gray + (b - gray) * SATURATION_BOOST;
+                        }
+                        // Apply contrast boost
+                        if (COLOR_CONTRAST !== 1) {
+                            var mid = 127.5;
+                            r = mid + (r - mid) * COLOR_CONTRAST;
+                            g = mid + (g - mid) * COLOR_CONTRAST;
+                            b = mid + (b - mid) * COLOR_CONTRAST;
+                        }
+                        colorMap[cmIdx++] = Math.round(Math.max(0, Math.min(255, r)));
+                        colorMap[cmIdx++] = Math.round(Math.max(0, Math.min(255, g)));
+                        colorMap[cmIdx++] = Math.round(Math.max(0, Math.min(255, b)));
+                        colorMap[cmIdx++] = 255;
+                    }
+                }
+                colorMapCtx.putImageData(colorMapData, 0, 0);
+                // Use PNG for lossless color, nearest-neighbor scaling via CSS
+                output.style.backgroundImage = 'url(' + colorMapCanvas.toDataURL('image/png') + ')';
+                output.style.imageRendering = 'pixelated';
+            }
         }
-        output.textContent = lines.join('\n');
-        if (COLOR) output.style.backgroundImage = 'url(' + canvas.toDataURL('image/jpeg', 0.8) + ')';
-    }
 
     function loop(now) {
         if (!inView || document.hidden) { running = false; return; }

@@ -317,6 +317,8 @@
   white-space: pre;
   user-select: none;
   -webkit-user-select: none;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
 }
 .ascii-output .word {
   display: inline-block;
