@@ -42,8 +42,8 @@
     var GAMMA = 2.2;
     var SATURATION = 1.3;
     var COLOR_GAIN = DARK ? 1.45 : 0.95;  // glyphs only cover part of a cell, so colour is pushed brighter
-    var LIFT = 0.6;              // < 1 brightens shadows (1 = off, lower = brighter)
-    var MIN_COLOR = 90;    // glyphs only cover part of a cell, so colour is pushed brighter
+    var LIFT = 0.50;              // < 1 brightens shadows (1 = off, lower = brighter)
+    var MIN_COLOR = 120;    // glyphs only cover part of a cell, so colour is pushed brighter
     var LEVEL_CUT = 0.02;        // auto-levels: ignore darkest/brightest 2%
     var LEVEL_SMOOTH = 0.15;     // auto-levels: how fast it follows the scene (0..1)
 
