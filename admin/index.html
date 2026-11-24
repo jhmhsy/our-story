@@ -578,6 +578,7 @@
                     return typeof n === 'string' ? { text: n, nsfw: false } : { text: n.text || '', nsfw: !!n.nsfw };
                 });
                 state.letter = state.letter || {};
+                if (!state.greetings) dirty = true;
                 state.greetings = state.greetings || {
                     subtitle: '',
                     typingSpeed: 80,

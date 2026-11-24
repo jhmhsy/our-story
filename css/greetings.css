@@ -6,7 +6,7 @@
   align-items: stretch;
   padding: 0 0 0 var(--nav-gutter);
   overflow: hidden;
-  background: var(--pink-1);
+  background: #000;
 }
 
 /* ---- Left: typed greeting (transparent, so the emoji rain still shows) ---- */
@@ -26,13 +26,12 @@
 #greetings .gr-msg {
   display: grid;
   margin: 0;
-  font-family:
-    "Caveat", "Segoe Script", "Bradley Hand", "Brush Script MT", cursive;
+  font-family: "Caveat", "Segoe Script", "Bradley Hand", "Brush Script MT", cursive;
   font-weight: 700;
   font-size: clamp(32px, 4.2vw, 60px);
   line-height: 1.18;
-  color: #9c1f58;
-  text-shadow: 2px 2px 0 rgba(255, 255, 255, 0.7);
+  color: #ffd6e6;
+  text-shadow: 0 0 14px rgba(255, 122, 168, 0.55);
   overflow-wrap: anywhere;
 }
 #greetings .gr-ghost,
@@ -49,7 +48,8 @@
   height: 0.85em;
   margin-left: 3px;
   vertical-align: -0.08em;
-  background: #e5457f;
+  background: #ff7aa8;
+  box-shadow: 0 0 8px rgba(255, 122, 168, 0.8);
   animation: gr-blink 1s steps(1) infinite;
 }
 @keyframes gr-blink {
@@ -59,14 +59,10 @@
 }
 #greetings .gr-sub {
   margin: 22px 0 0;
-  font:
-    600 clamp(13px, 1.3vw, 16px) / 1.5 "Segoe UI",
-    Tahoma,
-    Verdana,
-    sans-serif;
+  font: 600 clamp(13px, 1.3vw, 16px) / 1.5 "Segoe UI", Tahoma, Verdana, sans-serif;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #b44a78;
+  color: #f48fb1;
 }
 
 /* ---- Right: pure black stage for the bouquet and stars ---- */

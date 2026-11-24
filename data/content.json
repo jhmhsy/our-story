@@ -1,4 +1,18 @@
 {
+  "greetings": {
+    "subtitle": "",
+    "typingSpeed": 80,
+    "startDelay": 600,
+    "holdDelay": 2200,
+    "messages": [
+      {
+        "text": "Hi baby 💞\nMy handsome boy 🍀\nMy honeybunch 💕\nI love youuuu 🎈"
+      },
+      {
+        "text": "Sending hugs & kisses 😏\nPlus points na me? mwheheh ❤️\n- From your lablab ❤️😘"
+      }
+    ]
+  },
   "videos": [
     {
       "src": "videos/upload-mwt11oxq-3.mp4"
