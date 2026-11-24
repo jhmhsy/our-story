@@ -1,10 +1,12 @@
 /* ascii-art.js - random mp4 compilation rendered as live ASCII (section 5, right column).
-   Videos are loaded from data/content.json. Zoom / pinch / buttons behave as before. */
+   Edit VIDEOS to change the playlist. Zoom / pinch / buttons behave as before. */
 (function () {
     'use strict';
 
-    /* ---- Playlist: loaded from content.json ---- */
-    var VIDEOS = [];
+    /* ---- Playlist: add your files here ---- */
+    var VIDEOS = ((window.SITE_CONTENT && window.SITE_CONTENT.videos) || [])
+        .map(function (v) { return typeof v === 'string' ? v : (v && v.src) || ''; })
+        .filter(function (s) { return s; });
 
     var output = document.getElementById('output');
     var canvas = document.getElementById('sourceCanvas');
@@ -22,7 +24,7 @@
     /* ---- Settings ---- */
     var RAMP = ' .\'`^",:;Il!i><~+_-?][}{1)(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$'; // light -> dense
     var INK = '#9c1f58';         // text colour (dense chars = dark pixels, on the white viewport)
-    var CONTRAST = 1.15;
+    var CONTRAST = 1.0;
     var FPS = 24;
     var COL_BASE = 1200;         // columns = COL_BASE / slider value
     var MAX_COLS = 300;          // detail cap, keeps frames fast
@@ -50,7 +52,16 @@
     var inView = false, running = false, started = false;
     var failCount = 0, bag = [], lastSrc = '';
 
-    output.style.color = INK;
+    var COLOR = true;            // false = single-colour text (INK)
+    if (COLOR) {
+        output.style.color = 'transparent';
+        output.style.webkitBackgroundClip = 'text';
+        output.style.backgroundClip = 'text';
+        output.style.backgroundSize = '100% 100%';
+        output.style.backgroundRepeat = 'no-repeat';
+    } else {
+        output.style.color = INK;
+    }
 
     /* ---- Video element (hidden, muted so autoplay is allowed) ---- */
     var video = document.createElement('video');
@@ -191,6 +202,7 @@
             lines[y] = String.fromCharCode.apply(null, codes);
         }
         output.textContent = lines.join('\n');
+        if (COLOR) output.style.backgroundImage = 'url(' + canvas.toDataURL('image/jpeg', 0.8) + ')';
     }
 
     function loop(now) {
@@ -274,34 +286,24 @@
 
     /* ---- Init: wait for the password gate, then start ---- */
     function init() {
-        // Load videos from content.json
-        fetch('./data/content.json')
-            .then(function (res) { return res.json(); })
-            .then(function (data) {
-                VIDEOS = data.videos || [];
-                if (!VIDEOS.length) {
-                    output.textContent = 'Add mp4 videos in the Admin panel';
-                    return;
-                }
-                measureCharAspect();
-                started = true;
-                updateDangerUI();
-                playNext();
+        if (!VIDEOS.length) {
+            output.textContent = 'Add videos in the admin page';
+            return;
+        }
+        measureCharAspect();
+        started = true;
+        updateDangerUI();
+        playNext();
 
-                if ('IntersectionObserver' in window && section) {
-                    new IntersectionObserver(function (entries) {
-                        inView = entries[0].isIntersecting;
-                        updatePlayback();
-                    }, { threshold: 0.15 }).observe(section);
-                } else {
-                    inView = true;
-                    updatePlayback();
-                }
-            })
-            .catch(function (err) {
-                console.error('[ascii-art] Failed to load videos:', err);
-                output.textContent = 'Failed to load video playlist';
-            });
+        if ('IntersectionObserver' in window && section) {
+            new IntersectionObserver(function (entries) {
+                inView = entries[0].isIntersecting;
+                updatePlayback();
+            }, { threshold: 0.15 }).observe(section);
+        } else {
+            inView = true;
+            updatePlayback();
+        }
     }
 
     function tryInitialLoad() {
