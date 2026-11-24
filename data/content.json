@@ -328,5 +328,6 @@
     "gallery": "#000000",
     "jar": "#000000",
     "last": "#000000"
-  }
+  },
+  "asciiMode": false
 }
