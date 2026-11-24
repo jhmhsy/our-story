@@ -321,5 +321,12 @@
         "nsfw": false
       }
     ]
+  },
+  "backgrounds": {
+    "greetings": "#000000",
+    "story": "#000000",
+    "gallery": "#000000",
+    "jar": "#000000",
+    "last": "#000000"
   }
 }
