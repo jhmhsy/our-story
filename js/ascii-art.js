@@ -463,77 +463,77 @@
     }
 
     /* ---- Show actual video instead of ASCII ---- */
-        function showActualVideo() {
-            // Hide ASCII controls
-            var controls = document.querySelector('.ascii-controls');
-            if (controls) controls.style.display = 'none';
+    function showActualVideo() {
+        // Hide ASCII controls
+        var controls = document.querySelector('.ascii-controls');
+        if (controls) controls.style.display = 'none';
 
-            // Create video element
-            var videoContainer = document.createElement('div');
-            videoContainer.style.width = '100%';
-            videoContainer.style.height = '100%';
-            videoContainer.style.display = 'flex';
-            videoContainer.style.alignItems = 'center';
-            videoContainer.style.justifyContent = 'center';
-            videoContainer.style.background = '#2b1020';
+        // Create video element
+        var videoContainer = document.createElement('div');
+        videoContainer.style.width = '100%';
+        videoContainer.style.height = '100%';
+        videoContainer.style.display = 'flex';
+        videoContainer.style.alignItems = 'center';
+        videoContainer.style.justifyContent = 'center';
+        videoContainer.style.background = '#2b1020';
 
-            var videoEl = document.createElement('video');
-            videoEl.controls = true;
-            videoEl.muted = true;
-            videoEl.defaultMuted = true;
-            videoEl.playsInline = true;
-            videoEl.setAttribute('playsinline', '');
-            videoEl.setAttribute('muted', '');
-            videoEl.style.maxWidth = '100%';
-            videoEl.style.maxHeight = '100%';
-            videoEl.style.borderRadius = '8px';
-            videoEl.style.boxShadow = '0 8px 32px rgba(0,0,0,0.3)';
+        var videoEl = document.createElement('video');
+        videoEl.controls = true;
+        videoEl.muted = true;
+        videoEl.defaultMuted = true;
+        videoEl.playsInline = true;
+        videoEl.setAttribute('playsinline', '');
+        videoEl.setAttribute('muted', '');
+        videoEl.style.maxWidth = '100%';
+        videoEl.style.maxHeight = '100%';
+        videoEl.style.borderRadius = '8px';
+        videoEl.style.boxShadow = '0 8px 32px rgba(0,0,0,0.3)';
 
-            // Play videos in sequence
-            var currentVideoIndex = 0;
-            var bag = [];
+        // Play videos in sequence
+        var currentVideoIndex = 0;
+        var bag = [];
 
-            function shuffleBag() {
-                bag = VIDEOS.slice();
-                for (var i = bag.length - 1; i > 0; i--) {
-                    var j = Math.floor(Math.random() * (i + 1));
-                    var t = bag[i]; bag[i] = bag[j]; bag[j] = t;
-                }
+        function shuffleBag() {
+            bag = VIDEOS.slice();
+            for (var i = bag.length - 1; i > 0; i--) {
+                var j = Math.floor(Math.random() * (i + 1));
+                var t = bag[i]; bag[i] = bag[j]; bag[j] = t;
             }
+        }
 
-            function playNextVideo() {
-                if (!bag.length) shuffleBag();
-                var src = bag.pop();
-                videoEl.src = src;
-                videoEl.load();
-                videoEl.play().catch(function() {
-                    // Autoplay might be blocked, user can click play
-                });
-            }
-
-            videoEl.addEventListener('ended', playNextVideo);
-            videoEl.addEventListener('error', function() {
-                // Try next video on error
-                playNextVideo();
+        function playNextVideo() {
+            if (!bag.length) shuffleBag();
+            var src = bag.pop();
+            videoEl.src = src;
+            videoEl.load();
+            videoEl.play().catch(function () {
+                // Autoplay might be blocked, user can click play
             });
+        }
 
-            videoContainer.appendChild(videoEl);
-
-            // Replace the ASCII output with video container
-            var asciiFrame = document.querySelector('.ascii-frame');
-            if (asciiFrame) {
-                asciiFrame.innerHTML = '';
-                asciiFrame.appendChild(videoContainer);
-            }
-
-            // Start playing
+        videoEl.addEventListener('ended', playNextVideo);
+        videoEl.addEventListener('error', function () {
+            // Try next video on error
             playNextVideo();
+        });
+
+        videoContainer.appendChild(videoEl);
+
+        // Replace the ASCII output with video container
+        var asciiFrame = document.querySelector('.ascii-frame');
+        if (asciiFrame) {
+            asciiFrame.innerHTML = '';
+            asciiFrame.appendChild(videoContainer);
         }
 
-        function tryInitialLoad() {
-            var site = document.getElementById('site-content');
-            if (site && !site.hasAttribute('hidden')) init();
-            else setTimeout(tryInitialLoad, 200);
-        }
-        tryInitialLoad();
-    })();
+        // Start playing
+        playNextVideo();
+    }
+
+    function tryInitialLoad() {
+        var site = document.getElementById('site-content');
+        if (site && !site.hasAttribute('hidden')) init();
+        else setTimeout(tryInitialLoad, 200);
+    }
+    tryInitialLoad();
+})();
