@@ -333,6 +333,66 @@
   "music": {
     "songs": [
       {
+        "title": "Segundo, Siguro",
+        "artist": "Arthur Nery",
+        "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/ec/36/22/ec362249-4ff9-760c-f983-8f64a01793ea/cover.jpg/600x600bb.jpg",
+        "audio": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview122/v4/ca/b6/5b/cab65b99-98e5-1990-cb51-ef9b85ecea2b/mzaf_5324468541206269386.plus.aac.p.m4a"
+      },
+      {
+        "title": "Higa",
+        "artist": "Arthur Nery",
+        "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/98/cc/8c/98cc8c6f-7dd5-18ab-2af8-981cd9c13b7f/cover.jpg/600x600bb.jpg",
+        "audio": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/3f/fc/31/3ffc319c-315e-622f-ce94-b6ba76fc63dc/mzaf_830679551326303535.plus.aac.p.m4a"
+      },
+      {
+        "title": "Binhi",
+        "artist": "Arthur Nery",
+        "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/14/8d/42/148d4271-2e79-c97f-7848-8ed16296cfe3/cover.jpg/600x600bb.jpg",
+        "audio": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/08/64/cd/0864cd70-4637-35c4-1dc4-d12890523eb5/mzaf_1212608944171957188.plus.aac.p.m4a"
+      },
+      {
+        "title": "TAKE ALL THE LOVE",
+        "artist": "Arthur Nery",
+        "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/76/6e/ae/766eae3d-f3af-4e83-d76d-48c36b50a68a/cover.jpg/600x600bb.jpg",
+        "audio": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/f5/92/79/f592792c-6c22-9bb7-d30d-6b4f12fcaf05/mzaf_14078869570826747544.plus.aac.p.m4a"
+      },
+      {
+        "title": "Pagsamo",
+        "artist": "Arthur Nery",
+        "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/23/b7/24/23b72461-4b92-230a-a1c1-041fb75acbaf/cover.jpg/600x600bb.jpg",
+        "audio": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/dc/52/a5/dc52a5c9-ec23-6d9b-254b-4ab8c10278a5/mzaf_2362941077511782734.plus.aac.p.m4a"
+      },
+      {
+        "title": "Isa lang",
+        "artist": "Arthur Nery",
+        "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/bf/63/0c/bf630c2e-4a33-629f-7bb8-ca43737bc08c/cover.jpg/600x600bb.jpg",
+        "audio": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/24/e7/ac/24e7ac86-c947-4b93-3d42-fbc6fdaa49d4/mzaf_17717506291418073053.plus.aac.p.m4a"
+      },
+      {
+        "title": "Dito Sa'kin",
+        "artist": "Earl Agustin",
+        "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music122/v4/8b/d7/48/8bd748ef-4de3-f7e2-fea1-62eb51e4cbaf/cover.jpg/600x600bb.jpg",
+        "audio": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/9a/9c/4e/9a9c4eef-438a-3a89-0c27-5ed209f680c9/mzaf_9607063499694923569.plus.aac.p.m4a"
+      },
+      {
+        "title": "Dalangin",
+        "artist": "Earl Agustin",
+        "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/9d/ad/d0/9dadd05c-9650-d529-0b02-704bd0b57135/cover.jpg/600x600bb.jpg",
+        "audio": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/5c/47/5b/5c475b59-79fc-a7e9-bc82-85cc67fb9ff8/mzaf_2500953796092172653.plus.aac.p.m4a"
+      },
+      {
+        "title": "Tibok",
+        "artist": "Earl Agustin",
+        "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/ef/49/ba/ef49baef-1e82-620b-453f-81c3a9122a50/cover.jpg/600x600bb.jpg",
+        "audio": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/e3/8b/0f/e38b0f12-f00a-4292-07ac-2aa38597260b/mzaf_1460050281538624820.plus.aac.p.m4a"
+      },
+      {
+        "title": "Pag-ibig ng Ikaw at Ako",
+        "artist": "Earl Agustin",
+        "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/82/2b/2c/822b2c97-1571-6dcd-3f1f-9508c9b2d126/cover.jpg/600x600bb.jpg",
+        "audio": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/51/bf/f5/51bff521-ba82-a10f-4b4d-3d23f439e4ed/mzaf_6250094996570502164.plus.aac.p.m4a"
+      },
+      {
         "title": "Closer",
         "artist": "GEHLEE",
         "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/e4/38/36/e4383691-7a98-ede4-7ebb-f2a3b1969e52/823375548775_Cover.jpg/600x600bb.jpg",
