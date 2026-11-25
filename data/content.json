@@ -18,7 +18,7 @@
       "src": "videos/upload-mwt11oxq-3.mp4"
     }
   ],
-  "asciiMode": true,
+  "asciiMode": false,
   "timeline": {
     "title": "Our Story",
     "subtitle": "Little moments we keep forever",
@@ -330,5 +330,27 @@
     "jar": "#000000",
     "last": "#000000"
   },
-  "asciiMode": false
+  "music": {
+    "songs": [
+      {
+        "title": "Enchanted (Taylor's Version)",
+        "artist": "Taylor Swift",
+        "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/9f/3c/0a/9f3c0a60-f9e0-a34e-60e5-0be1f182896b/23UMGIM63932.rgb.jpg/600x600bb.jpg",
+        "audio": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/ff/f2/da/fff2daa7-e089-c08b-9b34-d2ba8d8ee37c/mzaf_13585740172543756019.plus.aac.p.m4a"
+      },
+      {
+        "title": "purple",
+        "artist": "Olivia Rodrigo",
+        "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/1d/1b/f9/1d1bf9b1-44c6-9a6c-6ffb-c158488c06ce/26UMGIM39303.rgb.jpg/600x600bb.jpg",
+        "audio": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/1b/23/c0/1b23c0d2-78cf-2d63-15d0-a2aab64bc43b/mzaf_978337358949533196.plus.aac.p.m4a"
+      },
+      {
+        "title": "twilight zone",
+        "artist": "Ariana Grande",
+        "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/98/f0/dc/98f0dcff-559c-2910-c0b1-5ba6b66748d4/25UMGIM42096.rgb.jpg/600x600bb.jpg",
+        "audio": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/de/c6/1d/dec61de0-ca56-abfa-1007-13bf1c011795/mzaf_10955788795631585370.plus.aac.p.m4a"
+      }
+    ],
+    "title": "Songs that remind me of us"
+  }
 }
