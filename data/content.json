@@ -324,12 +324,12 @@
     ]
   },
   "backgrounds": {
-    "greetings": "#000000",
-    "story": "#000000",
-    "gallery": "#000000",
-    "jar": "#000000",
-    "last": "#000000",
-    "songs": "#000000"
+    "greetings": "#fde3ee",
+    "story": "#f8a9c6",
+    "gallery": "#f8a3c2",
+    "jar": "#f69bbc",
+    "music": "#f9a8c8",
+    "last": "#f48fb1"
   },
   "music": {
     "songs": [

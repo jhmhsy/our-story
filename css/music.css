@@ -6,7 +6,7 @@
   justify-content: center;
   overflow: hidden;
   padding: 40px var(--nav-gutter);
-  background: #f9a8c8;
+  /* Background color is set dynamically from data/content.json via content.js */
 }
 
 #music .mu {
