@@ -2,8 +2,8 @@
     'use strict';
 
     var CONTENT_URL = 'data/content.json';
-    var DEPENDENTS = ['js/greetings.js', 'js/timeline.js', 'js/gallery.js', 'js/jar.js', 'js/letter.js', 'js/ascii-art.js'];
-    var SECTION_IDS = ['greetings', 'story', 'gallery', 'jar', 'last'];
+    var DEPENDENTS = ['js/greetings.js', 'js/timeline.js', 'js/gallery.js', 'js/jar.js', 'js/music.js', 'js/letter.js', 'js/ascii-art.js'];
+    var SECTION_IDS = ['greetings', 'story', 'gallery', 'jar', 'music', 'last'];
 
     function loadScript(src) {
         return new Promise(function (resolve, reject) {

@@ -1,0 +1,330 @@
+/* music.css - Music section (#music). Scoped to #music, .mu, .mu-* and .mu-fab. */
+
+#music.section--music {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 40px var(--nav-gutter);
+  background: #f9a8c8;
+}
+
+#music .mu {
+  --mu-w: clamp(180px, 36vw, 250px);
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 1000px;
+  text-align: center;
+  font-family:
+    "Caveat", "Segoe Script", "Bradley Hand", "Brush Script MT", cursive;
+}
+#music .mu__title {
+  margin: 0;
+  font-size: clamp(40px, 6vw, 62px);
+  line-height: 1.1;
+  color: #9c1f58;
+  text-shadow: 2px 2px 0 rgba(255, 255, 255, 0.7);
+}
+#music .mu__subtitle {
+  margin: 4px 0 0;
+  font-size: clamp(20px, 2.6vw, 26px);
+  color: #b44a78;
+}
+#music .mu__empty {
+  margin: 18px 0 0;
+  font-size: clamp(22px, 2.6vw, 28px);
+  font-weight: 700;
+  color: #9c1f58;
+}
+
+/* ---- Stage ---- */
+#music .mu__stage {
+  position: relative;
+  height: calc(var(--mu-w) + 60px);
+  margin-top: 10px;
+  overflow: hidden;
+  touch-action: pan-y;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  outline: none;
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 7%,
+    #000 93%,
+    transparent
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 7%,
+    #000 93%,
+    transparent
+  );
+}
+#music .mu__stage.is-dragging {
+  cursor: grabbing;
+}
+#music .mu__stage:focus-visible {
+  outline: 3px solid rgba(229, 69, 127, 0.6);
+  outline-offset: -3px;
+  border-radius: 24px;
+}
+#music .mu__ring {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+/* ---- Album card + vinyl disc ---- */
+#music .mu-card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--mu-w);
+  margin: 0;
+  will-change: transform;
+  cursor: pointer;
+}
+#music .mu-card__art {
+  position: relative;
+  z-index: 1;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 22px;
+  background: #f8c3d6;
+  box-shadow: 0 14px 30px rgba(120, 20, 70, 0.35);
+}
+#music .mu-card__art img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+
+#music .mu-disc {
+  position: absolute;
+  z-index: 0;
+  top: 5%;
+  left: 6%;
+  width: 90%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: repeating-radial-gradient(circle, #1b1b22 0 2px, #2c2c36 2px 3px);
+  box-shadow: 0 8px 18px rgba(60, 10, 40, 0.35);
+  translate: 0 0;
+  transition: translate 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+  animation: mu-spin 7s linear infinite;
+  animation-play-state: paused;
+}
+#music .mu-card.is-active .mu-disc {
+  translate: 34% 0;
+}
+#music .mu.is-playing .mu-card.is-active .mu-disc {
+  animation-play-state: running;
+}
+#music .mu-disc__label {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 34%;
+  aspect-ratio: 1;
+  margin: -17% 0 0 -17%;
+  border-radius: 50%;
+  background: #e5457f center / cover no-repeat;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.35);
+}
+#music .mu-disc__label::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 14%;
+  aspect-ratio: 1;
+  margin: -7% 0 0 -7%;
+  border-radius: 50%;
+  background: #1b1b22;
+}
+@keyframes mu-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* equalizer badge (bottom-left of the active cover) */
+#music .mu-eq {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: rgba(20, 20, 30, 0.45);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+#music .mu-card.is-active .mu-eq {
+  opacity: 1;
+}
+#music .mu-eq i {
+  display: block;
+  width: 6px;
+  border-radius: 3px;
+  background: #fff;
+}
+#music .mu-eq i:nth-child(1) {
+  height: 14px;
+}
+#music .mu-eq i:nth-child(2) {
+  height: 26px;
+}
+#music .mu-eq i:nth-child(3) {
+  height: 18px;
+}
+#music .mu.is-playing .mu-card.is-active .mu-eq i {
+  animation: mu-bar 0.9s ease-in-out infinite;
+}
+#music .mu.is-playing .mu-card.is-active .mu-eq i:nth-child(2) {
+  animation-delay: -0.3s;
+}
+#music .mu.is-playing .mu-card.is-active .mu-eq i:nth-child(3) {
+  animation-delay: -0.6s;
+}
+@keyframes mu-bar {
+  0%,
+  100% {
+    transform: scaleY(0.4);
+  }
+  50% {
+    transform: scaleY(1.15);
+  }
+}
+
+/* ---- Now playing ---- */
+#music .mu__now {
+  min-height: 70px;
+  margin-top: 6px;
+  padding: 0 12px;
+}
+#music .mu__song {
+  margin: 0;
+  overflow: hidden;
+  font-size: clamp(30px, 4vw, 42px);
+  font-weight: 700;
+  line-height: 1.1;
+  color: #9c1f58;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#music .mu__artist {
+  margin: 2px 0 0;
+  overflow: hidden;
+  font-size: clamp(22px, 2.8vw, 28px);
+  color: #b44a78;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- Controls ---- */
+#music .mu__controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  margin-top: 10px;
+}
+#music .mu__btn {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  padding: 0 0 4px;
+  border: none;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ff7aa8, #e5457f);
+  color: #fff;
+  font:
+    700 30px/1 "Segoe UI",
+    sans-serif;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(229, 69, 127, 0.4);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+#music .mu__btn--play {
+  width: 58px;
+  height: 58px;
+  padding: 0;
+  font-size: 22px;
+}
+#music .mu__btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(229, 69, 127, 0.5);
+}
+#music .mu__btn:active {
+  transform: scale(0.95);
+}
+#music .mu__btn:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 2px;
+}
+#music .mu__btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* ---- Floating mute / pause button (visible on every section) ---- */
+.mu-fab {
+  position: fixed;
+  right: 14px;
+  bottom: calc(var(--nav-space, 0px) + 14px);
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.7);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(190, 40, 100, 0.3);
+}
+.mu-fab:focus-visible {
+  outline: 3px solid #e5457f;
+  outline-offset: 2px;
+}
+
+@media (max-width: 900px) {
+  #music.section--music {
+    padding: 28px 0 calc(28px + var(--nav-space));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #music .mu-disc,
+  #music .mu.is-playing .mu-card.is-active .mu-eq i {
+    animation: none;
+  }
+  #music .mu-disc,
+  #music .mu__btn {
+    transition: none;
+  }
+}

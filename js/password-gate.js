@@ -23,6 +23,10 @@
     if (typeof window.__startTreeAnimation === 'function') {
       window.__startTreeAnimation();
     }
+    // Start music inside the unlock click, so the browser allows sound
+    if (typeof window.__startMusic === 'function') {
+      window.__startMusic();
+    }
     // Focus first nav link for a11y
     var firstLink = document.querySelector('#love-nav a');
     if (firstLink) firstLink.focus();

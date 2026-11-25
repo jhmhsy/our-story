@@ -302,6 +302,7 @@
             var statusEl = null;
             var saveBtn = null;
             var MIN_PASS = 6;
+            var musicTerm = '', musicResults = [], musicMsg = '', previewAudio = null, previewUrl = '';
             var BG_DEFAULTS = { greetings: '#000000', story: '#f8a9c6', gallery: '#f8a3c2', jar: '#f69bbc', last: '#f48fb1' };
             var BG_LABELS = [
                 ['greetings', '1 · Greetings'],
@@ -653,6 +654,10 @@
                 BG_LABELS.forEach(function (p) {
                     if (!/^#[0-9a-f]{6}$/i.test(state.backgrounds[p[0]] || '')) state.backgrounds[p[0]] = BG_DEFAULTS[p[0]];
                 });
+                state.music = state.music || {};
+                state.music.songs = (state.music.songs || []).map(function (s) {
+                    return { title: s.title || '', artist: s.artist || '', cover: s.cover || '', audio: s.audio || '' };
+                });
             }
 
             function rerender() {
@@ -805,8 +810,119 @@
                 return card;
             }
 
+            /* ---------- Music: iTunes Search API (free, no key, 30-second previews) ---------- */
+            function stopPreview() {
+                if (previewAudio) { previewAudio.pause(); previewAudio = null; }
+                previewUrl = '';
+            }
+            function searchSongs(term) {
+                var url = 'https://itunes.apple.com/search?media=music&entity=song&limit=15&term=' + encodeURIComponent(term);
+                return fetch(url).then(function (res) {
+                    if (!res.ok) throw new Error('Song search failed (HTTP ' + res.status + ').');
+                    return res.json();
+                }).then(function (j) {
+                    return (j.results || []).filter(function (r) { return r.previewUrl; }).map(function (r) {
+                        return {
+                            title: r.trackName || '',
+                            artist: r.artistName || '',
+                            cover: String(r.artworkUrl100 || '').replace('100x100bb', '600x600bb'),
+                            audio: r.previewUrl
+                        };
+                    });
+                });
+            }
+
+            function resultRow(r) {
+                var added = state.music.songs.some(function (s) { return s.audio === r.audio; });
+                var cover = r.cover ? h('img', { class: 'thumb', alt: '', loading: 'lazy', src: r.cover }) : h('div', { class: 'thumb thumb--empty', text: 'No cover' });
+                var previewBtn = h('button', {
+                    type: 'button', class: 'btn btn--ghost', text: '\u25B6 Preview',
+                    onclick: function () {
+                        if (previewUrl === r.audio) { stopPreview(); return; }
+                        stopPreview();
+                        previewUrl = r.audio;
+                        previewAudio = new Audio(r.audio);
+                        previewAudio.play().catch(function () { previewUrl = ''; });
+                    }
+                });
+                var addBtn = h('button', {
+                    type: 'button', class: 'btn', text: added ? 'Added' : '+ Add',
+                    disabled: added ? 'disabled' : false,
+                    onclick: function () {
+                        stopPreview();
+                        state.music.songs.unshift({ title: r.title, artist: r.artist, cover: r.cover, audio: r.audio });
+                        markDirty();
+                        rerender();
+                    }
+                });
+                return h('div', { class: 'card item' }, [
+                    h('div', null, [cover]),
+                    h('div', null, [
+                        h('p', { text: r.title + ' \u2014 ' + r.artist }),
+                        h('div', { class: 'actions' }, [previewBtn, addBtn])
+                    ])
+                ]);
+            }
+
+            function musicSearchCard() {
+                var input = h('input', { type: 'text', 'aria-label': 'Search songs', placeholder: 'Song or artist, e.g. twilight zone ariana grande' });
+                input.value = musicTerm;
+                var msg = h('p', { class: 'msg', text: musicMsg });
+                var list = h('div');
+
+                function draw() {
+                    list.textContent = '';
+                    musicResults.forEach(function (r) { list.appendChild(resultRow(r)); });
+                    msg.textContent = musicMsg;
+                }
+                function run() {
+                    var term = input.value.trim();
+                    if (!term) return;
+                    stopPreview();
+                    musicTerm = term;
+                    musicMsg = 'Searching\u2026';
+                    msg.textContent = musicMsg;
+                    searchSongs(term).then(function (res) {
+                        musicResults = res;
+                        musicMsg = res.length ? '' : 'No songs with a preview found.';
+                        draw();
+                    }).catch(function (err) {
+                        musicResults = [];
+                        musicMsg = err.message || 'Song search failed.';
+                        draw();
+                    });
+                }
+                input.addEventListener('keydown', function (e) {
+                    if (e.key === 'Enter') { e.preventDefault(); run(); }
+                });
+                draw();
+                return h('div', null, [
+                    h('div', { class: 'card' }, [
+                        h('label', { text: 'Search songs to add' }),
+                        input,
+                        h('div', { class: 'actions' }, [h('button', { type: 'button', class: 'btn', text: 'Search', onclick: run })]),
+                        msg
+                    ]),
+                    list
+                ]);
+            }
+
+            function songCard(list, s, i) {
+                var cover = s.cover ? h('img', { class: 'thumb', alt: '', loading: 'lazy', src: s.cover }) : h('div', { class: 'thumb thumb--empty', text: 'No cover' });
+                return h('div', { class: 'card item' }, [
+                    h('div', null, [cover]),
+                    h('div', null, [
+                        field('Title', s.title, bind(s, 'title')),
+                        field('Artist', s.artist, bind(s, 'artist')),
+                        h('div', { class: 'actions' }, [
+                            h('button', { type: 'button', class: 'btn btn--danger', text: 'Delete', onclick: function () { removeItem(list, i, 'Remove this song from the playlist?'); } })
+                        ])
+                    ])
+                ]);
+            }
+
             function renderEditor() {
-                var t = state.timeline, g = state.gallery, j = state.jar, l = state.letter, gr = state.greetings;
+                var t = state.timeline, g = state.gallery, j = state.jar, l = state.letter, gr = state.greetings, m = state.music;
                 var root = h('div');
 
                 root.appendChild(h('div', { class: 'top' }, [
@@ -839,6 +955,7 @@
                         numField('Delay before deleting / restarting (ms)', gr.holdDelay, bind(gr, 'holdDelay'), 0)
                     ])
                 ]));
+
                 gr.messages.forEach(function (m, i) { root.appendChild(greetingMessageCard(gr.messages, m, i)); });
                 root.appendChild(h('button', {
                     type: 'button', class: 'btn', text: '+ Add message',
@@ -922,6 +1039,16 @@
                         rerender();
                     }
                 }));
+
+                /* Music */
+                root.appendChild(h('h2', { text: 'Music' }));
+                root.appendChild(h('p', { class: 'hint', text: 'Songs shuffle on every visit. Search uses Apple\u2019s free iTunes Search API, which provides 30-second previews.' }));
+                root.appendChild(h('div', { class: 'card' }, [
+                    field('Section title', m.title, bind(m, 'title')),
+                    field('Subtitle', m.subtitle, bind(m, 'subtitle'))
+                ]));
+                root.appendChild(musicSearchCard());
+                m.songs.forEach(function (s, i) { root.appendChild(songCard(m.songs, s, i)); });
 
                 /* Letter */
                 root.appendChild(h('h2', { text: 'Love letter' }));
