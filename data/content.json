@@ -333,6 +333,12 @@
   "music": {
     "songs": [
       {
+        "title": "Closer",
+        "artist": "GEHLEE",
+        "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/e4/38/36/e4383691-7a98-ede4-7ebb-f2a3b1969e52/823375548775_Cover.jpg/600x600bb.jpg",
+        "audio": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/6c/8c/8b/6c8c8bc9-b77a-9e52-b04f-6ac38fa34d10/mzaf_5424543195878305815.plus.aac.p.m4a"
+      },
+      {
         "title": "Ikaw Lang Patutunguhan",
         "artist": "Amiel Sol",
         "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/90/9d/45/909d45ab-feac-c6a4-59b6-eb252a23569b/cover.jpg/600x600bb.jpg",
