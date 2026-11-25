@@ -65,14 +65,14 @@
   color: #f48fb1;
 }
 
-/* ---- Right: pure black stage for the bouquet and stars ---- */
+/* ---- Right: transparent stage for the bouquet (emoji rain shows through) ---- */
 #greetings .gr-art {
   position: relative;
   z-index: 2;
   display: flex;
   min-width: 0;
   box-sizing: border-box;
-  background: inherit;
+  background: transparent;
 }
 #greetings .gr-stage {
   position: relative;
@@ -138,7 +138,7 @@
   display: flex;
   min-width: 0;
   box-sizing: border-box;
-  background: #03030a;
+  background: transparent;
   overflow: hidden;
 }
 #greetings .gr-canvas {

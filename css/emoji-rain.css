@@ -6,7 +6,7 @@
   top: 0; right: 0; bottom: 0; left: 0;
   overflow: hidden;
   pointer-events: none;
-  z-index: 1;                 /* above section backgrounds, below content */
+  z-index: 3;                 /* above section content (z-index 2), below sidebar/modals (z-index 50+) */
 }
 
 .love-drop {

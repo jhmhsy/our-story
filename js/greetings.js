@@ -419,10 +419,13 @@
     }
 
     function draw() {
-        ctx.fillStyle = '#000';
-        ctx.fillRect(0, 0, W, H);
+        // Transparent canvas - section background shows through, emoji rain (z-index 3) floats on top
+        ctx.clearRect(0, 0, W, H);
 
         ZO.fill(-1e9); ZS.fill(-1e9);
+
+        // Twinkle phase for star/bling effect on ASCII particles
+        var twinklePhase = performance.now() * 0.003;
         var c = Math.cos(theta), s = Math.sin(theta);
 
         // static parts (stalk, paper, leaves, stems) – timed appearance
@@ -477,15 +480,35 @@
                 var hasO = ZO[ci] > -1e8, hasS = ZS[ci] > -1e8;
                 if (!hasO && !hasS) continue;
                 var px = col * cw, py = row * chh;
+
+                // Subtle star/bling twinkle: ~8% of particles twinkle
+                var twinkle = 0;
+                if ((ci * 73856093) % 13 === 0) { // pseudo-random per-cell
+                    var tw = Math.sin(twinklePhase + ci * 0.01) * 0.5 + 0.5; // 0..1
+                    twinkle = tw * tw * 0.35; // 0..0.35 boost, squared for sparkle feel
+                }
+
                 if (hasO) {
                     if (RO[ci] !== lr || GO[ci] !== lg || BO[ci] !== lb) {
                         lr = RO[ci]; lg = GO[ci]; lb = BO[ci];
                         ctx.fillStyle = 'rgb(' + lr + ',' + lg + ',' + lb + ')';
                     }
-                    ctx.fillText(RAMP[CO[ci]], px, py);
+                    var baseAlpha = 1;
+                    if (twinkle > 0) {
+                        // Draw twinkle highlight (brighter, slightly larger)
+                        ctx.globalAlpha = Math.min(1, baseAlpha + twinkle);
+                        ctx.fillText(RAMP[CO[ci]], px, py);
+                        // Draw core
+                        ctx.globalAlpha = baseAlpha;
+                        ctx.fillText(RAMP[CO[ci]], px, py);
+                    } else {
+                        ctx.fillText(RAMP[CO[ci]], px, py);
+                    }
                 }
                 if (hasS && ZS[ci] > ZO[ci]) {
-                    ctx.globalAlpha = AS[ci] / 100 * (hasO ? 1 : 1.2);
+                    var alpha = AS[ci] / 100 * (hasO ? 1 : 1.2);
+                    if (twinkle > 0) alpha = Math.min(1, alpha + twinkle * 0.8);
+                    ctx.globalAlpha = alpha;
                     ctx.fillStyle = 'rgb(' + RS[ci] + ',' + GS[ci] + ',' + BS[ci] + ')';
                     lr = -1;
                     ctx.fillText(RAMP_P[CS[ci] % RAMP_P.length] || '.', px, py);
