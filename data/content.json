@@ -1,7 +1,7 @@
 {
   "greetings": {
     "subtitle": "",
-    "typingSpeed": 80,
+    "typingSpeed": 50,
     "startDelay": 600,
     "holdDelay": 2200,
     "messages": [
@@ -333,6 +333,12 @@
   },
   "music": {
     "songs": [
+      {
+        "title": "Babalik Sa'yo (from \"2 Good 2 Be True\")",
+        "artist": "Moira Dela Torre",
+        "cover": "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/5e/df/53/5edf5326-9eb1-99bf-c99c-4c8326d88c0d/199350893797.jpg/600x600bb.jpg",
+        "audio": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/6f/95/9b/6f959bd4-f30f-8f1f-8b2c-1ebe1e4bb990/mzaf_1360600785599055884.plus.aac.p.m4a"
+      },
       {
         "title": "Segundo, Siguro",
         "artist": "Arthur Nery",
