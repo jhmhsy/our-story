@@ -10,37 +10,15 @@
   z-index: 50;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   gap: 6px;
-  padding: 10px 8px 8px;
+  padding: 12px 8px;
   border-radius: 30px;
   background: rgba(255, 255, 255, 0.58);
   border: 1px solid rgba(255, 255, 255, 0.8);
   box-shadow: 0 10px 30px rgba(190, 40, 100, 0.28);
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
-}
-
-.love-nav__heart {
-  align-self: center;
-  font-size: 18px;
-  line-height: 1;
-  animation: love-beat 1.4s ease-in-out infinite;
-}
-@keyframes love-beat {
-  0%,
-  100% {
-    transform: scale(1);
-  }
-  15% {
-    transform: scale(1.25);
-  }
-  30% {
-    transform: scale(1);
-  }
-  45% {
-    transform: scale(1.18);
-  }
 }
 
 .love-nav__link {
@@ -101,17 +79,26 @@
 /* Desktop only: slide the labels out. Scoped to >900px so these (higher-specificity)
    rules can never fight the mobile bottom-bar styles below. */
 @media (min-width: 901px) {
+  /* Also show on keyboard focus for accessibility */
   .love-nav__link:focus-visible .love-nav__label {
     max-width: 140px;
     margin-left: 10px;
     opacity: 1;
   }
 }
+
+/* On hover-capable devices: show labels when nav is hovered, hide otherwise */
 @media (min-width: 901px) and (hover: hover) and (pointer: fine) {
   .love-nav:hover .love-nav__label {
     max-width: 140px;
     margin-left: 10px;
     opacity: 1;
+  }
+  /* Explicitly hide labels when nav is not hovered, even if link has aria-current */
+  .love-nav:not(:hover) .love-nav__label {
+    max-width: 0;
+    margin-left: 0;
+    opacity: 0;
   }
 }
 
@@ -136,10 +123,6 @@
     border-radius: 22px 22px 0 0;
     box-shadow: 0 -6px 22px rgba(190, 40, 100, 0.25);
   }
-
-  .love-nav__heart {
-    display: none;
-  } /* decoration only; frees room for the four items */
 
   .love-nav__link {
     flex: 1 1 0; /* four equal columns, no overflow */
@@ -187,9 +170,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .love-nav__heart {
-    animation: none;
-  }
   .love-nav__label {
     transition: none;
   }
