@@ -353,7 +353,7 @@
    ========================================================================== */
 [data-theme="dark"] #story.section--memory {
   background-image:
-    var(--grad-story),
+    var(--grad-story-dark, var(--grad-story)),
     radial-gradient(var(--border-subtle) 2px, transparent 2.6px),
     radial-gradient(var(--border-strong) 1.5px, transparent 2px);
 }
@@ -692,7 +692,7 @@
    Dark mode — ASCII section (#last - right panel)
    ========================================================================== */
 [data-theme="dark"] .section--poem {
-  background: var(--grad-last);
+  background: var(--grad-last-dark, var(--grad-last));
 }
 [data-theme="dark"] .poem-panel {
   background: rgba(45, 20, 35, 0.6);
@@ -795,23 +795,41 @@ html {
   min-height: 100svh;
 }
 
+/* Section backgrounds — use theme-specific custom properties set by content.js */
 .section--tree {
-  background: var(--section-bg, var(--grad-greetings));
+  background: var(--grad-greetings);
 }
 .section--memory {
-  background: var(--section-bg, var(--grad-story));
+  background: var(--grad-story);
 }
 .section--future {
-  background: var(--section-bg, var(--grad-gallery));
+  background: var(--grad-gallery);
 }
 .section--jar {
-  background: var(--section-bg, var(--grad-jar));
+  background: var(--grad-jar);
 }
 .section--music {
-  background: var(--section-bg, var(--grad-music));
+  background: var(--grad-music);
 }
 .section--poem {
-  background: var(--section-bg, var(--grad-last));
+  background: var(--grad-last);
+}
+
+/* Dark mode section gradients — overridden by content.js via --grad-*-dark */
+[data-theme="dark"] .section--memory {
+  background: var(--grad-story-dark, var(--grad-story));
+}
+[data-theme="dark"] .section--future {
+  background: var(--grad-gallery-dark, var(--grad-gallery));
+}
+[data-theme="dark"] .section--jar {
+  background: var(--grad-jar-dark, var(--grad-jar));
+}
+[data-theme="dark"] .section--music {
+  background: var(--grad-music-dark, var(--grad-music));
+}
+[data-theme="dark"] .section--poem {
+  background: var(--grad-last-dark, var(--grad-last));
 }
 
 /* Section 1 centres the existing tree animation */

@@ -59,6 +59,10 @@
                 html.setAttribute('data-theme', theme);
                 writeCookie(THEME_COOKIE, theme, 365);
                 updateToggleButton(theme);
+                // Re-apply theme-dependent text colors (gradients handled via CSS custom properties)
+                if (typeof window.__reapplyThemeColors === 'function') {
+                    window.__reapplyThemeColors();
+                }
             }
 
             function updateToggleButton(theme) {

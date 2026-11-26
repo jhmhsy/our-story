@@ -116,6 +116,7 @@
         var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
         var allErrors = [];
         var allWarnings = [];
+        var html = document.documentElement;
 
         SECTION_IDS.forEach(function (id) {
             var node = document.getElementById(id);
@@ -127,6 +128,36 @@
             var lightSection = bg[id];
             var darkSection = darkBg && darkBg[id];
 
+            // Set light gradient custom property on :root
+            if (lightSection && lightSection.bg) {
+                html.style.setProperty('--grad-' + id, lightSection.bg);
+                // Validate light theme contrast
+                var validation = validateSectionContrast(id, lightSection.bg, lightSection.text, lightSection.muted, false);
+                allErrors.push.apply(allErrors, validation.errors);
+                allWarnings.push.apply(allWarnings, validation.warnings);
+            }
+
+            // Set dark gradient custom property on :root
+            if (darkSection && darkSection.bg) {
+                html.style.setProperty('--grad-' + id + '-dark', darkSection.bg);
+                // Validate dark theme contrast
+                var validation = validateSectionContrast(id, darkSection.bg, darkSection.text, darkSection.muted, true);
+                allErrors.push.apply(allErrors, validation.errors);
+                allWarnings.push.apply(allWarnings, validation.warnings);
+            } else if (isDark && !darkSection && lightSection) {
+                // Fallback to global dark palette for validation
+                var computedStyle = getComputedStyle(html);
+                var fallbackBg = computedStyle.getPropertyValue('--grad-' + id).trim();
+                if (fallbackBg) {
+                    var fallbackText = computedStyle.getPropertyValue('--text-primary').trim() || '#f5e6f0';
+                    var fallbackMuted = computedStyle.getPropertyValue('--text-secondary').trim() || '#d4b8c8';
+                    var validation = validateSectionContrast(id, fallbackBg, fallbackText, fallbackMuted, true);
+                    allErrors.push.apply(allErrors, validation.errors);
+                    allWarnings.push.apply(allWarnings, validation.warnings);
+                }
+            }
+
+            // Apply text colors via CSS custom properties for the section (current theme)
             var sectionData = null;
             if (isDark && darkSection) {
                 sectionData = darkSection;
@@ -134,7 +165,6 @@
                 sectionData = lightSection;
             } else if (isDark && !darkSection) {
                 // Fallback to global dark palette
-                var html = document.documentElement;
                 var computedStyle = getComputedStyle(html);
                 var fallbackBg = computedStyle.getPropertyValue('--grad-' + id).trim();
                 if (fallbackBg) {
@@ -146,29 +176,9 @@
                 }
             }
 
-            if (!sectionData || !sectionData.bg) return;
-
-            var val = sectionData.bg;
-            var textColor = sectionData.text;
-            var mutedColor = sectionData.muted;
-
-            // Validate contrast
-            var validation = validateSectionContrast(id, val, textColor, mutedColor, isDark);
-            allErrors.push.apply(allErrors, validation.errors);
-            allWarnings.push.apply(allWarnings, validation.warnings);
-
-            // Apply background via CSS custom property (so it responds to theme changes)
-            // Use --section-bg which the CSS will reference with fallback to --grad-{id}
-            if (/^linear-gradient|^radial-gradient|^conic-gradient/i.test(val.trim())) {
-                node.style.setProperty('--section-bg', val);
-            } else if (/^#[0-9a-f]{6}$/i.test(val)) {
-                node.style.setProperty('--section-bg', val);
-            }
-
-            // Apply text colors via CSS custom properties for the section
-            if (textColor) {
-                node.style.setProperty('--section-text', textColor);
-                node.style.setProperty('--section-text-muted', mutedColor || textColor);
+            if (sectionData && sectionData.text) {
+                node.style.setProperty('--section-text', sectionData.text);
+                node.style.setProperty('--section-text-muted', sectionData.muted || sectionData.text);
             }
         });
 
@@ -210,4 +220,10 @@
         .catch(function (err) {
             console.error('[content] Failed to load site content:', err);
         });
+
+    // Expose function to re-apply theme-dependent text colors (called on theme toggle)
+    window.__reapplyThemeColors = function () {
+        if (!window.SITE_CONTENT) return;
+        applyBackgrounds(window.SITE_CONTENT.backgrounds, window.SITE_CONTENT['dark-backgrounds']);
+    };
 })();
