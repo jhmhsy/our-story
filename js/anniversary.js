@@ -6,8 +6,6 @@
     // ==========================================================================
     var ANNIVERSARY_DATE = new Date('2023-02-20T00:00:00');
     var FLIP_MS = 600;            // must equal 2 x --ac-flip-half in anniversary.css
-    var HERO_ID = 'greetings';    // clock is expanded by default only while this section is in view
-    var HERO_RATIO = 0.5;         // hero counts as "in view" at this visible fraction
     var TAP_CLOSE_MS = 5000;      // touch: auto-close so it is never stuck open
     var TAP_SCROLL_PX = 8;        // touch: scroll distance that closes a tap-opened clock
 
@@ -22,14 +20,12 @@
     var prefersReducedMotion = false;
     var lastSecond = -1;
 
-    // Expand / collapse state. Expanded = heroInView || hoverOpen || tapOpen
-    var heroInView = true;        // default expanded until the observer reports
+    // Expand / collapse state. Expanded = hoverOpen || tapOpen
     var hoverOpen = false;        // mouse hover
     var tapOpen = false;          // touch / pen tap
     var tapTimer = null;
     var lastPointerType = 'mouse';
     var lastScrollY = window.scrollY || window.pageYOffset || 0;
-    var heroObserver = null;
 
     var UNITS = [
         { key: 'years', label: 'Years' },
@@ -44,6 +40,8 @@
     // INITIALIZATION
     // ==========================================================================
     function init() {
+        clockEl.classList.add('is-collapsed');
+
         prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
         if (window.matchMedia) {
@@ -66,7 +64,7 @@
     // EXPAND / COLLAPSE
     // ==========================================================================
     function applyState() {
-        var open = heroInView || hoverOpen || tapOpen;
+        var open = hoverOpen || tapOpen;
         clockEl.classList.toggle('is-collapsed', !open);
         clockEl.setAttribute('aria-label', open
             ? 'Time since our first anniversary'
@@ -83,25 +81,6 @@
     }
 
     function setupExpandCollapse() {
-        // --- Hero section observer: expanded while the greeting section is in view ---
-        var hero = document.getElementById(HERO_ID);
-        if ('IntersectionObserver' in window && hero) {
-            heroObserver = new IntersectionObserver(function (entries) {
-                var e = entries[entries.length - 1];
-                heroInView = e.isIntersecting && e.intersectionRatio >= HERO_RATIO;
-                applyState();
-            }, { threshold: [0, 0.25, HERO_RATIO, 0.75, 1] });
-            heroObserver.observe(hero);
-        } else {
-            // Fallback: hero is "in view" while we are within its first half-screen of scroll
-            var checkHero = function () {
-                heroInView = (window.scrollY || window.pageYOffset || 0) < window.innerHeight * HERO_RATIO;
-                applyState();
-            };
-            window.addEventListener('scroll', checkHero, { passive: true });
-            checkHero();
-        }
-
         // --- Mouse hover: open on enter, close on leave ---
         clockEl.addEventListener('pointerenter', function (e) {
             if (e.pointerType !== 'mouse') return;
@@ -359,7 +338,6 @@
     // ==========================================================================
     function destroy() {
         if (rafId) cancelAnimationFrame(rafId);
-        if (heroObserver) heroObserver.disconnect();
         clearTimeout(tapTimer);
 
         if (window.matchMedia) {
