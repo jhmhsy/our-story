@@ -2,18 +2,14 @@
     'use strict';
 
     // ==========================================================================
-    // CONFIGURATION - Change this date to your first anniversary
+    // CONFIGURATION
     // ==========================================================================
     var ANNIVERSARY_DATE = new Date('2023-02-20T00:00:00');
-    var FLIP_MS = 600; // must equal 2 x --ac-flip-half in anniversary.css
-
-    // ==========================================================================
-    // MINIMIZE/MAXIMIZE CONFIGURATION
-    // ==========================================================================
-    var MINIMIZE_DELAY = 150;      // ms after scroll starts before minimizing
-    var MAXIMIZE_DELAY = 300;      // ms after scroll stops before maximizing
-    var MINIMIZED_SCALE = 0.35;    // scale factor when minimized
-    var MINIMIZED_OPACITY = 0.6;   // opacity when minimized
+    var FLIP_MS = 600;            // must equal 2 x --ac-flip-half in anniversary.css
+    var HERO_ID = 'greetings';    // clock is expanded by default only while this section is in view
+    var HERO_RATIO = 0.5;         // hero counts as "in view" at this visible fraction
+    var TAP_CLOSE_MS = 5000;      // touch: auto-close so it is never stuck open
+    var TAP_SCROLL_PX = 8;        // touch: scroll distance that closes a tap-opened clock
 
     // ==========================================================================
     // DOM & STATE
@@ -26,13 +22,14 @@
     var prefersReducedMotion = false;
     var lastSecond = -1;
 
-    // Scroll/minimize state
-    var isMinimized = false;
-    var minimizeTimeout = null;      // timeout for minimize animation
-    var scrollStopTimeout = null;    // timeout for detecting scroll stop
-    var maximizeTimeout = null;
-    var lastScrollY = window.scrollY || window.pageYOffset;
-    var isScrolling = false;
+    // Expand / collapse state. Expanded = heroInView || hoverOpen || tapOpen
+    var heroInView = true;        // default expanded until the observer reports
+    var hoverOpen = false;        // mouse hover
+    var tapOpen = false;          // touch / pen tap
+    var tapTimer = null;
+    var lastPointerType = 'mouse';
+    var lastScrollY = window.scrollY || window.pageYOffset || 0;
+    var heroObserver = null;
 
     var UNITS = [
         { key: 'years', label: 'Years' },
@@ -59,104 +56,94 @@
         }
 
         buildClock();
-        setupScrollHandler();
-        setupThemeListener();
+        setupExpandCollapse();
+        applyState();
         tick();
         rafId = requestAnimationFrame(loop);
     }
 
     // ==========================================================================
-    // SCROLL HANDLER - Minimize on scroll, maximize when steady
+    // EXPAND / COLLAPSE
     // ==========================================================================
-    function setupScrollHandler() {
-        // Use passive listener for performance
-        var scrollHandler = function () {
-            var currentScrollY = window.scrollY || window.pageYOffset;
-
-            // Detect scroll direction and activity
-            if (!isScrolling && Math.abs(currentScrollY - lastScrollY) > 5) {
-                isScrolling = true;
-                // Clear any pending maximize
-                if (maximizeTimeout) {
-                    clearTimeout(maximizeTimeout);
-                    maximizeTimeout = null;
-                }
-                // Schedule minimize after delay
-                if (minimizeTimeout) clearTimeout(minimizeTimeout);
-                minimizeTimeout = setTimeout(minimizeClock, MINIMIZE_DELAY);
-            }
-
-            lastScrollY = currentScrollY;
-
-            // Reset scroll detection timer (separate from minimize timeout)
-            if (scrollStopTimeout) clearTimeout(scrollStopTimeout);
-            scrollStopTimeout = setTimeout(function () {
-                isScrolling = false;
-                // Clear minimize timeout if scroll stopped before minimize triggered
-                if (minimizeTimeout) {
-                    clearTimeout(minimizeTimeout);
-                    minimizeTimeout = null;
-                }
-                // Schedule maximize after user stops scrolling
-                if (maximizeTimeout) clearTimeout(maximizeTimeout);
-                maximizeTimeout = setTimeout(maximizeClock, MAXIMIZE_DELAY);
-            }, 100); // Consider scrolling stopped after 100ms of no scroll events
-        };
-
-        window.addEventListener('scroll', scrollHandler, { passive: true });
-
-        // Also handle touch scrolling on mobile
-        var touchStartY = 0;
-        window.addEventListener('touchstart', function (e) {
-            touchStartY = e.touches[0].clientY;
-        }, { passive: true });
-
-        window.addEventListener('touchmove', function (e) {
-            if (!isScrolling) {
-                var currentY = e.touches[0].clientY;
-                if (Math.abs(currentY - touchStartY) > 10) {
-                    isScrolling = true;
-                    if (maximizeTimeout) {
-                        clearTimeout(maximizeTimeout);
-                        maximizeTimeout = null;
-                    }
-                    if (minimizeTimeout) clearTimeout(minimizeTimeout);
-                    minimizeTimeout = setTimeout(minimizeClock, MINIMIZE_DELAY);
-                }
-            }
-        }, { passive: true });
-
-        window.addEventListener('touchend', function () {
-            if (scrollStopTimeout) clearTimeout(scrollStopTimeout);
-            scrollStopTimeout = setTimeout(function () {
-                isScrolling = false;
-                if (minimizeTimeout) {
-                    clearTimeout(minimizeTimeout);
-                    minimizeTimeout = null;
-                }
-                if (maximizeTimeout) clearTimeout(maximizeTimeout);
-                maximizeTimeout = setTimeout(maximizeClock, MAXIMIZE_DELAY);
-            }, 100);
-        }, { passive: true });
+    function applyState() {
+        var open = heroInView || hoverOpen || tapOpen;
+        clockEl.classList.toggle('is-collapsed', !open);
+        clockEl.setAttribute('aria-label', open
+            ? 'Time since our first anniversary'
+            : 'Time since our first anniversary (collapsed - hover or tap to expand)');
     }
 
-    // ==========================================================================
-    // THEME LISTENER - Re-apply theme-aware styles on theme change
-    // ==========================================================================
-    function setupThemeListener() {
-        // Listen for theme changes via the data-theme attribute
-        var observer = new MutationObserver(function (mutations) {
-            mutations.forEach(function (mutation) {
-                if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme') {
-                    // Force reflow to apply new theme variables
-                    clockEl.style.transform = clockEl.style.transform; // trigger reflow
-                }
-            });
+    function closeTap() {
+        clearTimeout(tapTimer);
+        tapTimer = null;
+        if (tapOpen) {
+            tapOpen = false;
+            applyState();
+        }
+    }
+
+    function setupExpandCollapse() {
+        // --- Hero section observer: expanded while the greeting section is in view ---
+        var hero = document.getElementById(HERO_ID);
+        if ('IntersectionObserver' in window && hero) {
+            heroObserver = new IntersectionObserver(function (entries) {
+                var e = entries[entries.length - 1];
+                heroInView = e.isIntersecting && e.intersectionRatio >= HERO_RATIO;
+                applyState();
+            }, { threshold: [0, 0.25, HERO_RATIO, 0.75, 1] });
+            heroObserver.observe(hero);
+        } else {
+            // Fallback: hero is "in view" while we are within its first half-screen of scroll
+            var checkHero = function () {
+                heroInView = (window.scrollY || window.pageYOffset || 0) < window.innerHeight * HERO_RATIO;
+                applyState();
+            };
+            window.addEventListener('scroll', checkHero, { passive: true });
+            checkHero();
+        }
+
+        // --- Mouse hover: open on enter, close on leave ---
+        clockEl.addEventListener('pointerenter', function (e) {
+            if (e.pointerType !== 'mouse') return;
+            hoverOpen = true;
+            applyState();
+        });
+        clockEl.addEventListener('pointerleave', function (e) {
+            if (e.pointerType !== 'mouse') return;
+            hoverOpen = false;
+            applyState();
         });
 
-        observer.observe(document.documentElement, {
-            attributes: true,
-            attributeFilter: ['data-theme']
+        // --- Touch / pen: tap toggles ---
+        clockEl.addEventListener('pointerdown', function (e) {
+            lastPointerType = e.pointerType || 'mouse';
+        });
+        clockEl.addEventListener('click', function () {
+            if (lastPointerType === 'mouse') return;   // mouse uses hover
+            tapOpen = !tapOpen;
+            clearTimeout(tapTimer);
+            tapTimer = null;
+            if (tapOpen) tapTimer = setTimeout(closeTap, TAP_CLOSE_MS);
+            applyState();
+        });
+
+        // Tap anywhere else closes it
+        document.addEventListener('pointerdown', function (e) {
+            if (tapOpen && !clockEl.contains(e.target)) closeTap();
+        }, true);
+
+        // Scrolling closes a tap-opened clock
+        window.addEventListener('scroll', function () {
+            var y = window.scrollY || window.pageYOffset || 0;
+            if (tapOpen && Math.abs(y - lastScrollY) > TAP_SCROLL_PX) closeTap();
+            lastScrollY = y;
+        }, { passive: true });
+
+        // Never stay stuck open if the tab loses focus
+        window.addEventListener('blur', function () {
+            hoverOpen = false;
+            closeTap();
+            applyState();
         });
     }
 
@@ -170,7 +157,6 @@
     function buildClock() {
         var frag = document.createDocumentFragment();
 
-        // Wrapper for the timer row (digits + separators)
         var timerRow = document.createElement('div');
         timerRow.className = 'ac-timer-row';
 
@@ -186,7 +172,6 @@
 
         frag.appendChild(timerRow);
 
-        // Add anniversary indicator label below the timer
         var indicator = document.createElement('div');
         indicator.className = 'ac-indicator';
         indicator.setAttribute('aria-hidden', 'true');
@@ -370,38 +355,12 @@
     }
 
     // ==========================================================================
-    // MINIMIZE / MAXIMIZE ANIMATIONS
-    // ==========================================================================
-    function minimizeClock() {
-        if (isMinimized || prefersReducedMotion) return;
-
-        isMinimized = true;
-        clockEl.classList.add('is-minimized');
-        clockEl.setAttribute('aria-label', 'Time since our first anniversary (minimized - scroll to expand)');
-    }
-
-    function maximizeClock() {
-        if (!isMinimized) return;
-
-        isMinimized = false;
-        clockEl.classList.remove('is-minimized');
-        clockEl.setAttribute('aria-label', 'Time since our first anniversary');
-    }
-
-    // ==========================================================================
     // CLEANUP
     // ==========================================================================
     function destroy() {
         if (rafId) cancelAnimationFrame(rafId);
-
-        // Clean up scroll timeouts
-        if (minimizeTimeout) clearTimeout(minimizeTimeout);
-        if (scrollStopTimeout) clearTimeout(scrollStopTimeout);
-        if (maximizeTimeout) clearTimeout(maximizeTimeout);
-
-        // Remove event listeners (note: we can't easily remove anonymous handlers,
-        // but the timeouts are cleared so no further action will occur)
-        window.removeEventListener('scroll', null); // placeholder - actual handler not removable without reference
+        if (heroObserver) heroObserver.disconnect();
+        clearTimeout(tapTimer);
 
         if (window.matchMedia) {
             var mq = window.matchMedia('(prefers-reduced-motion: reduce)');

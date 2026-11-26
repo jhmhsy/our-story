@@ -1,6 +1,7 @@
 /* anniversary.css - 3D flip clock counter for time since first anniversary.
    Four-layer flip card: static top/bottom + animated top/bottom flaps.
-   Scoped to #anniversary-clock and .ac-*. */
+   Scoped to #anniversary-clock and .ac-*.
+   States: expanded (default, hero section) / .is-collapsed (all other sections; hover or tap expands). */
 
 :root {
   --ac-card-w: 56px;
@@ -18,13 +19,18 @@
   --ac-label-color: #9c1f58;
   --ac-sep-color: #c2185b;
   --ac-container-bg: linear-gradient(180deg, #fffdf6, #fff4e2);
-  --ac-container-shadow: 0 8px 24px rgba(120, 20, 70, 0.22),
-                         inset 0 0 0 1px rgba(255, 255, 255, 0.7);
-  /* Minimize/maximize animation tokens */
-  --ac-minimize-duration: 0.4s;
-  --ac-maximize-duration: 0.5s;
-  --ac-minimized-scale: 0.35;
-  --ac-minimized-opacity: 0.6;
+  --ac-container-shadow:
+    0 8px 24px rgba(120, 20, 70, 0.22), inset 0 0 0 1px rgba(255, 255, 255, 0.7);
+
+  /* Expand / collapse tokens */
+  --ac-top: 14px; /* gap from the top edge when expanded */
+  --ac-pad: 10px 16px; /* container padding when expanded */
+  --ac-pad-collapsed: 6px 10px;
+  --ac-collapsed-scale: 0.55;
+  --ac-collapsed-opacity: 0.75;
+  --ac-anim: 0.4s;
+  --ac-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --ac-clear: 64px; /* top room non-hero sections keep free for the collapsed clock */
 }
 
 [data-theme="dark"] {
@@ -35,36 +41,56 @@
   --ac-split-line: rgba(0, 0, 0, 0.55);
   --ac-label-color: var(--accent-rose);
   --ac-sep-color: var(--accent-rose);
-  --ac-container-bg: linear-gradient(180deg, var(--bg-surface), var(--bg-elevated));
-  --ac-container-shadow: 0 8px 24px rgba(0, 0, 0, 0.35),
-                         inset 0 0 0 1px var(--border-subtle);
-}
-
-/* Reduced motion: disable minimize/maximize animations */
-@media (prefers-reduced-motion: reduce) {
-  #anniversary-clock {
-    transition: none !important;
-  }
-  .ac-card.is-flipping .ac-flap { visibility: hidden; animation: none; }
+  --ac-container-bg: linear-gradient(
+    180deg,
+    var(--bg-surface),
+    var(--bg-elevated)
+  );
+  --ac-container-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.35), inset 0 0 0 1px var(--border-subtle);
 }
 
 /* ---------- Container ---------- */
 #anniversary-clock {
   position: fixed;
-  top: 14px;
+  top: var(--ac-top);
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) scale(1);
+  transform-origin: 50% 0; /* shrinks toward the top edge, so no gap hangs above it */
   z-index: 100;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  padding: 10px 16px;
+  padding: var(--ac-pad);
   border-radius: 16px;
   background: var(--ac-container-bg);
   box-shadow: var(--ac-container-shadow);
   font-family: "Segoe UI", Tahoma, Verdana, sans-serif;
-  will-change: transform, opacity, border-radius;
+  opacity: 1;
+  cursor: default;
+  -webkit-tap-highlight-color: transparent;
+  will-change: transform, opacity;
+  transition:
+    transform var(--ac-anim) var(--ac-ease),
+    opacity var(--ac-anim) ease,
+    top var(--ac-anim) var(--ac-ease),
+    padding var(--ac-anim) var(--ac-ease),
+    gap var(--ac-anim) var(--ac-ease),
+    border-radius var(--ac-anim) ease,
+    background 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+/* Collapsed: flush to the top edge, wraps the digits exactly */
+#anniversary-clock.is-collapsed {
+  top: 0;
+  gap: 0;
+  padding: var(--ac-pad-collapsed);
+  border-radius: 0 0 14px 14px;
+  transform: translateX(-50%) scale(var(--ac-collapsed-scale));
+  opacity: var(--ac-collapsed-opacity);
+  cursor: pointer;
 }
 
 /* Timer row - horizontal layout for digits and separators */
@@ -72,43 +98,6 @@
   display: flex;
   align-items: center;
   gap: var(--ac-gap);
-}
-
-/* Minimized state - applied via JS */
-#anniversary-clock.is-minimized {
-  transform: translateX(-50%) scale(var(--ac-minimized-scale, 0.35));
-  opacity: var(--ac-minimized-opacity, 0.6);
-  border-radius: 24px;
-  pointer-events: none; /* Prevent interaction when minimized */
-}
-#anniversary-clock.is-minimized .ac-indicator {
-  display: none; /* Hide label when minimized */
-}
-
-/* Maximized state - default */
-#anniversary-clock:not(.is-minimized) {
-  transform: translateX(-50%) scale(1);
-  opacity: 1;
-  border-radius: 16px;
-  pointer-events: auto;
-}
-
-/* Transition for minimize/maximize - separate from theme transitions */
-#anniversary-clock {
-  transition: 
-    transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-    opacity 0.3s ease,
-    border-radius 0.3s ease,
-    background 0.3s ease,
-    box-shadow 0.3s ease;
-}
-#anniversary-clock.is-minimized {
-  transition: 
-    transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
-    opacity 0.4s ease,
-    border-radius 0.3s ease,
-    background 0.3s ease,
-    box-shadow 0.3s ease;
 }
 
 .ac-digit {
@@ -129,7 +118,7 @@
 
 /* Split line across the middle */
 .ac-card::before {
-  content: '';
+  content: "";
   position: absolute;
   left: 0;
   top: 50%;
@@ -172,59 +161,95 @@
   border-radius: var(--ac-radius) var(--ac-radius) 0 0;
   background: var(--ac-bg-top);
 }
-.ac-half--top > span { top: 0; }
+.ac-half--top > span {
+  top: 0;
+}
 
 .ac-half--bottom {
   bottom: 0;
   border-radius: 0 0 var(--ac-radius) var(--ac-radius);
   background: var(--ac-bg-bottom);
 }
-.ac-half--bottom > span { bottom: 0; }
+.ac-half--bottom > span {
+  bottom: 0;
+}
 
 /* ---------- Flaps (animated layers) ---------- */
 .ac-flap {
   visibility: hidden;
   z-index: 3;
 }
-.ac-flap--top { transform-origin: 50% 100%; }
+.ac-flap--top {
+  transform-origin: 50% 100%;
+}
 .ac-flap--bottom {
   transform-origin: 50% 0;
   transform: rotateX(90deg);
 }
 
-.ac-card.is-flipping .ac-flap { visibility: visible; }
+.ac-card.is-flipping .ac-flap {
+  visibility: visible;
+}
 .ac-card.is-flipping .ac-flap--top {
   animation: ac-flip-top var(--ac-flip-half) ease-in forwards;
 }
 .ac-card.is-flipping .ac-flap--bottom {
-  animation: ac-flip-bottom var(--ac-flip-half) ease-out var(--ac-flip-half) forwards;
+  animation: ac-flip-bottom var(--ac-flip-half) ease-out var(--ac-flip-half)
+    forwards;
 }
 
 @keyframes ac-flip-top {
-  from { transform: rotateX(0deg); }
-  to   { transform: rotateX(-90deg); }
+  from {
+    transform: rotateX(0deg);
+  }
+  to {
+    transform: rotateX(-90deg);
+  }
 }
 @keyframes ac-flip-bottom {
-  from { transform: rotateX(90deg); }
-  to   { transform: rotateX(0deg); }
+  from {
+    transform: rotateX(90deg);
+  }
+  to {
+    transform: rotateX(0deg);
+  }
 }
 
-/* ---------- Label ---------- */
+/* ---------- Label (row collapses to zero height when the clock is collapsed) ---------- */
 .ac-label {
+  box-sizing: border-box;
+  width: 100%;
+  max-height: 20px;
   margin-top: 6px;
+  overflow: hidden;
   font-size: 10px;
   font-weight: 600;
+  line-height: 1.5;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--ac-label-color);
   white-space: nowrap;
   opacity: 0.9;
   text-align: center;
-  width: 100%;
+  transition:
+    max-height var(--ac-anim) var(--ac-ease),
+    margin-top var(--ac-anim) var(--ac-ease),
+    opacity 0.25s ease;
+}
+#anniversary-clock.is-collapsed .ac-label {
+  max-height: 0;
+  margin-top: 0;
+  opacity: 0;
 }
 
-/* ---------- Indicator (anniversary label) ---------- */
+/* ---------- Indicator (anniversary label; collapses to zero height) ---------- */
 .ac-indicator {
+  box-sizing: border-box;
+  width: 100%;
+  max-height: 44px;
+  margin-top: 6px;
+  padding: 4px 12px;
+  overflow: hidden;
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.02em;
@@ -233,54 +258,21 @@
   color: var(--accent-rose);
   text-shadow: 0 1px 2px rgba(194, 24, 91, 0.3);
   white-space: nowrap;
-  margin-top: 6px;
-  padding: 4px 12px;
   text-align: center;
-  width: 100%;
   position: relative;
+  opacity: 1;
+  transition:
+    max-height var(--ac-anim) var(--ac-ease),
+    margin-top var(--ac-anim) var(--ac-ease),
+    padding var(--ac-anim) var(--ac-ease),
+    opacity 0.25s ease;
 }
-
-/* Decorative accents */
-.ac-indicator::before,
-.ac-indicator::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  width: 24px;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, var(--accent-rose), transparent);
-  transform: translateY(-50%);
-}
-.ac-indicator::before {
-  left: -30px;
-}
-.ac-indicator::after {
-  right: -30px;
-}
-
-@media (max-width: 900px) {
-  .ac-indicator {
-    font-size: 12px;
-  }
-  .ac-indicator::before,
-  .ac-indicator::after {
-    width: 18px;
-    left: -22px;
-    right: -22px;
-  }
-}
-
-@media (max-width: 420px) {
-  .ac-indicator {
-    font-size: 11px;
-    padding: 3px 8px;
-  }
-  .ac-indicator::before,
-  .ac-indicator::after {
-    width: 14px;
-    left: -18px;
-    right: -18px;
-  }
+#anniversary-clock.is-collapsed .ac-indicator {
+  max-height: 0;
+  margin-top: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  opacity: 0;
 }
 
 /* ---------- Separator ---------- */
@@ -301,7 +293,17 @@
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
-/* ---------- Mobile ---------- */
+/* ---------- Keep section headings clear of the collapsed clock ----------
+   Non-hero sections reserve room at the top; the hero is untouched. */
+html #story.section--memory,
+html #gallery.section--future,
+html #jar.section--jar,
+html #music.section--music,
+html #last.section--poem {
+  padding-top: var(--ac-clear);
+}
+
+/* ---------- Tablet / mobile ---------- */
 @media (max-width: 900px) {
   :root {
     --ac-card-w: 42px;
@@ -310,16 +312,25 @@
     --ac-font-size: 26px;
     --ac-gap: 4px;
     --ac-perspective: 300px;
+    --ac-top: 8px;
+    --ac-pad: 8px 12px;
+    --ac-pad-collapsed: 5px 8px;
+    --ac-clear: 52px;
   }
-  #anniversary-clock {
-    top: 8px;
-    padding: 8px 12px;
-    border-radius: 12px;
+  .ac-label {
+    display: none;
   }
-  .ac-label { display: none; }
-  .ac-indicator { font-size: 10px; }
-  .ac-separator { width: 8px; }
-  .ac-separator__dot { width: 4px; height: 4px; margin: 3px 0; }
+  .ac-indicator {
+    font-size: 12px;
+  }
+  .ac-separator {
+    width: 8px;
+  }
+  .ac-separator__dot {
+    width: 4px;
+    height: 4px;
+    margin: 3px 0;
+  }
 }
 
 @media (max-width: 420px) {
@@ -330,18 +341,34 @@
     --ac-font-size: 20px;
     --ac-gap: 2px;
     --ac-perspective: 250px;
+    --ac-top: 6px;
+    --ac-pad: 6px 10px;
+    --ac-pad-collapsed: 4px 6px;
+    --ac-clear: 44px;
   }
-  #anniversary-clock {
-    top: 6px;
-    padding: 6px 10px;
-    border-radius: 10px;
+  .ac-indicator {
+    font-size: 11px;
+    padding: 3px 8px;
   }
-  .ac-indicator { font-size: 9px; }
-  .ac-separator { width: 6px; }
-  .ac-separator__dot { width: 3px; height: 3px; margin: 2px 0; }
+  .ac-separator {
+    width: 6px;
+  }
+  .ac-separator__dot {
+    width: 3px;
+    height: 3px;
+    margin: 2px 0;
+  }
 }
 
-/* ---------- Reduced motion ---------- */
+/* ---------- Reduced motion: no state animation, no flips ---------- */
 @media (prefers-reduced-motion: reduce) {
-  .ac-card.is-flipping .ac-flap { visibility: hidden; animation: none; }
+  #anniversary-clock,
+  .ac-label,
+  .ac-indicator {
+    transition: none !important;
+  }
+  .ac-card.is-flipping .ac-flap {
+    visibility: hidden;
+    animation: none;
+  }
 }
