@@ -225,16 +225,62 @@
 
 /* ---------- Indicator (anniversary label) ---------- */
 .ac-indicator {
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--ac-label-color);
-  opacity: 0.85;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  font-family: "Caveat", "Segoe UI", Tahoma, Verdana, sans-serif;
+  color: var(--accent-rose);
+  text-shadow: 0 1px 2px rgba(194, 24, 91, 0.3);
   white-space: nowrap;
-  margin-top: 4px;
+  margin-top: 6px;
+  padding: 4px 12px;
   text-align: center;
   width: 100%;
+  position: relative;
+}
+
+/* Decorative accents */
+.ac-indicator::before,
+.ac-indicator::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 24px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent-rose), transparent);
+  transform: translateY(-50%);
+}
+.ac-indicator::before {
+  left: -30px;
+}
+.ac-indicator::after {
+  right: -30px;
+}
+
+@media (max-width: 900px) {
+  .ac-indicator {
+    font-size: 12px;
+  }
+  .ac-indicator::before,
+  .ac-indicator::after {
+    width: 18px;
+    left: -22px;
+    right: -22px;
+  }
+}
+
+@media (max-width: 420px) {
+  .ac-indicator {
+    font-size: 11px;
+    padding: 3px 8px;
+  }
+  .ac-indicator::before,
+  .ac-indicator::after {
+    width: 14px;
+    left: -18px;
+    right: -18px;
+  }
 }
 
 /* ---------- Separator ---------- */

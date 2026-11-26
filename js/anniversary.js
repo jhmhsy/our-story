@@ -190,7 +190,7 @@
         var indicator = document.createElement('div');
         indicator.className = 'ac-indicator';
         indicator.setAttribute('aria-hidden', 'true');
-        indicator.textContent = 'since we both made it official';
+        indicator.textContent = 'Since we both made it official <3';
         frag.appendChild(indicator);
 
         clockEl.appendChild(frag);
