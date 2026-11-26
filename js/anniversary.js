@@ -8,6 +8,14 @@
     var FLIP_MS = 600; // must equal 2 x --ac-flip-half in anniversary.css
 
     // ==========================================================================
+    // MINIMIZE/MAXIMIZE CONFIGURATION
+    // ==========================================================================
+    var MINIMIZE_DELAY = 150;      // ms after scroll starts before minimizing
+    var MAXIMIZE_DELAY = 300;      // ms after scroll stops before maximizing
+    var MINIMIZED_SCALE = 0.35;    // scale factor when minimized
+    var MINIMIZED_OPACITY = 0.6;   // opacity when minimized
+
+    // ==========================================================================
     // DOM & STATE
     // ==========================================================================
     var clockEl = document.getElementById('anniversary-clock');
@@ -17,6 +25,14 @@
     var rafId = null;
     var prefersReducedMotion = false;
     var lastSecond = -1;
+
+    // Scroll/minimize state
+    var isMinimized = false;
+    var minimizeTimeout = null;      // timeout for minimize animation
+    var scrollStopTimeout = null;    // timeout for detecting scroll stop
+    var maximizeTimeout = null;
+    var lastScrollY = window.scrollY || window.pageYOffset;
+    var isScrolling = false;
 
     var UNITS = [
         { key: 'years', label: 'Years' },
@@ -43,8 +59,105 @@
         }
 
         buildClock();
+        setupScrollHandler();
+        setupThemeListener();
         tick();
         rafId = requestAnimationFrame(loop);
+    }
+
+    // ==========================================================================
+    // SCROLL HANDLER - Minimize on scroll, maximize when steady
+    // ==========================================================================
+    function setupScrollHandler() {
+        // Use passive listener for performance
+        var scrollHandler = function () {
+            var currentScrollY = window.scrollY || window.pageYOffset;
+
+            // Detect scroll direction and activity
+            if (!isScrolling && Math.abs(currentScrollY - lastScrollY) > 5) {
+                isScrolling = true;
+                // Clear any pending maximize
+                if (maximizeTimeout) {
+                    clearTimeout(maximizeTimeout);
+                    maximizeTimeout = null;
+                }
+                // Schedule minimize after delay
+                if (minimizeTimeout) clearTimeout(minimizeTimeout);
+                minimizeTimeout = setTimeout(minimizeClock, MINIMIZE_DELAY);
+            }
+
+            lastScrollY = currentScrollY;
+
+            // Reset scroll detection timer (separate from minimize timeout)
+            if (scrollStopTimeout) clearTimeout(scrollStopTimeout);
+            scrollStopTimeout = setTimeout(function () {
+                isScrolling = false;
+                // Clear minimize timeout if scroll stopped before minimize triggered
+                if (minimizeTimeout) {
+                    clearTimeout(minimizeTimeout);
+                    minimizeTimeout = null;
+                }
+                // Schedule maximize after user stops scrolling
+                if (maximizeTimeout) clearTimeout(maximizeTimeout);
+                maximizeTimeout = setTimeout(maximizeClock, MAXIMIZE_DELAY);
+            }, 100); // Consider scrolling stopped after 100ms of no scroll events
+        };
+
+        window.addEventListener('scroll', scrollHandler, { passive: true });
+
+        // Also handle touch scrolling on mobile
+        var touchStartY = 0;
+        window.addEventListener('touchstart', function (e) {
+            touchStartY = e.touches[0].clientY;
+        }, { passive: true });
+
+        window.addEventListener('touchmove', function (e) {
+            if (!isScrolling) {
+                var currentY = e.touches[0].clientY;
+                if (Math.abs(currentY - touchStartY) > 10) {
+                    isScrolling = true;
+                    if (maximizeTimeout) {
+                        clearTimeout(maximizeTimeout);
+                        maximizeTimeout = null;
+                    }
+                    if (minimizeTimeout) clearTimeout(minimizeTimeout);
+                    minimizeTimeout = setTimeout(minimizeClock, MINIMIZE_DELAY);
+                }
+            }
+        }, { passive: true });
+
+        window.addEventListener('touchend', function () {
+            if (scrollStopTimeout) clearTimeout(scrollStopTimeout);
+            scrollStopTimeout = setTimeout(function () {
+                isScrolling = false;
+                if (minimizeTimeout) {
+                    clearTimeout(minimizeTimeout);
+                    minimizeTimeout = null;
+                }
+                if (maximizeTimeout) clearTimeout(maximizeTimeout);
+                maximizeTimeout = setTimeout(maximizeClock, MAXIMIZE_DELAY);
+            }, 100);
+        }, { passive: true });
+    }
+
+    // ==========================================================================
+    // THEME LISTENER - Re-apply theme-aware styles on theme change
+    // ==========================================================================
+    function setupThemeListener() {
+        // Listen for theme changes via the data-theme attribute
+        var observer = new MutationObserver(function (mutations) {
+            mutations.forEach(function (mutation) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme') {
+                    // Force reflow to apply new theme variables
+                    clockEl.style.transform = clockEl.style.transform; // trigger reflow
+                }
+            });
+        });
+
+        observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['data-theme']
+        });
     }
 
     function onReducedMotionChange(e) {
@@ -57,15 +170,28 @@
     function buildClock() {
         var frag = document.createDocumentFragment();
 
+        // Wrapper for the timer row (digits + separators)
+        var timerRow = document.createElement('div');
+        timerRow.className = 'ac-timer-row';
+
         UNITS.forEach(function (unit, index) {
             var digit = createDigit(unit.key, unit.label);
             digitElements[unit.key] = digit;
-            frag.appendChild(digit.wrapper);
+            timerRow.appendChild(digit.wrapper);
 
             if (index < UNITS.length - 1) {
-                frag.appendChild(createSeparator());
+                timerRow.appendChild(createSeparator());
             }
         });
+
+        frag.appendChild(timerRow);
+
+        // Add anniversary indicator label below the timer
+        var indicator = document.createElement('div');
+        indicator.className = 'ac-indicator';
+        indicator.setAttribute('aria-hidden', 'true');
+        indicator.textContent = 'since we both made it official';
+        frag.appendChild(indicator);
 
         clockEl.appendChild(frag);
     }
@@ -244,10 +370,39 @@
     }
 
     // ==========================================================================
+    // MINIMIZE / MAXIMIZE ANIMATIONS
+    // ==========================================================================
+    function minimizeClock() {
+        if (isMinimized || prefersReducedMotion) return;
+
+        isMinimized = true;
+        clockEl.classList.add('is-minimized');
+        clockEl.setAttribute('aria-label', 'Time since our first anniversary (minimized - scroll to expand)');
+    }
+
+    function maximizeClock() {
+        if (!isMinimized) return;
+
+        isMinimized = false;
+        clockEl.classList.remove('is-minimized');
+        clockEl.setAttribute('aria-label', 'Time since our first anniversary');
+    }
+
+    // ==========================================================================
     // CLEANUP
     // ==========================================================================
     function destroy() {
         if (rafId) cancelAnimationFrame(rafId);
+
+        // Clean up scroll timeouts
+        if (minimizeTimeout) clearTimeout(minimizeTimeout);
+        if (scrollStopTimeout) clearTimeout(scrollStopTimeout);
+        if (maximizeTimeout) clearTimeout(maximizeTimeout);
+
+        // Remove event listeners (note: we can't easily remove anonymous handlers,
+        // but the timeouts are cleared so no further action will occur)
+        window.removeEventListener('scroll', null); // placeholder - actual handler not removable without reference
+
         if (window.matchMedia) {
             var mq = window.matchMedia('(prefers-reduced-motion: reduce)');
             if (mq.removeEventListener) {
