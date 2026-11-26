@@ -1,10 +1,7 @@
-/* anniversary.css - 3D Flip clock counter for time since first anniversary.
-   Inspired by https://codepen.io/jerrylow/pen/jVoWwp
+/* anniversary.css - 3D flip clock counter for time since first anniversary.
+   Four-layer flip card: static top/bottom + animated top/bottom flaps.
    Scoped to #anniversary-clock and .ac-*. */
 
-/* ==========================================================================
-   CSS Custom Properties for theming
-   ========================================================================== */
 :root {
   --ac-card-w: 56px;
   --ac-card-h: 72px;
@@ -12,11 +9,10 @@
   --ac-font-size: 36px;
   --ac-gap: 6px;
   --ac-perspective: 400px;
-  --ac-flip-duration: 0.6s;
-  --ac-bg-card: linear-gradient(180deg, #fffdf6, #fff4e2);
-  --ac-border-color: rgba(120, 20, 70, 0.18);
+  --ac-flip-half: 0.3s;
+  --ac-bg-top: linear-gradient(180deg, #fffdf6, #fff8ec);
+  --ac-bg-bottom: linear-gradient(180deg, #fff4e2, #ffeccf);
   --ac-shadow: 0 4px 14px rgba(120, 20, 70, 0.18);
-  --ac-shadow-inner: inset 0 1px 0 rgba(255, 255, 255, 0.6);
   --ac-text: #5b2a45;
   --ac-split-line: rgba(120, 20, 70, 0.35);
   --ac-label-color: #9c1f58;
@@ -27,12 +23,11 @@
 }
 
 [data-theme="dark"] {
-  --ac-bg-card: linear-gradient(180deg, var(--bg-elevated), var(--bg-surface));
-  --ac-border-color: var(--border-subtle);
+  --ac-bg-top: linear-gradient(180deg, var(--bg-surface), var(--bg-elevated));
+  --ac-bg-bottom: linear-gradient(180deg, var(--bg-elevated), var(--bg-deep));
   --ac-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
-  --ac-shadow-inner: inset 0 1px 0 var(--border-subtle);
   --ac-text: var(--text-primary);
-  --ac-split-line: var(--border-subtle);
+  --ac-split-line: rgba(0, 0, 0, 0.55);
   --ac-label-color: var(--accent-rose);
   --ac-sep-color: var(--accent-rose);
   --ac-container-bg: linear-gradient(180deg, var(--bg-surface), var(--bg-elevated));
@@ -40,9 +35,7 @@
                          inset 0 0 0 1px var(--border-subtle);
 }
 
-/* ==========================================================================
-   Container: fixed, centered at top of viewport
-   ========================================================================== */
+/* ---------- Container ---------- */
 #anniversary-clock {
   position: fixed;
   top: 14px;
@@ -59,78 +52,105 @@
   font-family: "Segoe UI", Tahoma, Verdana, sans-serif;
 }
 
-/* ==========================================================================
-   Flip card - 3D flip with two full-height faces (clip-path approach)
-   ========================================================================== */
+.ac-digit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ---------- Card ---------- */
 .ac-card {
   position: relative;
   width: var(--ac-card-w);
   height: var(--ac-card-h);
   perspective: var(--ac-perspective);
-}
-
-.ac-card__flipper {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  transform-style: preserve-3d;
-  transition: transform var(--ac-flip-duration) cubic-bezier(0.4, 0, 0.2, 1);
   border-radius: var(--ac-radius);
+  box-shadow: var(--ac-shadow);
 }
 
-/* Full-height faces with clip-path showing only half */
-.ac-card__face {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--ac-font-size);
-  font-weight: 700;
-  line-height: 1;
-  color: var(--ac-text);
-  background: var(--ac-bg-card);
-  border-radius: var(--ac-radius);
-  box-shadow: var(--ac-shadow), var(--ac-shadow-inner);
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  overflow: hidden;
-}
-
-.ac-card__face--top {
-  clip-path: polygon(0 0, 100% 0, 100% 50%, 0 50%);
-  z-index: 2;
-  border-bottom: 1px solid var(--ac-border-color);
-}
-
-.ac-card__face--bottom {
-  clip-path: polygon(0 50%, 100% 50%, 100% 100%, 0 100%);
-  transform: rotateX(180deg);
-  z-index: 1;
-  border-top: 1px solid var(--ac-border-color);
-}
-
-/* The horizontal split line */
-.ac-card__flipper::before {
+/* Split line across the middle */
+.ac-card::before {
   content: '';
   position: absolute;
   left: 0;
   top: 50%;
   width: 100%;
   height: 2px;
+  margin-top: -1px;
   background: var(--ac-split-line);
   z-index: 10;
   pointer-events: none;
 }
 
-/* When flipping, rotate the flipper 180deg */
-.ac-card.is-flipping .ac-card__flipper {
-  transform: rotateX(-180deg);
+/* One half of a digit. The inner span is twice the half's height, so the
+   top half shows the upper part of the number and the bottom half the lower part. */
+.ac-half {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 50%;
+  overflow: hidden;
+  color: var(--ac-text);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.ac-half > span {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 200%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--ac-font-size);
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
 
-/* ==========================================================================
-   Label under each card
-   ========================================================================== */
+.ac-half--top {
+  top: 0;
+  border-radius: var(--ac-radius) var(--ac-radius) 0 0;
+  background: var(--ac-bg-top);
+}
+.ac-half--top > span { top: 0; }
+
+.ac-half--bottom {
+  bottom: 0;
+  border-radius: 0 0 var(--ac-radius) var(--ac-radius);
+  background: var(--ac-bg-bottom);
+}
+.ac-half--bottom > span { bottom: 0; }
+
+/* ---------- Flaps (animated layers) ---------- */
+.ac-flap {
+  visibility: hidden;
+  z-index: 3;
+}
+.ac-flap--top { transform-origin: 50% 100%; }
+.ac-flap--bottom {
+  transform-origin: 50% 0;
+  transform: rotateX(90deg);
+}
+
+.ac-card.is-flipping .ac-flap { visibility: visible; }
+.ac-card.is-flipping .ac-flap--top {
+  animation: ac-flip-top var(--ac-flip-half) ease-in forwards;
+}
+.ac-card.is-flipping .ac-flap--bottom {
+  animation: ac-flip-bottom var(--ac-flip-half) ease-out var(--ac-flip-half) forwards;
+}
+
+@keyframes ac-flip-top {
+  from { transform: rotateX(0deg); }
+  to   { transform: rotateX(-90deg); }
+}
+@keyframes ac-flip-bottom {
+  from { transform: rotateX(90deg); }
+  to   { transform: rotateX(0deg); }
+}
+
+/* ---------- Label ---------- */
 .ac-label {
   margin-top: 6px;
   font-size: 10px;
@@ -144,9 +164,7 @@
   width: 100%;
 }
 
-/* ==========================================================================
-   Separator dots (colon-like)
-   ========================================================================== */
+/* ---------- Separator ---------- */
 .ac-separator {
   display: flex;
   flex-direction: column;
@@ -164,9 +182,7 @@
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
-/* ==========================================================================
-   Mobile: shrink cards, hide labels
-   ========================================================================== */
+/* ---------- Mobile ---------- */
 @media (max-width: 900px) {
   :root {
     --ac-card-w: 42px;
@@ -204,14 +220,7 @@
   .ac-separator__dot { width: 3px; height: 3px; margin: 2px 0; }
 }
 
-/* ==========================================================================
-   Reduced motion
-   ========================================================================== */
+/* ---------- Reduced motion ---------- */
 @media (prefers-reduced-motion: reduce) {
-  .ac-card__flipper {
-    transition: none !important;
-  }
-  .ac-card.is-flipping .ac-card__flipper {
-    transform: none !important;
-  }
+  .ac-card.is-flipping .ac-flap { visibility: hidden; animation: none; }
 }
