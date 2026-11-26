@@ -22,6 +22,10 @@
   --ac-container-shadow:
     0 8px 24px rgba(120, 20, 70, 0.22), inset 0 0 0 1px rgba(255, 255, 255, 0.7);
 
+  /* Indicator (anniversary label) - light theme */
+  --ac-indicator-color: #c2185b; /* --wine: deep pink with good contrast on light bg */
+  --ac-indicator-shadow: 0 1px 2px rgba(194, 24, 91, 0.3);
+
   /* Expand / collapse tokens */
   --ac-top: 14px; /* gap from the top edge when expanded */
   --ac-pad: 10px 16px; /* container padding when expanded */
@@ -48,6 +52,10 @@
   );
   --ac-container-shadow:
     0 8px 24px rgba(0, 0, 0, 0.35), inset 0 0 0 1px var(--border-subtle);
+
+  /* Indicator (anniversary label) - dark theme */
+  --ac-indicator-color: var(--accent-rose);
+  --ac-indicator-shadow: 0 1px 2px rgba(232, 165, 200, 0.4);
 }
 
 /* ---------- Container ---------- */
@@ -255,8 +263,8 @@
   letter-spacing: 0.02em;
   text-transform: none;
   font-family: "Caveat", "Segoe UI", Tahoma, Verdana, sans-serif;
-  color: var(--accent-rose);
-  text-shadow: 0 1px 2px rgba(194, 24, 91, 0.3);
+  color: var(--ac-indicator-color);
+  text-shadow: var(--ac-indicator-shadow);
   white-space: nowrap;
   text-align: center;
   position: relative;
