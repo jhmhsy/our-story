@@ -104,7 +104,18 @@
     var fab = el('button', 'mu-fab', '\uD83D\uDD07');
     fab.type = 'button';
     fab.setAttribute('aria-label', 'Play music');
-    (document.getElementById('site-content') || document.body).appendChild(fab);
+    var fabWrap = document.querySelector('.mu-fab-wrap');
+    if (!fabWrap) {
+        fabWrap = el('div', 'mu-fab-wrap');
+        (document.getElementById('site-content') || document.body).appendChild(fabWrap);
+    }
+    fabWrap.appendChild(fab);
+    // Theme toggle button is created early by inline script in index.html
+    // Just ensure it's in the fabWrap
+    var themeToggle = document.getElementById('theme-toggle');
+    if (themeToggle && themeToggle.parentNode !== fabWrap) {
+        fabWrap.appendChild(themeToggle);
+    }
 
     /* ---- Geometry ---- */
     var cardW = 0, pxPerItem = 200;

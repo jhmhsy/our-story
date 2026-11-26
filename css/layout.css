@@ -39,6 +39,688 @@
   --tree-scale: 1;
 }
 
+/* ==========================================================================
+   Dark theme — deep plum/maroon with light text
+   ========================================================================== */
+[data-theme="dark"] {
+  /* Core dark palette — deep plum/maroon family */
+  --bg-deepest: #1a0a14;
+  --bg-deep: #2d1423;
+  --bg-elevated: #3d1a2e;
+  --bg-surface: #4a1f36;
+
+  /* Text colors */
+  --text-primary: #f5e6f0;
+  --text-secondary: #d4b8c8;
+  --text-muted: #a88a9a;
+  --text-inverse: #1a0a14;
+
+  /* Accent colors — plum/rose tones that work on dark */
+  --accent-plum: #c97fb8;
+  --accent-rose: #e8a5c8;
+  --accent-coral: #f08fb8;
+  --accent-gold: #f5d08a;
+
+  /* Border / divider */
+  --border-subtle: #5a2a42;
+  --border-strong: #7a3a5a;
+
+  /* Sidebar / nav backgrounds */
+  --nav-bg: rgba(29, 10, 20, 0.85);
+  --nav-border: #5a2a42;
+  --nav-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  --nav-link-color: #e8c8dc;
+  --nav-link-hover: rgba(232, 200, 220, 0.2);
+  --nav-link-active-start: #c97fb8;
+  --nav-link-active-end: #e8a5c8;
+  --nav-link-active-shadow: 0 4px 12px rgba(201, 127, 184, 0.45);
+
+  /* Section gradients — dark versions */
+  --grad-greetings: linear-gradient(135deg, var(--bg-deepest) 0%, #2d0a1a 50%, #4a142a 100%);
+  --grad-story: linear-gradient(135deg, var(--bg-deep) 0%, #2a1020 50%, var(--bg-elevated) 100%);
+  --grad-gallery: linear-gradient(135deg, #3d1028 0%, #4a1a30 50%, #5a1f38 100%);
+  --grad-jar: linear-gradient(135deg, var(--bg-deep) 0%, #2a1020 50%, var(--bg-elevated) 100%);
+  --grad-music: linear-gradient(135deg, #4a1a30 0%, #5a2038 50%, #6a2a42 100%);
+  --grad-last: linear-gradient(135deg, #5a2038 0%, #6a2a42 50%, #7a1a3a 100%);
+
+  /* Override pink palette for dark mode components that reference them */
+  --blush: var(--bg-surface);
+  --blush-light: var(--bg-elevated);
+  --rose-light: var(--bg-elevated);
+  --rose: var(--accent-plum);
+  --rose-medium: var(--accent-rose);
+  --coral: var(--accent-coral);
+  --coral-deep: #d87ab0;
+  --wine: var(--accent-plum);
+  --wine-deep: #b86fa8;
+  --wine-darkest: #9a5a8a;
+
+  /* Emoji rain tint for dark mode */
+  --emoji-tint: rgba(245, 230, 240, 0.15);
+
+  /* Focus outlines */
+  --focus-ring: #f5d08a;
+}
+
+/* Dark mode specific component overrides */
+[data-theme="dark"] .love-nav {
+  background: var(--nav-bg);
+  border-color: var(--nav-border);
+  box-shadow: var(--nav-shadow);
+}
+
+[data-theme="dark"] .love-nav__link {
+  color: var(--nav-link-color);
+}
+
+[data-theme="dark"] .love-nav__link:hover {
+  background: var(--nav-link-hover);
+}
+
+[data-theme="dark"] .love-nav__link:focus-visible {
+  outline-color: var(--focus-ring);
+}
+
+[data-theme="dark"] .love-nav__link[aria-current="true"] {
+  background: linear-gradient(135deg, var(--nav-link-active-start), var(--nav-link-active-end));
+  color: var(--text-inverse);
+  box-shadow: var(--nav-link-active-shadow);
+}
+
+/* Dark mode mobile bottom bar */
+@media (max-width: 900px) {
+  [data-theme="dark"] .love-nav {
+    border-color: var(--nav-border);
+    box-shadow: 0 -6px 22px rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* ==========================================================================
+   Dark mode — Component overrides
+   ========================================================================== */
+
+/* Password gate */
+[data-theme="dark"] .password-gate {
+  background: rgba(26, 10, 20, 0.95);
+}
+[data-theme="dark"] .password-gate__card {
+  background: var(--bg-elevated);
+  border-color: var(--border-subtle);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+}
+[data-theme="dark"] .password-gate__title {
+  color: var(--text-primary);
+}
+[data-theme="dark"] .password-gate__hint {
+  color: var(--text-secondary);
+}
+[data-theme="dark"] .password-gate__label {
+  color: var(--text-secondary);
+}
+[data-theme="dark"] .password-gate__input {
+  background: var(--bg-surface);
+  border-color: var(--border-subtle);
+  color: var(--text-primary);
+}
+[data-theme="dark"] .password-gate__input::placeholder {
+  color: var(--text-muted);
+}
+[data-theme="dark"] .password-gate__input:focus {
+  border-color: var(--accent-rose);
+  box-shadow: 0 0 0 3px rgba(232, 165, 200, 0.2);
+}
+[data-theme="dark"] .password-gate__btn {
+  background: linear-gradient(135deg, var(--accent-plum), var(--accent-rose));
+  color: var(--text-inverse);
+}
+[data-theme="dark"] .password-gate__btn:hover {
+  background: linear-gradient(135deg, var(--accent-rose), var(--accent-plum));
+}
+[data-theme="dark"] .password-gate__error {
+  color: #f5a8c8;
+}
+[data-theme="dark"] .pw-heart {
+  color: var(--accent-rose);
+  text-shadow: 0 0 8px rgba(232, 165, 200, 0.6);
+}
+
+/* Site content background */
+[data-theme="dark"] .site-content {
+  background: var(--grad-last);
+}
+
+/* Emoji rain - tint for dark mode */
+[data-theme="dark"] .emoji-rain {
+  /* Emoji rain glyphs get a subtle tint via JS or CSS filter */
+}
+[data-theme="dark"] .love-drop__glyph {
+  filter: brightness(1.1) saturate(0.8);
+}
+
+/* Greetings section */
+[data-theme="dark"] #greetings .gr-msg {
+  color: var(--accent-rose);
+  text-shadow: 0 0 14px rgba(232, 165, 200, 0.45);
+}
+[data-theme="dark"] #greetings .gr-cursor {
+  background: var(--accent-rose);
+  box-shadow: 0 0 8px rgba(232, 165, 200, 0.7);
+}
+[data-theme="dark"] #greetings .gr-sub {
+  color: var(--accent-plum);
+}
+[data-theme="dark"] #greetings .gr-art {
+  /* Keep transparent for emoji rain */
+}
+
+/* Tree stage (legacy from default.css) */
+[data-theme="dark"] #wrap {
+  /* Tree container - background handled by section gradient */
+}
+[data-theme="dark"] #text {
+  color: var(--text-primary);
+}
+[data-theme="dark"] #code {
+  color: var(--text-primary);
+}
+[data-theme="dark"] #clock-box {
+  color: var(--text-primary);
+}
+
+/* ASCII rose bouquet variables for dark mode */
+[data-theme="dark"] #greetings {
+  --pink: var(--accent-plum);
+  --pale: var(--accent-rose);
+}
+
+/* Section text content defaults */
+[data-theme="dark"] .section {
+  color: var(--text-primary);
+}
+[data-theme="dark"] .section h1,
+[data-theme="dark"] .section h2,
+[data-theme="dark"] .section h3,
+[data-theme="dark"] .section h4 {
+  color: var(--text-primary);
+}
+[data-theme="dark"] .section p {
+  color: var(--text-secondary);
+}
+[data-theme="dark"] .section a {
+  color: var(--accent-rose);
+}
+[data-theme="dark"] .section a:hover {
+  color: var(--accent-gold);
+}
+
+/* Form elements */
+[data-theme="dark"] input,
+[data-theme="dark"] textarea,
+[data-theme="dark"] select,
+[data-theme="dark"] button {
+  color: var(--text-primary);
+}
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder {
+  color: var(--text-muted);
+}
+
+/* Focus states */
+[data-theme="dark"] *:focus-visible {
+  outline-color: var(--focus-ring);
+}
+
+/* Scrollbar */
+[data-theme="dark"] ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+[data-theme="dark"] ::-webkit-scrollbar-track {
+  background: var(--bg-deep);
+}
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 5px;
+}
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-plum);
+}
+
+/* ==========================================================================
+   Dark mode — Timeline section (#story)
+   ========================================================================== */
+[data-theme="dark"] #story.section--memory {
+  background-image:
+    var(--grad-story),
+    radial-gradient(var(--border-subtle) 2px, transparent 2.6px),
+    radial-gradient(var(--border-strong) 1.5px, transparent 2px);
+}
+[data-theme="dark"] #story .tl__title {
+  color: var(--text-primary);
+  text-shadow: 2px 2px 0 rgba(26, 10, 20, 0.5);
+}
+[data-theme="dark"] #story .tl__subtitle {
+  color: var(--text-secondary);
+}
+[data-theme="dark"] #story .tl__list::before {
+  border-color: var(--accent-plum);
+}
+[data-theme="dark"] #story .tl-entry__marker {
+  border-color: var(--accent-plum);
+  background: var(--bg-surface);
+  color: var(--accent-rose);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+}
+[data-theme="dark"] #story .tl-entry::after {
+  border-color: var(--accent-plum);
+}
+[data-theme="dark"] #story .tl-card {
+  border-color: var(--border-subtle);
+  background: var(--bg-elevated);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.4);
+  color: var(--text-primary);
+}
+[data-theme="dark"] #story .tl-card:hover {
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.5);
+}
+[data-theme="dark"] #story .tl-card__photo {
+  background: var(--bg-surface);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+[data-theme="dark"] #story .tl-card__photo::before {
+  background: rgba(201, 127, 184, 0.6);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+[data-theme="dark"] #story .tl-card__photo img {
+  background: var(--bg-deep);
+}
+[data-theme="dark"] #story .tl-card__year {
+  background: linear-gradient(135deg, var(--accent-plum), var(--accent-rose));
+  box-shadow: 0 3px 8px rgba(201, 127, 184, 0.4);
+}
+[data-theme="dark"] #story .tl-card__date {
+  color: var(--text-secondary);
+}
+[data-theme="dark"] #story .tl-card__heading {
+  color: var(--text-primary);
+}
+[data-theme="dark"] #story .tl-card__caption {
+  color: var(--text-secondary);
+}
+[data-theme="dark"] #story .tl-card__heart {
+  color: var(--accent-rose);
+}
+
+/* ==========================================================================
+   Dark mode — Gallery section (#gallery)
+   ========================================================================== */
+[data-theme="dark"] #gallery .pb__title {
+  color: var(--text-primary);
+  text-shadow: 2px 2px 0 rgba(26, 10, 20, 0.5);
+}
+[data-theme="dark"] #gallery .pb__subtitle {
+  color: var(--text-secondary);
+}
+[data-theme="dark"] #gallery .pb__stage:focus-visible {
+  outline-color: var(--accent-rose);
+}
+[data-theme="dark"] #gallery .pb-card {
+  background: var(--bg-elevated);
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.4),
+    0 2px 4px rgba(0, 0, 0, 0.2);
+}
+[data-theme="dark"] #gallery .pb-card.is-active {
+  box-shadow:
+    0 16px 34px rgba(0, 0, 0, 0.5),
+    0 2px 5px rgba(0, 0, 0, 0.2);
+}
+[data-theme="dark"] #gallery .pb-card img {
+  background: var(--bg-deep);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+[data-theme="dark"] #gallery .pb-card__caption {
+  color: var(--text-primary);
+}
+[data-theme="dark"] #gallery .pb__count {
+  color: var(--text-primary);
+}
+[data-theme="dark"] #gallery .pb__btn {
+  background: linear-gradient(135deg, var(--accent-plum), var(--accent-rose));
+  box-shadow: 0 6px 16px rgba(201, 127, 184, 0.4);
+}
+[data-theme="dark"] #gallery .pb__btn:hover {
+  box-shadow: 0 8px 20px rgba(201, 127, 184, 0.5);
+}
+[data-theme="dark"] #gallery .pb__btn:focus-visible {
+  outline-color: var(--focus-ring);
+}
+[data-theme="dark"] #gallery .pb__btn:disabled {
+  opacity: 0.4;
+}
+
+/* ==========================================================================
+   Dark mode — Jar section (#jar)
+   ========================================================================== */
+[data-theme="dark"] #jar .jar__title {
+  color: var(--text-primary);
+  text-shadow: 2px 2px 0 rgba(26, 10, 20, 0.5);
+}
+[data-theme="dark"] #jar .jar__subtitle {
+  color: var(--text-secondary);
+}
+[data-theme="dark"] #jar .jar__hint {
+  color: var(--text-primary);
+}
+[data-theme="dark"] #jar .jar-btn svg {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+[data-theme="dark"] #jar .jar-btn:hover:not(:disabled) svg {
+  filter: drop-shadow(0 0 14px rgba(232, 165, 200, 0.5));
+}
+[data-theme="dark"] #jar .jar-btn:focus-visible {
+  outline-color: var(--focus-ring);
+}
+[data-theme="dark"] #jar .jar-modal {
+  background: rgba(10, 5, 8, 0.6);
+}
+[data-theme="dark"] #jar .jn-panel {
+  background: linear-gradient(180deg, var(--bg-surface), var(--bg-elevated));
+  box-shadow:
+    0 6px 16px rgba(0, 0, 0, 0.3),
+    inset 0 0 0 1px var(--border-subtle);
+}
+[data-theme="dark"] #jar .jn-panel--2::before,
+[data-theme="dark"] #jar .jn-panel--3::before {
+  background: linear-gradient(rgba(201, 127, 184, 0.2), transparent);
+}
+[data-theme="dark"] #jar .jn-text {
+  color: var(--text-primary);
+}
+[data-theme="dark"] #jar .jar-modal__btn {
+  background: linear-gradient(135deg, var(--accent-plum), var(--accent-rose));
+  box-shadow: 0 6px 16px rgba(201, 127, 184, 0.4);
+}
+[data-theme="dark"] #jar .jar-modal__btn:hover {
+  transform: translateY(-1px);
+}
+[data-theme="dark"] #jar .jar-modal__btn:focus-visible {
+  outline-color: var(--focus-ring);
+}
+[data-theme="dark"] #jar .jar-modal__btn--ghost {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+[data-theme="dark"] #jar .jn-nsfw {
+  background: var(--accent-coral);
+}
+
+/* ==========================================================================
+   Dark mode — Music section (#music)
+   ========================================================================== */
+[data-theme="dark"] #music .mu__title {
+  color: var(--text-primary);
+  text-shadow: 2px 2px 0 rgba(26, 10, 20, 0.5);
+}
+[data-theme="dark"] #music .mu__subtitle {
+  color: var(--text-secondary);
+}
+[data-theme="dark"] #music .mu__empty {
+  color: var(--text-primary);
+}
+[data-theme="dark"] #music .mu__stage:focus-visible {
+  outline-color: var(--accent-rose);
+}
+[data-theme="dark"] #music .mu-card__art {
+  background: var(--bg-surface);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.4);
+}
+[data-theme="dark"] #music .mu-card__art img {
+  background: var(--bg-deep);
+}
+[data-theme="dark"] #music .mu-disc {
+  background: repeating-radial-gradient(circle, #0a0508 0 2px, #150a10 2px 3px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.5);
+}
+[data-theme="dark"] #music .mu-disc__label {
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.5);
+}
+[data-theme="dark"] #music .mu-disc__label::after {
+  background: #0a0508;
+}
+[data-theme="dark"] #music .mu-eq {
+  background: rgba(10, 5, 8, 0.6);
+}
+[data-theme="dark"] #music .mu-eq i {
+  background: var(--text-primary);
+}
+[data-theme="dark"] #music .mu__song {
+  color: var(--text-primary);
+}
+[data-theme="dark"] #music .mu__artist {
+  color: var(--text-secondary);
+}
+[data-theme="dark"] #music .mu__btn {
+  background: linear-gradient(135deg, var(--accent-plum), var(--accent-rose));
+  box-shadow: 0 6px 16px rgba(201, 127, 184, 0.4);
+}
+[data-theme="dark"] #music .mu__btn:hover {
+  box-shadow: 0 8px 20px rgba(201, 127, 184, 0.5);
+}
+[data-theme="dark"] #music .mu__btn:focus-visible {
+  outline-color: var(--focus-ring);
+}
+[data-theme="dark"] #music .mu__btn:disabled {
+  opacity: 0.4;
+}
+[data-theme="dark"] .mu-fab {
+  border-color: var(--border-subtle);
+  background: var(--bg-elevated);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+}
+[data-theme="dark"] .mu-fab:focus-visible {
+  outline-color: var(--focus-ring);
+}
+
+/* ==========================================================================
+   Dark mode — Letter section (#last - left panel)
+   ========================================================================== */
+[data-theme="dark"] .lv-env {
+  filter: drop-shadow(0 12px 16px rgba(0, 0, 0, 0.5));
+}
+[data-theme="dark"] .lv-env__back {
+  background: linear-gradient(160deg, var(--accent-plum), var(--accent-rose));
+}
+[data-theme="dark"] .lv-env__paper {
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0 17px,
+      rgba(201, 127, 184, 0.2) 17px 18px
+    ),
+    var(--bg-surface);
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.3);
+}
+[data-theme="dark"] .lv-env__paper-heart {
+  color: var(--accent-rose);
+}
+[data-theme="dark"] .lv-env__front {
+  background: linear-gradient(135deg, var(--bg-surface), var(--bg-elevated));
+}
+[data-theme="dark"] .lv-env__flap-shape {
+  background: linear-gradient(180deg, var(--accent-plum), var(--accent-rose));
+}
+[data-theme="dark"] .lv-env__seal {
+  background: radial-gradient(circle at 35% 30%, var(--accent-rose), var(--accent-plum) 72%);
+  box-shadow:
+    0 3px 8px rgba(0, 0, 0, 0.5),
+    inset 0 -3px 5px rgba(0, 0, 0, 0.4);
+  color: var(--text-primary);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+[data-theme="dark"] .lv-env__btn:focus-visible {
+  outline-color: var(--focus-ring);
+}
+[data-theme="dark"] .lv-hint {
+  color: var(--text-primary);
+}
+[data-theme="dark"] .lv-letter::before {
+  background: rgba(201, 127, 184, 0.7);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+[data-theme="dark"] .lv-letter__paper {
+  background-color: var(--bg-surface);
+  background-image:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .25 0 0 0 0 .2 0 0 0 0 .15 0 0 0 .05 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"),
+    linear-gradient(
+      to right,
+      transparent 46px,
+      rgba(201, 127, 184, 0.5) 46px 48px,
+      transparent 48px
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0 31px,
+      rgba(120, 150, 200, 0.2) 31px 32px
+    );
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 1px var(--border-subtle);
+  color: var(--text-primary);
+}
+[data-theme="dark"] .lv-line--to,
+[data-theme="dark"] .lv-line--sign {
+  color: var(--accent-rose);
+}
+[data-theme="dark"] .lv-cursor {
+  background: var(--accent-rose);
+}
+[data-theme="dark"] .lv-decor__heart {
+  color: var(--accent-rose);
+}
+[data-theme="dark"] .lv-close {
+  background: linear-gradient(135deg, var(--accent-plum), var(--accent-rose));
+  box-shadow: 0 4px 12px rgba(201, 127, 184, 0.4);
+}
+[data-theme="dark"] .lv-close:focus-visible {
+  outline-color: var(--focus-ring);
+}
+
+/* Mobile letter paper */
+@media (max-width: 900px) {
+  [data-theme="dark"] .lv-letter__paper {
+    background-image:
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .25 0 0 0 0 .2 0 0 0 0 .15 0 0 0 .05 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"),
+      linear-gradient(
+        to right,
+        transparent 36px,
+        rgba(201, 127, 184, 0.5) 36px 38px,
+        transparent 38px
+      ),
+      repeating-linear-gradient(
+        to bottom,
+        transparent 0 31px,
+        rgba(120, 150, 200, 0.2) 31px 32px
+      );
+  }
+}
+
+/* ==========================================================================
+   Dark mode — ASCII section (#last - right panel)
+   ========================================================================== */
+[data-theme="dark"] .section--poem {
+  background: var(--grad-last);
+}
+[data-theme="dark"] .poem-panel {
+  background: rgba(45, 20, 35, 0.6);
+  border-color: var(--border-subtle);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+  color: var(--text-secondary);
+}
+[data-theme="dark"] .ascii-controls {
+  background: rgba(45, 20, 35, 0.6);
+  border-color: var(--border-subtle);
+  color: var(--text-primary);
+}
+[data-theme="dark"] .ascii-file-btn {
+  background: linear-gradient(135deg, var(--accent-plum), var(--accent-rose));
+  box-shadow: 0 3px 10px rgba(201, 127, 184, 0.35);
+}
+[data-theme="dark"] .ascii-file-btn:hover {
+  filter: brightness(1.05);
+}
+[data-theme="dark"] .ascii-slider-wrap input[type="range"] {
+  accent-color: var(--accent-rose);
+}
+[data-theme="dark"] .ascii-danger-bar {
+  background: var(--accent-coral);
+}
+[data-theme="dark"] .ascii-warning {
+  color: var(--accent-coral);
+}
+[data-theme="dark"] .ascii-zoom-btn {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+[data-theme="dark"] .ascii-zoom-btn:hover {
+  background: var(--bg-elevated);
+}
+[data-theme="dark"] .ascii-frame .ascii-viewport {
+  background: var(--bg-deepest);
+  border-color: var(--border-subtle);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+}
+[data-theme="dark"] .ascii-output {
+  /* ASCII glyphs are colored via JS - background handled by viewport */
+}
+
+/* ==========================================================================
+   Dark mode — Password gate (from ascii.css)
+   ========================================================================== */
+[data-theme="dark"] .password-gate {
+  background:
+    radial-gradient(ellipse at 30% 20%, rgba(201, 127, 184, 0.3), transparent 55%),
+    radial-gradient(ellipse at 70% 80%, rgba(240, 143, 184, 0.2), transparent 50%),
+    linear-gradient(160deg, var(--bg-deepest) 0%, var(--bg-deep) 45%, var(--bg-elevated) 100%);
+}
+[data-theme="dark"] .password-gate__card {
+  background: rgba(61, 26, 46, 0.8);
+  border-color: var(--border-subtle);
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.5),
+    0 0 0 1px var(--border-subtle) inset;
+}
+[data-theme="dark"] .pw-heart {
+  color: var(--accent-rose);
+}
+[data-theme="dark"] .password-gate__title {
+  color: var(--text-primary);
+}
+[data-theme="dark"] .password-gate__hint {
+  color: var(--text-secondary);
+}
+[data-theme="dark"] .password-gate__input {
+  border-color: var(--border-strong);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+}
+[data-theme="dark"] .password-gate__input:focus {
+  border-color: var(--accent-rose);
+  box-shadow: 0 0 0 4px rgba(232, 165, 200, 0.2);
+}
+[data-theme="dark"] .password-gate__btn {
+  background: linear-gradient(135deg, var(--accent-plum), var(--accent-rose));
+  box-shadow: 0 6px 18px rgba(201, 127, 184, 0.4);
+}
+[data-theme="dark"] .password-gate__btn:hover {
+  box-shadow: 0 8px 22px rgba(201, 127, 184, 0.5);
+}
+[data-theme="dark"] .password-gate__error {
+  color: var(--accent-coral);
+}
+
 html {
   -webkit-text-size-adjust: 100%;
 }

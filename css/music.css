@@ -286,12 +286,18 @@
   cursor: default;
 }
 
-/* ---- Floating mute / pause button (visible on every section) ---- */
-.mu-fab {
+/* ---- Floating mute / pause button + theme toggle (visible on every section) ---- */
+.mu-fab-wrap {
   position: fixed;
   right: 14px;
   bottom: calc(var(--nav-space, 0px) + 14px);
   z-index: 60;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: 8px;
+}
+.mu-fab {
   display: grid;
   place-items: center;
   width: 46px;
@@ -310,6 +316,55 @@
 .mu-fab:focus-visible {
   outline: 3px solid #e5457f;
   outline-offset: 2px;
+}
+
+.mu-fab__theme {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.7);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(190, 40, 100, 0.3);
+  color: #9c1f58;
+  transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.3s ease;
+}
+.mu-fab__theme:hover {
+  background: rgba(255, 255, 255, 0.9);
+  transform: rotate(15deg);
+}
+.mu-fab__theme:focus-visible {
+  outline: 3px solid #e5457f;
+  outline-offset: 2px;
+}
+
+/* Dark mode FAB & theme toggle */
+[data-theme="dark"] .mu-fab {
+  border-color: rgba(232, 200, 220, 0.5);
+  background: rgba(45, 20, 35, 0.7);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+}
+[data-theme="dark"] .mu-fab:focus-visible {
+  outline-color: #f5d08a;
+}
+[data-theme="dark"] .mu-fab__theme {
+  border-color: rgba(232, 200, 220, 0.5);
+  background: rgba(45, 20, 35, 0.7);
+  color: #e8c8dc;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+}
+[data-theme="dark"] .mu-fab__theme:hover {
+  background: rgba(61, 26, 46, 0.8);
+}
+[data-theme="dark"] .mu-fab__theme:focus-visible {
+  outline-color: #f5d08a;
 }
 
 @media (max-width: 900px) {

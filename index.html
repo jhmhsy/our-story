@@ -21,6 +21,143 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&display=swap">
+    <script>
+        (function () {
+            'use strict';
+            var THEME_COOKIE = 'theme';
+            var DARK = 'dark';
+            var LIGHT = 'light';
+            var html = document.documentElement;
+
+            function readCookie(name) {
+                var match = document.cookie.match(new RegExp('(^|;\\s*)' + name + '=([^;]+)'));
+                return match ? decodeURIComponent(match[2]) : null;
+            }
+
+            function writeCookie(name, value, days) {
+                var expires = '';
+                if (days) {
+                    var date = new Date();
+                    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                    expires = '; expires=' + date.toUTCString();
+                }
+                document.cookie = name + '=' + encodeURIComponent(value) + expires + '; path=/; SameSite=Lax';
+            }
+
+            function getInitialTheme() {
+                var cookieTheme = readCookie(THEME_COOKIE);
+                if (cookieTheme === DARK || cookieTheme === LIGHT) {
+                    return cookieTheme;
+                }
+                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    return DARK;
+                }
+                return LIGHT;
+            }
+
+            function applyTheme(theme) {
+                html.setAttribute('data-theme', theme);
+                writeCookie(THEME_COOKIE, theme, 365);
+                updateToggleButton(theme);
+            }
+
+            function updateToggleButton(theme) {
+                var btn = document.getElementById('theme-toggle');
+                if (!btn) return;
+                // Support both old structure (icon/label spans) and new structure (direct emoji)
+                var icon = btn.querySelector('.theme-toggle__icon');
+                var label = btn.querySelector('.theme-toggle__label');
+                if (theme === DARK) {
+                    btn.setAttribute('aria-label', 'Switch to light mode');
+                    btn.title = 'Switch to light mode';
+                    if (icon) icon.textContent = '☀️';
+                    if (label) label.textContent = 'Light';
+                    if (!icon && !label) btn.textContent = '☀️';
+                } else {
+                    btn.setAttribute('aria-label', 'Switch to dark mode');
+                    btn.title = 'Switch to dark mode';
+                    if (icon) icon.textContent = '🌙';
+                    if (label) label.textContent = 'Dark';
+                    if (!icon && !label) btn.textContent = '🌙';
+                }
+            }
+
+            function toggleTheme() {
+                var current = html.getAttribute('data-theme') || LIGHT;
+                var next = current === DARK ? LIGHT : DARK;
+                applyTheme(next);
+            }
+
+            // Create theme toggle button early and inject into page
+            function createThemeToggleButton() {
+                var btn = document.createElement('button');
+                btn.id = 'theme-toggle';
+                btn.type = 'button';
+                btn.className = 'mu-fab__theme'; // reuse existing dark-mode styles from music.css
+                btn.setAttribute('aria-label', 'Switch to dark mode');
+                btn.title = 'Toggle theme';
+                btn.textContent = '🌙'; // default to light mode icon (moon = switch to dark)
+                return btn;
+            }
+
+            // Set initial theme immediately (before paint)
+            var theme = getInitialTheme();
+            html.setAttribute('data-theme', theme);
+
+            // Insert theme toggle button into the page as soon as possible
+            function insertThemeToggle() {
+                var fabWrap = document.querySelector('.mu-fab-wrap');
+                if (fabWrap) {
+                    // If music.js already created the wrapper, insert our button there
+                    var existing = fabWrap.querySelector('#theme-toggle');
+                    if (!existing) {
+                        var btn = createThemeToggleButton();
+                        fabWrap.appendChild(btn);
+                        btn.addEventListener('click', toggleTheme);
+                        updateToggleButton(theme);
+                    }
+                } else {
+                    // Create our own wrapper (fixed bottom-right, above mobile nav)
+                    fabWrap = document.createElement('div');
+                    fabWrap.className = 'mu-fab-wrap';
+                    var btn = createThemeToggleButton();
+                    fabWrap.appendChild(btn);
+                    (document.getElementById('site-content') || document.body).appendChild(fabWrap);
+                    btn.addEventListener('click', toggleTheme);
+                    updateToggleButton(theme);
+                }
+            }
+
+            // Set up toggle button after DOM loads
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', function () {
+                    insertThemeToggle();
+                });
+            } else {
+                insertThemeToggle();
+            }
+
+            // Listen for system theme changes (only if no user preference stored)
+            if (window.matchMedia) {
+                var mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+                var hasUserPreference = readCookie(THEME_COOKIE) !== null;
+                if (mediaQuery.addEventListener) {
+                    mediaQuery.addEventListener('change', function (e) {
+                        if (!hasUserPreference) {
+                            applyTheme(e.matches ? DARK : LIGHT);
+                        }
+                    });
+                } else if (mediaQuery.addListener) {
+                    // Safari < 14
+                    mediaQuery.addListener(function (e) {
+                        if (!hasUserPreference) {
+                            applyTheme(e.matches ? DARK : LIGHT);
+                        }
+                    });
+                }
+            }
+        })();
+    </script>
 </head>
 
 <body>
