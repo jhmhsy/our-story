@@ -6,7 +6,7 @@
   align-items: stretch;
   padding: 0 0 0 var(--nav-gutter);
   overflow: hidden;
-  /* Background color is set dynamically from data/content.json via content.js */
+  /* Background gradient defined in layout.css (--grad-greetings) */
 }
 
 /* ---- Left: typed greeting (transparent, so the emoji rain still shows) ---- */

@@ -134,12 +134,9 @@
 .site-content[hidden] { display: none !important; }
 
 /* ---- Section 4: poem + ASCII ---- */
-:root {
-  --pink-4: #f48fb1;
-}
 
 .section--poem {
-  background: var(--pink-4);
+  background: var(--grad-last);
   display: flex;
   align-items: stretch;
   justify-content: center;

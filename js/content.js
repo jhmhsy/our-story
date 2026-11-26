@@ -17,17 +17,29 @@
         });
     }
 
-    /* Only colour is overridden, so the polka-dot image on #story is kept. */
+    /* Backgrounds from content.json (solid hex or CSS gradient).
+       CSS gradients in layout.css (--grad-*) are defaults; content.json values override them. */
     function applyBackgrounds(bg) {
         if (!bg) return;
         SECTION_IDS.forEach(function (id) {
             var node = document.getElementById(id);
-            if (node && /^#[0-9a-f]{6}$/i.test(bg[id] || '')) node.style.backgroundColor = bg[id];
+            if (!node) return;
+            var val = bg[id];
+            if (!val) return;
+            // Gradient if it looks like one; otherwise treat as hex color
+            if (/^linear-gradient|^radial-gradient|^conic-gradient/i.test(val.trim())) {
+                node.style.background = val;
+            } else if (/^#[0-9a-f]{6}$/i.test(val)) {
+                node.style.backgroundColor = val;
+            }
         });
         // The strip behind the mobile bottom nav matches the last section
         var last = document.getElementById('last');
         var site = document.getElementById('site-content');
-        if (last && site && last.style.backgroundColor) site.style.backgroundColor = last.style.backgroundColor;
+        if (last && site) {
+            var lastBg = last.style.background || last.style.backgroundColor;
+            if (lastBg) site.style.background = lastBg;
+        }
         if (typeof window.__syncTreeBackground === 'function') window.__syncTreeBackground();
     }
 

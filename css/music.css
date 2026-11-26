@@ -6,7 +6,7 @@
   justify-content: center;
   overflow: hidden;
   padding: 40px var(--nav-gutter);
-  /* Background color is set dynamically from data/content.json via content.js */
+  /* Background gradient defined in layout.css (--grad-music) */
 }
 
 #music .mu {

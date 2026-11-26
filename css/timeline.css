@@ -1,14 +1,17 @@
 /* timeline.css - Section 2 (#story). Every selector is scoped to #story, .tl* or .tl-*. */
 
 #story.section--memory {
-  /* keeps the existing --pink-2 colour, adds a soft scrapbook polka-dot paper */
+  /* Base gradient from layout.css (--grad-story), adds a soft scrapbook polka-dot paper */
   background-image:
+    var(--grad-story),
     radial-gradient(rgba(255, 255, 255, 0.38) 2px, transparent 2.6px),
     radial-gradient(rgba(255, 255, 255, 0.22) 1.5px, transparent 2px);
   background-size:
+    100% 100%,
     30px 30px,
     30px 30px;
   background-position:
+    0 0,
     0 0,
     15px 15px;
   overflow: hidden;

@@ -324,12 +324,12 @@
     ]
   },
   "backgrounds": {
-    "greetings": "#0d0a1e",
-    "story": "#2d0a1a",
-    "gallery": "#0a1e2d",
-    "jar": "#1e0a2e",
-    "music": "#1a0d2e",
-    "last": "#2d0a1f"
+    "greetings": "linear-gradient(135deg, #880e4f 0%, #ad1457 50%, #c2185b 100%)",
+    "story": "linear-gradient(135deg, #fff0f6 0%, #ffeef5 50%, #ffdce8 100%)",
+    "gallery": "linear-gradient(135deg, #ffdce8 0%, #ffd1e3 50%, #f8bbd0 100%)",
+    "jar": "linear-gradient(135deg, #fff0f6 0%, #ffeef5 50%, #ffdce8 100%)",
+    "music": "linear-gradient(135deg, #f8bbd0 0%, #f48fb1 50%, #f06292 100%)",
+    "last": "linear-gradient(135deg, #f48fb1 0%, #ec407a 50%, #c2185b 100%)"
   },
   "music": {
     "songs": [

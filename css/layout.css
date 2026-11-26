@@ -6,11 +6,25 @@
    ========================================================================== */
 
 :root {
-  /* Section backgrounds: darkest (1) -> medium (2) -> lightest (3) */
-  --pink-1: #fde3ee;
-  --pink-2: #f8a9c6;
-  --pink-3: #f8a3c2;
-  --pink-4: #f48fb1;
+  /* Romantic red/pink palette — blush, rose, coral, wine */
+  --blush: #ffeef5;
+  --blush-light: #fff0f6;
+  --rose-light: #ffdce8;
+  --rose: #f8bbd0;
+  --rose-medium: #f48fb1;
+  --coral: #f06292;
+  --coral-deep: #ec407a;
+  --wine: #c2185b;
+  --wine-deep: #ad1457;
+  --wine-darkest: #880e4f;
+
+  /* Section gradients — each distinct but cohesive */
+  --grad-greetings: linear-gradient(135deg, var(--wine-darkest) 0%, var(--wine-deep) 50%, var(--wine) 100%);
+  --grad-story: linear-gradient(135deg, var(--blush-light) 0%, var(--blush) 50%, var(--rose-light) 100%);
+  --grad-gallery: linear-gradient(135deg, var(--rose-light) 0%, #ffd1e3 50%, var(--rose) 100%);
+  --grad-jar: linear-gradient(135deg, var(--blush-light) 0%, var(--blush) 50%, var(--rose-light) 100%);
+  --grad-music: linear-gradient(135deg, var(--rose) 0%, var(--rose-medium) 50%, var(--coral) 100%);
+  --grad-last: linear-gradient(135deg, var(--rose-medium) 0%, var(--coral-deep) 50%, var(--wine) 100%);
 
   /* Horizontal room kept free for the floating sidebar (desktop).
      On mobile the sidebar moves to the bottom, so this becomes a small, equal page margin. */
@@ -38,13 +52,22 @@ html {
 }
 
 .section--tree {
-  background: var(--pink-1);
+  background: var(--grad-greetings);
 }
 .section--memory {
-  background: var(--pink-2);
+  background: var(--grad-story);
 }
 .section--future {
-  background: var(--pink-3);
+  background: var(--grad-gallery);
+}
+.section--jar {
+  background: var(--grad-jar);
+}
+.section--music {
+  background: var(--grad-music);
+}
+.section--poem {
+  background: var(--grad-last);
 }
 
 /* Section 1 centres the existing tree animation */
@@ -92,7 +115,7 @@ html {
     padding-bottom: var(--nav-space);
     padding-left: env(safe-area-inset-left, 0px);
     padding-right: env(safe-area-inset-right, 0px);
-    background: var(--pink-4);
+    background: var(--grad-last);
   }
 
   /* Symmetric side padding; bottom padding lifts the tree into the visible area above the bar.
