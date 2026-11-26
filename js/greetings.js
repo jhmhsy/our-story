@@ -106,18 +106,23 @@
     }
 
     /* ================= 3D ASCII Bouquet ================= */
+    /* Palettes updated for WCAG AA contrast (4.5:1) against fixed near-black background
+       Background: linear-gradient(135deg, #0a0408 0%, #140a12 50%, #1a0a14 100%)
+       Darkest point: #0a0408 (rgb 10,4,8) - luminance ~0.0017
+       Minimum text luminance needed: (0.0017+0.05)*4.5 - 0.05 = 0.182
+       All palette colors must have luminance >= 0.182 */
     var CFG = {
         roses: 44,
         seed: 1402,
-        spin: 0.45,          // rad/s after bloom finishes
+        spin: 0.45,
         pitch: 0.24,
-        duration: 14,        // seconds for the full bloom-in sequence
+        duration: 14,
         palettes: [
-            ['#6b0a18', '#b3122b', '#e8344f'],
-            ['#7d2a40', '#c4607a', '#e68aa0'],
-            ['#9a5a6e', '#d490a2', '#f3c0cd'],
-            ['#4a0612', '#8e0f24', '#c91f3d'],
-            ['#b87a8c', '#e6aebb', '#fbd9e0']
+            ['#c95a7a', '#d46a8a', '#f06a7a'],   // Brighter rose → bright coral → brighter coral (all >= 0.182)
+            ['#c96a8a', '#e08ab0', '#f09ab8'],   // Brighter magenta → bright pink
+            ['#d48ab0', '#e8aac8', '#f8c0d8'],   // Light rose → lighter pink → very light pink
+            ['#b85a7a', '#d47aa8', '#e88ab8'],   // Rose → brighter rose → bright pink
+            ['#d49ab8', '#e8b8d0', '#ffe0ec']    // Light pink → lighter pink → very pale
         ]
     };
 
@@ -160,7 +165,9 @@
         var f = 1 + (rnd() - .5) * a;
         return [c[0]*f, c[1]*f, c[2]*f];
     };
-    var GREEN = ['#1f7a3a','#2f9a4e','#46b862','#7de39a'].map(hex);
+    /* Greens updated for WCAG AA contrast against near-black (#0a0408).
+   Minimum luminance needed: 0.184 */
+var GREEN = ['#3f9a5a','#5fba6e','#76d882','#9ef3b0'].map(hex);
     var BUD   = [28, 66, 38];
     var GOLD  = [hex('#e6b422'), hex('#f5d36b')];
 

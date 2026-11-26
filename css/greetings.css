@@ -6,7 +6,7 @@
   align-items: stretch;
   padding: 0 0 0 var(--nav-gutter);
   overflow: hidden;
-  /* Background gradient defined in layout.css (--grad-greetings) */
+  /* Background is fixed near-black in layout.css (excluded from dark mode) */
 }
 
 /* ---- Left: typed greeting (transparent, so the emoji rain still shows) ---- */
@@ -30,8 +30,8 @@
   font-weight: 700;
   font-size: clamp(32px, 4.2vw, 60px);
   line-height: 1.18;
-  color: #ffd6e6;
-  text-shadow: 0 0 14px rgba(255, 122, 168, 0.55);
+  color: #e8c8dc;
+  text-shadow: 0 0 14px rgba(232, 165, 200, 0.45);
   overflow-wrap: anywhere;
 }
 #greetings .gr-ghost,
@@ -48,8 +48,8 @@
   height: 0.85em;
   margin-left: 3px;
   vertical-align: -0.08em;
-  background: #ff7aa8;
-  box-shadow: 0 0 8px rgba(255, 122, 168, 0.8);
+  background: #e8a5c8;
+  box-shadow: 0 0 8px rgba(232, 165, 200, 0.7);
   animation: gr-blink 1s steps(1) infinite;
 }
 @keyframes gr-blink {
@@ -62,7 +62,7 @@
   font: 600 clamp(13px, 1.3vw, 16px) / 1.5 "Segoe UI", Tahoma, Verdana, sans-serif;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #f48fb1;
+  color: #c97fb8;
 }
 
 /* ---- Right: transparent stage for the bouquet (emoji rain shows through) ---- */
@@ -127,10 +127,11 @@
   }
 }
 
-/* ---- ASCII Rose Bouquet styles (from ascii-rose.css, adapted for container) ---- */
+/* ---- ASCII Rose Bouquet styles (from ascii-rose.css, adapted for container) ----
+   Colors updated for WCAG AA contrast (4.5:1) against fixed near-black background */
 #greetings {
-  --pink: #c98a9b;
-  --pale: #f3c9d3;
+  --pink: #c97fb8;
+  --pale: #e8a5c8;
 }
 #greetings .gr-art {
   position: relative;
