@@ -27,7 +27,7 @@
   box-sizing: border-box;
   height: 44px;
   min-width: 44px;
-  padding: 0 11px;
+  padding: 0 9px;
   border-radius: 22px;
   color: #9c1f58;
   font:
@@ -58,7 +58,11 @@
 
 .love-nav__icon {
   flex: none;
-  width: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
   font-size: 20px;
   line-height: 1;
   text-align: center;
