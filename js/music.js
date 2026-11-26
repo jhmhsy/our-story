@@ -211,8 +211,7 @@
         playTrack(mod(Math.round(target)));
     }
     function advance() {
-        var offset = 1 + Math.floor(Math.random() * (N - 1));   // 1..N-1, so never the same song
-        target = Math.round(target) + wrap(offset);
+        target = Math.round(target) + 1;
         playTrack(mod(target));
         kick();
     }

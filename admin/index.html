@@ -235,51 +235,6 @@
             font-size: 14px;
         }
 
-        .bgrow {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin: 0 0 10px;
-        }
-
-        .bgrow label {
-            flex: 1;
-            margin: 0;
-        }
-
-        .bgrow .hint {
-            min-width: 66px;
-            margin: 0;
-            font-family: monospace;
-        }
-
-        /* Gradient picker */
-        .grad-picker {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 8px;
-        }
-        .grad-option {
-            flex: 1 1 200px;
-            min-width: 180px;
-            max-width: 220px;
-            height: 60px;
-            border: 2px solid transparent;
-            border-radius: 10px;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-            transition: border-color 0.2s, transform 0.1s;
-        }
-        .grad-option:hover { transform: scale(1.02); }
-        .grad-option.selected { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
-        .grad-option input { position: absolute; opacity: 0; pointer-events: none; }
-        .grad-option .label { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 600; text-shadow: 0 1px 4px rgba(0,0,0,0.7); font-size: 12px; pointer-events: none; }
-        .grad-custom { flex: 1 1 100%; }
-        .grad-custom input { width: 100%; font-family: monospace; font-size: 12px; }
-        .bgrow-custom { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
-
         @media (max-width: 520px) {
             .item {
                 grid-template-columns: 72px 1fr;
@@ -329,30 +284,6 @@
             var saveBtn = null;
             var MIN_PASS = 6;
             var musicTerm = '', musicResults = [], musicMsg = '', previewAudio = null, previewUrl = '';
-            // Section backgrounds are now managed exclusively in content.json.
-            // The admin panel displays them as read-only to keep text legible.
-            var BG_LABELS = [
-                ['greetings', '1 · Greetings'],
-                ['story', '2 · Our Story'],
-                ['gallery', '3 · Our Gallery'],
-                ['jar', '4 · Love Jar'],
-                ['music', '5 · Music'],
-                ['last', '6 · Love Letter']
-            ];
-
-            // Gradient presets matching the CSS defaults in layout.css
-            var GRAD_PRESETS = [
-                { key: 'greetings', label: 'Deep Wine (default)', css: 'linear-gradient(135deg, #880e4f 0%, #ad1457 50%, #c2185b 100%)' },
-                { key: 'story', label: 'Soft Blush (default)', css: 'linear-gradient(135deg, #fff0f6 0%, #ffeef5 50%, #ffdce8 100%)' },
-                { key: 'gallery', label: 'Warm Rose (default)', css: 'linear-gradient(135deg, #ffdce8 0%, #ffd1e3 50%, #f8bbd0 100%)' },
-                { key: 'jar', label: 'Sweet Blush (default)', css: 'linear-gradient(135deg, #fff0f6 0%, #ffeef5 50%, #ffdce8 100%)' },
-                { key: 'music', label: 'Rose->Coral (default)', css: 'linear-gradient(135deg, #f8bbd0 0%, #f48fb1 50%, #f06292 100%)' },
-                { key: 'last', label: 'Coral->Wine (default)', css: 'linear-gradient(135deg, #f48fb1 0%, #ec407a 50%, #c2185b 100%)' },
-                { key: 'custom', label: 'Blush->Rose->Coral', css: 'linear-gradient(135deg, #fff0f6 0%, #ffdce8 40%, #f8bbd0 70%, #f06292 100%)' },
-                { key: 'custom', label: 'Deep Rose->Wine', css: 'linear-gradient(135deg, #f48fb1 0%, #ec407a 40%, #c2185b 70%, #880e4f 100%)' },
-                { key: 'custom', label: 'Soft Ombre', css: 'linear-gradient(135deg, #ffeef5 0%, #fff0f6 25%, #ffdce8 50%, #f8bbd0 75%, #f48fb1 100%)' },
-                { key: 'custom', label: 'Radial Blush', css: 'radial-gradient(circle at 50% 50%, #fff0f6 0%, #ffdce8 50%, #f8bbd0 100%)' }
-            ];
 
             /* ---------- Small DOM helpers ---------- */
             function h(tag, attrs, children) {
@@ -829,64 +760,6 @@
                 ]);
             }
 
-            function bgCard() {
-                var bg = state.backgrounds;
-                var card = h('div', { class: 'card' });
-                BG_LABELS.forEach(function (p) {
-                    var key = p[0];
-                    var current = bg[key] || '';
-                    var presetsForSection = GRAD_PRESETS.filter(function (pr) { return pr.key === key || pr.key === 'custom'; });
-
-                    var row = h('div', { class: 'bgrow' }, [
-                        h('label', { text: p[1] })
-                    ]);
-
-                    // Current value display
-                    var currentDisplay = h('span', { class: 'hint', style: 'font-family: monospace; min-width: 200px; word-break: break-all;', text: current || '#(not set - uses CSS default)' });
-                    row.appendChild(currentDisplay);
-
-                    // Gradient picker
-                    var picker = h('div', { class: 'grad-picker' });
-                    presetsForSection.forEach(function (pr) {
-                        var input = h('input', { type: 'radio', name: 'grad-' + key, value: pr.css });
-                        if (current === pr.css) input.checked = true;
-                        input.addEventListener('change', function () {
-                            bg[key] = pr.css;
-                            currentDisplay.textContent = pr.css;
-                            markDirty();
-                            // Update all radio buttons for this section
-                            row.querySelectorAll('input[name="grad-' + key + '"]').forEach(function (r) {
-                                r.parentElement.classList.toggle('selected', r.checked);
-                            });
-                        });
-                        var opt = h('div', { class: 'grad-option' + (input.checked ? ' selected' : ''), style: 'background: ' + pr.css },
-                            [input, h('span', { class: 'label', text: pr.label })]);
-                        opt.addEventListener('click', function () { input.checked = true; input.dispatchEvent(new Event('change')); });
-                        picker.appendChild(opt);
-                    });
-
-                    // Custom gradient input
-                    var customWrap = h('div', { class: 'grad-option grad-custom' });
-                    var customInput = h('input', {
-                        type: 'text',
-                        placeholder: 'Custom gradient (e.g. linear-gradient(135deg, #ff0000, #0000ff))',
-                        value: (current && !presetsForSection.some(function (pr) { return pr.css === current; })) ? current : ''
-                    });
-                    customInput.addEventListener('input', function () {
-                        bg[key] = customInput.value || '';
-                        currentDisplay.textContent = customInput.value || '#(not set - uses CSS default)';
-                        markDirty();
-                        row.querySelectorAll('input[name="grad-' + key + '"]').forEach(function (r) { r.parentElement.classList.remove('selected'); });
-                    });
-                    customWrap.appendChild(customInput);
-                    picker.appendChild(customWrap);
-
-                    card.appendChild(row);
-                    card.appendChild(picker);
-                });
-                return card;
-            }
-
             /* ---------- Music: iTunes Search API (free, no key, 30-second previews) ---------- */
             function stopPreview() {
                 if (previewAudio) { previewAudio.pause(); previewAudio = null; }
@@ -1016,10 +889,6 @@
                         })
                     ])
                 ]));
-
-                root.appendChild(h('h2', { text: 'Section backgrounds' }));
-                root.appendChild(h('p', { class: 'hint', text: 'Choose a gradient preset or enter a custom CSS gradient. Solid hex colors (e.g. #ffdce8) also work. Leave blank to use the CSS default from layout.css.' }));
-                root.appendChild(bgCard());
 
                 /* Greetings */
                 root.appendChild(h('h2', { text: 'Greetings' }));
