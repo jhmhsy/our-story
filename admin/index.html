@@ -238,16 +238,6 @@
             margin: 0;
         }
 
-        .bgrow input[type="color"] {
-            width: 56px;
-            height: 38px;
-            padding: 0;
-            border: 2px solid rgba(229, 69, 127, 0.3);
-            border-radius: 10px;
-            background: #fff;
-            cursor: pointer;
-        }
-
         .bgrow .hint {
             min-width: 66px;
             margin: 0;
@@ -303,7 +293,8 @@
             var saveBtn = null;
             var MIN_PASS = 6;
             var musicTerm = '', musicResults = [], musicMsg = '', previewAudio = null, previewUrl = '';
-            var BG_DEFAULTS = { greetings: '#fde3ee', story: '#f8a9c6', gallery: '#f8a3c2', jar: '#f69bbc', music: '#f9a8c8', last: '#f48fb1' };
+            // Section backgrounds are now managed exclusively in content.json.
+            // The admin panel displays them as read-only to keep text legible.
             var BG_LABELS = [
                 ['greetings', '1 · Greetings'],
                 ['story', '2 · Our Story'],
@@ -652,9 +643,8 @@
                     return { text: typeof m === 'string' ? m : (m && m.text) || '' };
                 });
                 state.backgrounds = state.backgrounds || {};
-                BG_LABELS.forEach(function (p) {
-                    if (!/^#[0-9a-f]{6}$/i.test(state.backgrounds[p[0]] || '')) state.backgrounds[p[0]] = BG_DEFAULTS[p[0]];
-                });
+                // Backgrounds are managed in content.json — no defaults applied here.
+                // The site CSS uses its own fallbacks if a section background is missing.
                 state.music = state.music || {};
                 state.music.songs = (state.music.songs || []).map(function (s) {
                     return { title: s.title || '', artist: s.artist || '', cover: s.cover || '', audio: s.audio || '' };
@@ -794,19 +784,12 @@
                 var card = h('div', { class: 'card' });
                 BG_LABELS.forEach(function (p) {
                     var key = p[0];
-                    var input = h('input', { type: 'color', 'aria-label': p[1] });
-                    input.value = bg[key];
-                    var code = h('span', { class: 'hint', text: bg[key] });
-                    input.addEventListener('input', function () {
-                        bg[key] = input.value;
-                        code.textContent = input.value;
-                        markDirty();
-                    });
-                    var reset = h('button', {
-                        type: 'button', class: 'btn btn--ghost', text: 'Reset',
-                        onclick: function () { bg[key] = BG_DEFAULTS[key]; markDirty(); rerender(); }
-                    });
-                    card.appendChild(h('div', { class: 'bgrow' }, [h('label', { text: p[1] }), input, code, reset]));
+                    var code = h('span', { class: 'hint', text: bg[key] || '#(not set)' });
+                    card.appendChild(h('div', { class: 'bgrow' }, [
+                        h('label', { text: p[1] }),
+                        code,
+                        h('span', { class: 'hint', text: '📝 Read-only — edit in content.json' })
+                    ]));
                 });
                 return card;
             }
@@ -942,7 +925,7 @@
                 ]));
 
                 root.appendChild(h('h2', { text: 'Section backgrounds' }));
-                root.appendChild(h('p', { class: 'hint', text: 'Pick a colour for each section. Reset restores the original pink.' }));
+                root.appendChild(h('p', { class: 'hint', text: 'Background colours are managed in data/content.json to keep text legible across themes. This panel shows current values as read-only.' }));
                 root.appendChild(bgCard());
 
                 /* Greetings */
