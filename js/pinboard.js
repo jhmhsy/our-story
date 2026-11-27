@@ -1,8 +1,9 @@
 ﻿/* pinboard.js - thumbtacked photo carousel inside #gallery, below the gallery carousel.
    Swaying pins, per-photo print button, and a photo-booth camera panel:
    formats (single / strip x3 / grid x4 / landscape x4 / custom), filters, paper colour,
-   review step (retake or add), caption, and saving to the GitHub repo (image + data/content.json).
-   Content shape: SITE_CONTENT.pinboard = { title, subtitle, photos: [{ src, caption }], dir?, repo?: { owner, repo, branch } } */
+   review step (retake or add), caption, and queueing to IndexedDB for admin approval.
+   Content shape: SITE_CONTENT.pinboard = { title, subtitle, photos: [{ src, caption }], dir? }
+   Admin panel (admin/index.html) reads the same IndexedDB (ourStoryPinboard/pending) and commits to GitHub. */
 (function () {
     'use strict';
     var section = document.getElementById('gallery');
@@ -18,6 +19,10 @@
     var CONTENT_PATH = 'data/content.json';
     var IMG_DIR = 'images';
     var PAD = 40, GAP = 24;
+
+    /* IndexedDB queue (shared with admin/index.html) */
+    var QUEUE_DB = 'ourStoryPinboard';
+    var QUEUE_STORE = 'pending';
 
     function el(tag, cls, text) {
         var n = document.createElement(tag);
@@ -579,6 +584,31 @@
     function render() {
         if (!N) { count.textContent = ''; return; }
         if (!cardW) return;
+
+        // Special handling for N <= 2: use simple linear layout instead of ring
+        // to avoid the "teleport" artifact when animating on a 2-item ring
+        if (N <= 2) {
+            var active = mod(Math.round(pos));
+            for (var i = 0; i < N; i++) {
+                var it = items[i];
+                // Position: active at center (0), other at -1 (left peek)
+                var d = (i === active) ? 0 : -1;
+                var ad = Math.abs(d);
+                var scale = 1 - Math.min(ad, 2) * 0.1;
+                it.style.visibility = 'visible';
+                it.style.opacity = '1';
+                it.style.zIndex = String(100 - Math.round(ad * 10));
+                it.style.transform = 'translateX(-50%) translateX(' + (d * spacing).toFixed(2) + 'px) scale(' + scale.toFixed(3) + ')';
+            }
+            if (active !== lastActive) {
+                lastActive = active;
+                for (var j = 0; j < N; j++) items[j].classList.toggle('is-active', j === active);
+                count.textContent = (active + 1) + ' / ' + N;
+            }
+            return;
+        }
+
+        // Normal ring layout for N >= 3
         var active = mod(Math.round(pos));
         for (var i = 0; i < N; i++) {
             var it = items[i];
@@ -704,32 +734,7 @@
     function setStatus(msg) { status.textContent = msg; }
     function setSave(msg) { saveMsg.textContent = msg; }
 
-    var TOKEN_RE = /^(ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|gho_[A-Za-z0-9]{20,})$/;
-    function findStoredToken() {
-        var own = '';
-        try { own = localStorage.getItem(TOKEN_KEY) || ''; } catch (e) { }
-        if (own) return own;
-        try {
-            var i, k, v, j;
-            for (i = 0; i < localStorage.length; i++) {      // /admin shares this origin on GitHub Pages
-                k = localStorage.key(i);
-                v = (localStorage.getItem(k) || '').trim();
-                if (TOKEN_RE.test(v)) return v;
-                try {
-                    j = JSON.parse(v);
-                    if (j && typeof j.token === 'string' && TOKEN_RE.test(j.token.trim())) return j.token.trim();
-                } catch (e) { }
-            }
-        } catch (e) { }
-        return '';
-    }
-    function hasToken() {
-        return typeof window.__getGithubToken === 'function' || !!findStoredToken();
-    }
-    function getToken() {
-        if (typeof window.__getGithubToken === 'function') return Promise.resolve(window.__getGithubToken());
-        return Promise.resolve(findStoredToken());
-    }
+
 
     function refreshUI() {
         FORMATS.forEach(function (f) { fmtBtns[f.id].setAttribute('aria-pressed', String(sel.format === f.id)); });
@@ -861,87 +866,51 @@
         setStatus('Smile! Tap capture when you are ready.');
     }
 
-    /* ==================================================================
-    Saving: image into images/, entry appended to data/content.json (GitHub contents API)
-    ================================================================== */
-    function decodeUtf8(b64) {
-        var bin = atob(b64.replace(/\s/g, ''));
-        var bytes = Uint8Array.from(bin, function (ch) { return ch.charCodeAt(0); });
-        return new TextDecoder().decode(bytes);
-    }
-    function encodeUtf8(str) {
-        var bytes = new TextEncoder().encode(str), bin = '', i;
-        for (i = 0; i < bytes.length; i += 8192) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 8192));
-        return btoa(bin);
-    }
-    function gh(method, path, body) {
-        var url = 'https://api.github.com/repos/' + GH_OWNER + '/' + GH_REPO + '/contents/' +
-            path.split('/').map(encodeURIComponent).join('/');
-        return fetch(url, {
-            method: method,
-            cache: 'no-store',
-            headers: {
-                'Accept': 'application/vnd.github+json',
-                'Authorization': 'Bearer ' + GH_TOKEN,
-                'Content-Type': 'application/json'
-            },
-            body: body ? JSON.stringify(body) : undefined
-        }).then(function (res) {
-            return res.json().then(function (j) {
-                if (!res.ok) throw new Error(j && j.message ? j.message : 'HTTP ' + res.status);
-                return j;
-            });
-        });
-    }
+/* ==================================================================
+   Saving: queue photo to IndexedDB for admin approval (shared with admin/index.html)
+   ================================================================== */
+function queueDb() {
+    return new Promise(function (resolve, reject) {
+        var req = indexedDB.open(QUEUE_DB, 1);
+        req.onupgradeneeded = function () { req.result.createObjectStore(QUEUE_STORE, { keyPath: 'id', autoIncrement: true }); };
+        req.onsuccess = function () { resolve(req.result); };
+        req.onerror = function () { reject(req.error); };
+    });
+}
 
-    async function saveToRepo(dataUrl, caption) {
-        var imgPath = IMG_DIR + '/pinboard-' + Date.now() + '.jpg';
-        await gh('PUT', imgPath, {
-            message: 'Add pinboard photo ' + imgPath,
-            content: dataUrl.split(',')[1]
+function queuePhoto(dataUrl, caption) {
+    return queueDb().then(function (db) {
+        return new Promise(function (resolve, reject) {
+            var tx = db.transaction(QUEUE_STORE, 'readwrite');
+            var store = tx.objectStore(QUEUE_STORE);
+            var item = { data: dataUrl, caption: caption, ts: Date.now() };
+            var rq = store.add(item);
+            rq.onsuccess = function () { db.close(); resolve(rq.result); };
+            rq.onerror = function () { db.close(); reject(rq.error); };
         });
-        for (var attempt = 0; attempt < 3; attempt++) {
-            var file = await gh('GET', CONTENT_PATH);
-            var text = decodeUtf8(file.content);
-            var data = JSON.parse(text);
-            data.pinboard = data.pinboard || {};
-            data.pinboard.photos = data.pinboard.photos || [];
-            data.pinboard.photos.push({ src: imgPath, caption: caption });
-            var indent = (text.match(/\n([ \t]+)"/) || [])[1] || '  ';
-            var out = JSON.stringify(data, null, indent) + (/\n$/.test(text) ? '\n' : '');
-            try {
-                await gh('PUT', CONTENT_PATH, {
-                    message: 'Add pinboard photo to content.json',
-                    content: encodeUtf8(out),
-                    sha: file.sha
-                });
-                return imgPath;
-            } catch (e) {
-                if (attempt === 2 || !/sha|match|conflict/i.test(e.message)) throw e;
-            }
-        }
-    }
+    });
+}
 
-    async function pin() {
-        if (mode !== 'review' || !composed) return;
-        var caption = captionInput.value.trim() || todayStr();
-        var dataUrl = composed.toDataURL('image/jpeg', 0.92);
-        setMode('saving');
-        addPhoto(makePhoto(dataUrl, caption));
-        setSave('Saving\u2026');
-        try {
-            var path = await saveToRepo(dataUrl, caption);
-            setSave('Saved to ' + path + ' \u2713 Live on the site in about a minute.');
-        } catch (e) {
-            setSave('Added to the board, but saving failed: ' + e.message);
-        }
-        captionInput.value = '';
-        frames = [];
-        composed = null;
-        setMode('live');
-        fitView(spec().ar);
-        setStatus('Smile! Tap capture when you are ready.');
+async function pin() {
+    if (mode !== 'review' || !composed) return;
+    var caption = captionInput.value.trim() || todayStr();
+    var dataUrl = composed.toDataURL('image/jpeg', 0.92);
+    setMode('saving');
+    addPhoto(makePhoto(dataUrl, caption));
+    setSave('Submitting for review\u2026');
+    try {
+        await queuePhoto(dataUrl, caption);
+        setSave('Submitted for review \u2713 It will appear after admin approval.');
+    } catch (e) {
+        setSave('Added to the board, but queueing failed: ' + e.message);
     }
+    captionInput.value = '';
+    frames = [];
+    composed = null;
+    setMode('live');
+    fitView(spec().ar);
+    setStatus('Smile! Tap capture when you are ready.');
+}
 
     function download() {
         if (!composed) return;
