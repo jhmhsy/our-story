@@ -613,5 +613,13 @@
     "photos": [
       { "src": "images/image7.jpg", "caption": "Matching shirts!" }
     ]
+  },
+  "pinboard": {
+    "photos": [
+      {
+        "src": "images/pinboard-1795759490055.jpg",
+        "caption": "Nov 27, 2026"
+      }
+    ]
   }
 }
