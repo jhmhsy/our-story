@@ -849,7 +849,9 @@
         var inReview = m === 'review' || m === 'saving';
         var sp = spec();
         var n = sp.cols * sp.rows;
-        var showProgressivePreview = (n >= 2 && (m === 'live' || m === 'shooting'));
+        // Show progressive preview ONLY during shooting for multi-photo formats
+        // In live mode, ALWAYS show live video for all formats
+        var showProgressivePreview = (n >= 2 && m === 'shooting');
 
         video.hidden = inReview || showProgressivePreview;
         shown.hidden = !(inReview || showProgressivePreview);
@@ -859,6 +861,13 @@
         retakeBtn.hidden = pinBtn.hidden = dlBtn.hidden = !inReview;
         retakeBtn.disabled = pinBtn.disabled = dlBtn.disabled = m === 'saving';
         lockables.forEach(function (b) { b.disabled = m !== 'live'; });
+
+        // In live mode, ensure video is visible and sized correctly
+        if (m === 'live') {
+            video.hidden = false;
+            shown.hidden = true;
+            fitView(sp.ar);
+        }
     }
 
     function compose() {
@@ -909,18 +918,38 @@
         fitView(composed.width / composed.height);
     }
 
+    // Track current format to detect changes
+    var currentFormatId = null;
+
     function onChange() {
         video.style.filter = cssFilter(curFilter());
-        if (mode === 'review') recompose();
-        else if (mode === 'shooting' || mode === 'live') {
-            // Update progressive preview for multi-photo formats
-            var sp = spec();
+        var sp = spec();
+
+        // Detect format change and reset state
+        if (currentFormatId !== null && currentFormatId !== sp.id) {
+            // Format changed - clear all captured frames and preview
+            frames = [];
+            stripPreview = null;
+            countEl.classList.remove('is-on');
+            countEl.textContent = '';
+        }
+        currentFormatId = sp.id;
+
+        if (mode === 'review') {
+            recompose();
+        } else if (mode === 'shooting') {
+            // During shooting, show progressive preview for multi-photo formats
             var n = sp.cols * sp.rows;
             if (n >= 2) {
                 renderProgressivePreview();
             } else {
                 fitView(sp.ar);
             }
+        } else if (mode === 'live') {
+            // In live mode, always show live video feed for all formats
+            fitView(sp.ar);
+            video.hidden = false;
+            shown.hidden = true;
         }
     }
 
@@ -978,57 +1007,60 @@
         frames = [];
         composed = null;
         stripPreview = null;
+        // Reset countdown display
+        countEl.classList.remove('is-on');
+        countEl.textContent = '';
         setMode('live');
         fitView(spec().ar);
         setStatus('Smile! Tap capture when you are ready.');
     }
 
-/* ==================================================================
-   Saving: queue photo to IndexedDB for admin approval (shared with admin/index.html)
-   ================================================================== */
-function queueDb() {
-    return new Promise(function (resolve, reject) {
-        var req = indexedDB.open(QUEUE_DB, 1);
-        req.onupgradeneeded = function () { req.result.createObjectStore(QUEUE_STORE, { keyPath: 'id', autoIncrement: true }); };
-        req.onsuccess = function () { resolve(req.result); };
-        req.onerror = function () { reject(req.error); };
-    });
-}
-
-function queuePhoto(dataUrl, caption) {
-    return queueDb().then(function (db) {
+    /* ==================================================================
+       Saving: queue photo to IndexedDB for admin approval (shared with admin/index.html)
+       ================================================================== */
+    function queueDb() {
         return new Promise(function (resolve, reject) {
-            var tx = db.transaction(QUEUE_STORE, 'readwrite');
-            var store = tx.objectStore(QUEUE_STORE);
-            var item = { data: dataUrl, caption: caption, ts: Date.now() };
-            var rq = store.add(item);
-            rq.onsuccess = function () { db.close(); resolve(rq.result); };
-            rq.onerror = function () { db.close(); reject(rq.error); };
+            var req = indexedDB.open(QUEUE_DB, 1);
+            req.onupgradeneeded = function () { req.result.createObjectStore(QUEUE_STORE, { keyPath: 'id', autoIncrement: true }); };
+            req.onsuccess = function () { resolve(req.result); };
+            req.onerror = function () { reject(req.error); };
         });
-    });
-}
-
-async function pin() {
-    if (mode !== 'review' || !composed) return;
-    var caption = captionInput.value.trim() || todayStr();
-    var dataUrl = composed.toDataURL('image/jpeg', 0.92);
-    setMode('saving');
-    addPhoto(makePhoto(dataUrl, caption));
-    setSave('Submitting for review\u2026');
-    try {
-        await queuePhoto(dataUrl, caption);
-        setSave('Submitted for review \u2713 It will appear after admin approval.');
-    } catch (e) {
-        setSave('Added to the board, but queueing failed: ' + e.message);
     }
-    captionInput.value = '';
-    frames = [];
-    composed = null;
-    stripPreview = null;
-    setMode('live');
-    fitView(spec().ar);
-    setStatus('Smile! Tap capture when you are ready.');
-}
+
+    function queuePhoto(dataUrl, caption) {
+        return queueDb().then(function (db) {
+            return new Promise(function (resolve, reject) {
+                var tx = db.transaction(QUEUE_STORE, 'readwrite');
+                var store = tx.objectStore(QUEUE_STORE);
+                var item = { data: dataUrl, caption: caption, ts: Date.now() };
+                var rq = store.add(item);
+                rq.onsuccess = function () { db.close(); resolve(rq.result); };
+                rq.onerror = function () { db.close(); reject(rq.error); };
+            });
+        });
+    }
+
+    async function pin() {
+        if (mode !== 'review' || !composed) return;
+        var caption = captionInput.value.trim() || todayStr();
+        var dataUrl = composed.toDataURL('image/jpeg', 0.92);
+        setMode('saving');
+        addPhoto(makePhoto(dataUrl, caption));
+        setSave('Submitting for review\u2026');
+        try {
+            await queuePhoto(dataUrl, caption);
+            setSave('Submitted for review \u2713 It will appear after admin approval.');
+        } catch (e) {
+            setSave('Added to the board, but queueing failed: ' + e.message);
+        }
+        captionInput.value = '';
+        frames = [];
+        composed = null;
+        stripPreview = null;
+        setMode('live');
+        fitView(spec().ar);
+        setStatus('Smile! Tap capture when you are ready.');
+    }
 
     function download() {
         if (!composed) return;
