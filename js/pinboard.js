@@ -1,4 +1,4 @@
-/* pinboard.js - thumbtacked photo carousel inside #gallery, below the gallery carousel.
+﻿/* pinboard.js - thumbtacked photo carousel inside #gallery, below the gallery carousel.
    Swaying pins, per-photo print button, and a photo-booth camera panel:
    formats (single / strip x3 / grid x4 / landscape x4 / custom), filters, paper colour,
    review step (retake or add), caption, and saving to the GitHub repo (image + data/content.json).
@@ -14,7 +14,7 @@
     var MAX_VISIBLE = 2;
     var GH_OWNER = 'jhmhsy';
     var GH_REPO = 'our-story';
-    var GH_TOKEN = 'PASTE_YOUR_FINE_GRAINED_TOKEN_HERE';
+    var GH_TOKEN = 'rahhhh';
     var CONTENT_PATH = 'data/content.json';
     var IMG_DIR = 'images';
     var PAD = 40, GAP = 24;
@@ -343,7 +343,6 @@
     captionInput.placeholder = 'Add a caption (optional)';
     captionInput.setAttribute('aria-label', 'Caption');
     reviewBox.appendChild(captionInput);
-    reviewBox.appendChild(tokenInput);
 
     var saveMsg = el('p', 'pn-cam__save', '');
     saveMsg.setAttribute('aria-live', 'polite');
