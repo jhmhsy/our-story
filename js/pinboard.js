@@ -1,6 +1,8 @@
 /* pinboard.js - thumbtacked photo carousel inside #gallery, below the gallery carousel.
-   Swaying pins, per-photo print button, and a camera panel that adds captured photos.
-   Optional seed data: SITE_CONTENT.pinboard = { title, subtitle, photos: [{ src, caption }] } */
+   Swaying pins, per-photo print button, and a photo-booth camera panel:
+   formats (single / strip x3 / grid x4 / landscape x4 / custom), filters, paper colour,
+   review step (retake or add), caption, and saving to the GitHub repo (image + data/content.json).
+   Content shape: SITE_CONTENT.pinboard = { title, subtitle, photos: [{ src, caption }], dir?, repo?: { owner, repo, branch } } */
 (function () {
     'use strict';
     var section = document.getElementById('gallery');
@@ -10,6 +12,12 @@
     var cfg = (window.SITE_CONTENT && window.SITE_CONTENT.pinboard) || {};
     var reduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
     var MAX_VISIBLE = 2;
+    var GH_OWNER = 'jhmhsy';
+    var GH_REPO = 'our-story';
+    var GH_TOKEN = 'PASTE_YOUR_FINE_GRAINED_TOKEN_HERE';
+    var CONTENT_PATH = 'data/content.json';
+    var IMG_DIR = 'images';
+    var PAD = 40, GAP = 24;
 
     function el(tag, cls, text) {
         var n = document.createElement(tag);
@@ -19,6 +27,10 @@
     }
     function rand(a, b) { return a + Math.random() * (b - a); }
     function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+    function wait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+    function todayStr() {
+        return new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+    }
 
     function makePhoto(src, caption) {
         return {
@@ -36,7 +48,233 @@
     function mod(i) { return N ? ((i % N) + N) % N : 0; }
     function wrap(d) { var h = N / 2; return ((((d + h) % N) + N) % N) - h; }
 
-    /* ---- DOM ---- */
+    /* ==================================================================
+       Booth data: formats, filters, paper colours
+       ================================================================== */
+    var SHAPES = { portrait: 0.8, square: 1, landscape: 4 / 3 };
+    var FORMATS = [
+        { id: 'single', label: 'Single', cols: 1, rows: 1, ar: 0.8, cellW: 640, footer: 110 },
+        { id: 'strip3', label: 'Strip \u00D73', cols: 1, rows: 3, ar: 4 / 3, cellW: 520, footer: 120 },
+        { id: 'grid4', label: 'Grid \u00D74', cols: 2, rows: 2, ar: 0.8, cellW: 400, footer: 110 },
+        { id: 'wide4', label: 'Landscape \u00D74', cols: 4, rows: 1, ar: 0.8, cellW: 300, footer: 110 },
+        { id: 'custom', label: 'Custom' }
+    ];
+    var FILTERS = [
+        { id: 'none', name: 'Normal' },
+        { id: 'bw', name: 'B&W', g: 1, c: 1.1 },
+        { id: 'noir', name: 'Noir', g: 1, c: 1.45, b: 0.9 },
+        { id: 'sepia', name: 'Sepia', sp: 0.9, c: 1.05 },
+        { id: 'vintage', name: 'Vintage', sp: 0.45, c: 0.9, b: 1.08, s: 0.8 },
+        { id: 'warm', name: 'Warm', sp: 0.25, s: 1.35, b: 1.05 },
+        { id: 'cool', name: 'Cool', h: -18, s: 1.1, b: 1.03 },
+        { id: 'fade', name: 'Faded', c: 0.78, b: 1.18, s: 0.8 },
+        { id: 'vivid', name: 'Vivid', s: 1.7, c: 1.12 },
+        { id: 'rosy', name: 'Rosy', sp: 0.3, h: -35, s: 1.4, b: 1.08 },
+        { id: 'dream', name: 'Dreamy', b: 1.12, c: 0.88, s: 1.25 }
+    ];
+    var PAPERS = [
+        { name: 'White', c: '#ffffff', dark: false },
+        { name: 'Blush', c: '#ffe3ee', dark: false },
+        { name: 'Cream', c: '#fff4dc', dark: false },
+        { name: 'Wine', c: '#9c1f58', dark: true },
+        { name: 'Black', c: '#1b0f16', dark: true }
+    ];
+
+    var sel = { format: 'strip3', cols: 2, rows: 2, shape: 'portrait', filter: 'none', paper: 0, border: 'mat', date: true, timer: 3 };
+
+    function curFilter() {
+        for (var i = 0; i < FILTERS.length; i++) if (FILTERS[i].id === sel.filter) return FILTERS[i];
+        return FILTERS[0];
+    }
+    function fv(v, d) { return v == null ? d : v; }
+    function fparams(f) {
+        return { b: fv(f.b, 1), c: fv(f.c, 1), s: fv(f.s, 1), g: fv(f.g, 0), sp: fv(f.sp, 0), h: fv(f.h, 0) };
+    }
+    /* Same filter for the live preview (CSS) and the saved photo (pixels), so Safari works too */
+    function cssFilter(f) {
+        var p = fparams(f), out = [];
+        if (p.b !== 1) out.push('brightness(' + p.b + ')');
+        if (p.c !== 1) out.push('contrast(' + p.c + ')');
+        if (p.s !== 1) out.push('saturate(' + p.s + ')');
+        if (p.g) out.push('grayscale(' + p.g + ')');
+        if (p.sp) out.push('sepia(' + p.sp + ')');
+        if (p.h) out.push('hue-rotate(' + p.h + 'deg)');
+        return out.length ? out.join(' ') : 'none';
+    }
+    function mul(a, b) {
+        var o = [], i, j;
+        for (i = 0; i < 3; i++) for (j = 0; j < 3; j++) {
+            o.push(a[i * 3] * b[j] + a[i * 3 + 1] * b[3 + j] + a[i * 3 + 2] * b[6 + j]);
+        }
+        return o;
+    }
+    function colorMatrix(p) {
+        var s = p.s, k = 1 - p.g, q = 1 - p.sp, t = p.h * Math.PI / 180, co = Math.cos(t), si = Math.sin(t);
+        var sat = [0.213 + 0.787 * s, 0.715 - 0.715 * s, 0.072 - 0.072 * s,
+        0.213 - 0.213 * s, 0.715 + 0.285 * s, 0.072 - 0.072 * s,
+        0.213 - 0.213 * s, 0.715 - 0.715 * s, 0.072 + 0.928 * s];
+        var gray = [0.2126 + 0.7874 * k, 0.7152 - 0.7152 * k, 0.0722 - 0.0722 * k,
+        0.2126 - 0.2126 * k, 0.7152 + 0.2848 * k, 0.0722 - 0.0722 * k,
+        0.2126 - 0.2126 * k, 0.7152 - 0.7152 * k, 0.0722 + 0.9278 * k];
+        var sep = [0.393 + 0.607 * q, 0.769 - 0.769 * q, 0.189 - 0.189 * q,
+        0.349 - 0.349 * q, 0.686 + 0.314 * q, 0.168 - 0.168 * q,
+        0.272 - 0.272 * q, 0.534 - 0.534 * q, 0.131 + 0.869 * q];
+        var hue = [0.213 + co * 0.787 - si * 0.213, 0.715 - co * 0.715 - si * 0.715, 0.072 - co * 0.072 + si * 0.928,
+        0.213 - co * 0.213 + si * 0.143, 0.715 + co * 0.285 + si * 0.140, 0.072 - co * 0.072 - si * 0.283,
+        0.213 - co * 0.213 - si * 0.787, 0.715 - co * 0.715 + si * 0.715, 0.072 + co * 0.928 + si * 0.072];
+        return mul(hue, mul(sep, mul(gray, sat)));
+    }
+    function applyFilter(ctx, x, y, w, h, f) {
+        if (!f || f.id === 'none') return;
+        var p = fparams(f), m = colorMatrix(p);
+        var img = ctx.getImageData(x, y, w, h), d = img.data;
+        for (var i = 0; i < d.length; i += 4) {
+            var r = d[i] / 255 * p.b, g = d[i + 1] / 255 * p.b, b = d[i + 2] / 255 * p.b;
+            r = (r - 0.5) * p.c + 0.5; g = (g - 0.5) * p.c + 0.5; b = (b - 0.5) * p.c + 0.5;
+            r = r < 0 ? 0 : r > 1 ? 1 : r;
+            g = g < 0 ? 0 : g > 1 ? 1 : g;
+            b = b < 0 ? 0 : b > 1 ? 1 : b;
+            d[i] = (m[0] * r + m[1] * g + m[2] * b) * 255;
+            d[i + 1] = (m[3] * r + m[4] * g + m[5] * b) * 255;
+            d[i + 2] = (m[6] * r + m[7] * g + m[8] * b) * 255;
+        }
+        ctx.putImageData(img, x, y);
+    }
+
+    var BORDERS = [
+        { id: 'none', name: 'None', bw: 0 },
+        { id: 'line', name: 'Line', bw: 8 },
+        { id: 'double', name: 'Double', bw: 16 },
+        { id: 'mat', name: 'White mat', bw: 18 },
+        { id: 'rounded', name: 'Rounded', bw: 8 },
+        { id: 'film', name: 'Film', bw: 26 },
+        { id: 'corners', name: 'Corners', bw: 0 },
+        { id: 'stitch', name: 'Stitch', bw: 14 },
+        { id: 'taped', name: 'Taped', bw: 12 },
+        { id: 'hearts', name: 'Hearts', bw: 14 }
+    ];
+    function curBorder() {
+        for (var i = 0; i < BORDERS.length; i++) if (BORDERS[i].id === sel.border) return BORDERS[i];
+        return BORDERS[0];
+    }
+
+    function spec() {
+        var f = null, i, bw = curBorder().bw;
+        for (i = 0; i < FORMATS.length; i++) if (FORMATS[i].id === sel.format) f = FORMATS[i];
+        if (f && f.id !== 'custom') return f;
+        var cols = sel.cols, rows = sel.rows;
+        return {
+            id: 'custom', cols: cols, rows: rows, ar: SHAPES[sel.shape],
+            cellW: Math.min(520, Math.floor((1280 - (PAD + bw) * 2 - (cols - 1) * (GAP + bw * 2)) / cols)),
+            footer: 110
+        };
+    }
+    function layout(sp) {
+        var bw = curBorder().bw, pad = PAD + bw, gap = GAP + bw * 2;
+        var cellH = Math.round(sp.cellW / sp.ar), rects = [], r, c;
+        var framesH = sp.rows * cellH + (sp.rows - 1) * gap;
+        for (r = 0; r < sp.rows; r++) for (c = 0; c < sp.cols; c++) {
+            rects.push({ x: pad + c * (sp.cellW + gap), y: pad + r * (cellH + gap), w: sp.cellW, h: cellH });
+        }
+        return {
+            W: pad * 2 + sp.cols * sp.cellW + (sp.cols - 1) * gap,
+            H: pad + framesH + bw + sp.footer,
+            rects: rects,
+            footerY: pad + framesH + bw + sp.footer * 0.55,
+            footer: sp.footer
+        };
+    }
+
+    function rrect(ctx, x, y, w, h, rad) {
+        ctx.beginPath();
+        ctx.moveTo(x + rad, y);
+        ctx.arcTo(x + w, y, x + w, y + h, rad);
+        ctx.arcTo(x + w, y + h, x, y + h, rad);
+        ctx.arcTo(x, y + h, x, y, rad);
+        ctx.arcTo(x, y, x + w, y, rad);
+        ctx.closePath();
+    }
+    /* Drawn behind the photo */
+    function borderBefore(ctx, id, r, paper) {
+        var bw = curBorder().bw;
+        if (id === 'mat' || id === 'taped') {
+            ctx.save();
+            ctx.shadowColor = 'rgba(40, 20, 30, 0.35)';
+            ctx.shadowBlur = 16;
+            ctx.shadowOffsetY = 5;
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(r.x - bw, r.y - bw, r.w + bw * 2, r.h + bw * 2);
+            ctx.restore();
+        } else if (id === 'rounded') {
+            ctx.fillStyle = '#fff';
+            rrect(ctx, r.x - bw, r.y - bw, r.w + bw * 2, r.h + bw * 2, 38);
+            ctx.fill();
+        } else if (id === 'film') {
+            ctx.fillStyle = '#111';
+            ctx.fillRect(r.x - bw, r.y - bw, r.w + bw * 2, r.h + bw * 2);
+            var span = r.w + bw * 2, n = Math.max(1, Math.floor(span / 30)), k;
+            var sx = r.x - bw + (span - (n * 30 - 14)) / 2;
+            ctx.fillStyle = paper.c;
+            for (k = 0; k < n; k++) {
+                rrect(ctx, sx + k * 30, r.y - bw / 2 - 6, 16, 12, 3);
+                ctx.fill();
+                rrect(ctx, sx + k * 30, r.y + r.h + bw / 2 - 6, 16, 12, 3);
+                ctx.fill();
+            }
+        }
+    }
+    /* Drawn on top of the photo */
+    function borderAfter(ctx, id, r, i, ink, paper) {
+        ctx.save();
+        ctx.strokeStyle = ink;
+        ctx.fillStyle = ink;
+        if (id === 'line') {
+            ctx.lineWidth = 3;
+            ctx.strokeRect(r.x - 6, r.y - 6, r.w + 12, r.h + 12);
+        } else if (id === 'double') {
+            ctx.lineWidth = 3;
+            ctx.strokeRect(r.x - 6, r.y - 6, r.w + 12, r.h + 12);
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(r.x - 14, r.y - 14, r.w + 28, r.h + 28);
+        } else if (id === 'stitch') {
+            ctx.lineWidth = 3;
+            ctx.setLineDash([12, 8]);
+            ctx.strokeRect(r.x - 9, r.y - 9, r.w + 18, r.h + 18);
+        } else if (id === 'corners') {
+            var s = 42, x2 = r.x + r.w, y2 = r.y + r.h;
+            ctx.fillStyle = paper.dark ? '#ffe3ee' : '#2b1020';
+            [[r.x, r.y, 1, 1], [x2, r.y, -1, 1], [r.x, y2, 1, -1], [x2, y2, -1, -1]].forEach(function (p) {
+                ctx.beginPath();
+                ctx.moveTo(p[0], p[1]);
+                ctx.lineTo(p[0] + p[2] * s, p[1]);
+                ctx.lineTo(p[0], p[1] + p[3] * s);
+                ctx.closePath();
+                ctx.fill();
+            });
+        } else if (id === 'taped') {
+            ctx.fillStyle = 'rgba(255, 190, 215, 0.88)';
+            [[r.x + 24, -0.6], [r.x + r.w - 24, 0.6]].forEach(function (t) {
+                ctx.save();
+                ctx.translate(t[0], r.y + 4);
+                ctx.rotate(t[1]);
+                ctx.fillRect(-46, -14, 92, 28);
+                ctx.restore();
+            });
+        } else if (id === 'hearts') {
+            ctx.font = '700 30px "Segoe UI Symbol", "Segoe UI", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('\u2665', r.x - 7, r.y - 7);
+            ctx.fillText('\u2665', r.x + r.w + 7, r.y - 7);
+            ctx.fillText('\u2665', r.x - 7, r.y + r.h + 7);
+            ctx.fillText('\u2665', r.x + r.w + 7, r.y + r.h + 7);
+        }
+        ctx.restore();
+    }
+
+    /* ==================================================================
+       DOM
+       ================================================================== */
     var root = el('div', 'pn');
     root.appendChild(el('h2', 'pn__title', cfg.title || 'Pin Board'));
     if (cfg.subtitle) root.appendChild(el('p', 'pn__subtitle', cfg.subtitle));
@@ -71,10 +309,12 @@
     count.setAttribute('aria-live', 'polite');
     root.appendChild(count);
 
-    /* Camera panel */
+    /* ---- Camera panel: main column (view + actions) and side column (formats + filters) ---- */
     var cam = el('div', 'pn-cam');
     cam.setAttribute('aria-hidden', 'true');
     var camInner = el('div', 'pn-cam__inner');
+
+    var main = el('div', 'pn-cam__main');
     var status = el('p', 'pn-cam__status', '');
     status.setAttribute('aria-live', 'polite');
     var view = el('div', 'pn-cam__view');
@@ -83,20 +323,184 @@
     video.muted = true;
     video.playsInline = true;
     video.setAttribute('playsinline', '');
+    var shown = document.createElement('canvas');
+    shown.className = 'pn-cam__result';
+    shown.hidden = true;
+    var countEl = el('div', 'pn-cam__count');
+    countEl.setAttribute('aria-hidden', 'true');
     var flash = el('div', 'pn-cam__flash');
     view.appendChild(video);
+    view.appendChild(shown);
+    view.appendChild(countEl);
     view.appendChild(flash);
+
+    var reviewBox = el('div', 'pn-cam__review');
+    reviewBox.hidden = true;
+    var captionInput = document.createElement('input');
+    captionInput.type = 'text';
+    captionInput.maxLength = 40;
+    captionInput.className = 'pn-cam__input';
+    captionInput.placeholder = 'Add a caption (optional)';
+    captionInput.setAttribute('aria-label', 'Caption');
+    reviewBox.appendChild(captionInput);
+    reviewBox.appendChild(tokenInput);
+
+    var saveMsg = el('p', 'pn-cam__save', '');
+    saveMsg.setAttribute('aria-live', 'polite');
+
     var camBtns = el('div', 'pn-cam__btns');
     var shotBtn = el('button', 'pn-cam__btn', 'Capture \uD83D\uDCF8');
     shotBtn.type = 'button';
     shotBtn.disabled = true;
+    var retakeBtn = el('button', 'pn-cam__btn pn-cam__btn--ghost', 'Retake \u21BA');
+    retakeBtn.type = 'button';
+    retakeBtn.hidden = true;
+    var pinBtn = el('button', 'pn-cam__btn', 'Add to pinboard \uD83D\uDCCC');
+    pinBtn.type = 'button';
+    pinBtn.hidden = true;
+    var dlBtn = el('button', 'pn-cam__btn pn-cam__btn--ghost', 'Download \u2B07');
+    dlBtn.type = 'button';
+    dlBtn.hidden = true;
     var closeBtn = el('button', 'pn-cam__btn pn-cam__btn--ghost', 'Close \u2715');
     closeBtn.type = 'button';
     camBtns.appendChild(shotBtn);
+    camBtns.appendChild(retakeBtn);
+    camBtns.appendChild(pinBtn);
+    camBtns.appendChild(dlBtn);
     camBtns.appendChild(closeBtn);
-    camInner.appendChild(status);
-    camInner.appendChild(view);
-    camInner.appendChild(camBtns);
+
+    main.appendChild(status);
+    main.appendChild(view);
+    main.appendChild(reviewBox);
+    main.appendChild(saveMsg);
+    main.appendChild(camBtns);
+
+    /* ---- Side column ---- */
+    var side = el('aside', 'pn-cam__side');
+    side.setAttribute('aria-label', 'Photo booth options');
+    var lockables = [];
+    var fmtBtns = {}, shapeBtns = {}, filterBtns = {}, borderBtns = {}, paperBtns = [];
+
+    function chip(label, cls) {
+        var b = el('button', cls || 'pn-chip', label);
+        b.type = 'button';
+        return b;
+    }
+    function group(title) {
+        var g = el('div', 'pn-side__group');
+        g.appendChild(el('h3', 'pn-side__title', title));
+        side.appendChild(g);
+        return g;
+    }
+
+    var gFormat = group('Format');
+    var fmtRow = el('div', 'pn-chips');
+    FORMATS.forEach(function (f) {
+        var b = chip(f.label);
+        b.addEventListener('click', function () { sel.format = f.id; refreshUI(); onChange(); });
+        fmtBtns[f.id] = b;
+        lockables.push(b);
+        fmtRow.appendChild(b);
+    });
+    gFormat.appendChild(fmtRow);
+
+    var customBox = el('div', 'pn-custom');
+    function stepper(label, key) {
+        var row = el('div', 'pn-step');
+        row.appendChild(el('span', 'pn-step__label', label));
+        var minus = chip('\u2212', 'pn-step__btn');
+        minus.setAttribute('aria-label', 'Fewer ' + label.toLowerCase());
+        var val = el('span', 'pn-step__val');
+        var plus = chip('+', 'pn-step__btn');
+        plus.setAttribute('aria-label', 'More ' + label.toLowerCase());
+        minus.addEventListener('click', function () { sel[key] = clamp(sel[key] - 1, 1, 4); refreshUI(); onChange(); });
+        plus.addEventListener('click', function () { sel[key] = clamp(sel[key] + 1, 1, 4); refreshUI(); onChange(); });
+        lockables.push(minus, plus);
+        row.appendChild(minus);
+        row.appendChild(val);
+        row.appendChild(plus);
+        customBox.appendChild(row);
+        return val;
+    }
+    var colsVal = stepper('Columns', 'cols');
+    var rowsVal = stepper('Rows', 'rows');
+    var shapeRow = el('div', 'pn-chips');
+    [['portrait', 'Portrait'], ['square', 'Square'], ['landscape', 'Landscape']].forEach(function (s) {
+        var b = chip(s[1]);
+        b.addEventListener('click', function () { sel.shape = s[0]; refreshUI(); onChange(); });
+        shapeBtns[s[0]] = b;
+        lockables.push(b);
+        shapeRow.appendChild(b);
+    });
+    customBox.appendChild(shapeRow);
+    gFormat.appendChild(customBox);
+    var shotsNote = el('p', 'pn-side__note');
+    gFormat.appendChild(shotsNote);
+
+    var gFilter = group('Filter');
+    var filterGrid = el('div', 'pn-filters');
+    FILTERS.forEach(function (f) {
+        var b = el('button', 'pn-filter');
+        b.type = 'button';
+        var sw = el('span', 'pn-filter__swatch');
+        sw.style.filter = cssFilter(f);
+        b.appendChild(sw);
+        b.appendChild(el('span', 'pn-filter__name', f.name));
+        b.addEventListener('click', function () { sel.filter = f.id; refreshUI(); onChange(); });
+        filterBtns[f.id] = b;
+        filterGrid.appendChild(b);
+    });
+    gFilter.appendChild(filterGrid);
+
+    var gPaper = group('Paper');
+    var paperRow = el('div', 'pn-papers');
+    PAPERS.forEach(function (p, i) {
+        var b = el('button', 'pn-paper');
+        b.type = 'button';
+        b.style.background = p.c;
+        b.setAttribute('aria-label', p.name + ' paper');
+        b.title = p.name;
+        b.addEventListener('click', function () { sel.paper = i; refreshUI(); onChange(); });
+        paperBtns.push(b);
+        paperRow.appendChild(b);
+    });
+    gPaper.appendChild(paperRow);
+    var gBorder = group('Border');
+    var borderRow = el('div', 'pn-chips');
+    BORDERS.forEach(function (b) {
+        var btn = chip(b.name);
+        btn.addEventListener('click', function () { sel.border = b.id; refreshUI(); onChange(); });
+        borderBtns[b.id] = btn;
+        borderRow.appendChild(btn);
+    });
+    gBorder.appendChild(borderRow);
+
+    var gOpts = group('Options');
+    var dateLabel = el('label', 'pn-check');
+    var dateBox = document.createElement('input');
+    dateBox.type = 'checkbox';
+    dateBox.checked = sel.date;
+    dateBox.addEventListener('change', function () { sel.date = dateBox.checked; onChange(); });
+    dateLabel.appendChild(dateBox);
+    dateLabel.appendChild(el('span', '', 'Date stamp'));
+    gOpts.appendChild(dateLabel);
+    var timerLabel = el('label', 'pn-check');
+    timerLabel.appendChild(el('span', '', 'Timer'));
+    var timerSel = document.createElement('select');
+    timerSel.className = 'pn-select';
+    [[0, 'Off'], [3, '3 s'], [5, '5 s']].forEach(function (o) {
+        var op = document.createElement('option');
+        op.value = String(o[0]);
+        op.textContent = o[1];
+        if (o[0] === sel.timer) op.selected = true;
+        timerSel.appendChild(op);
+    });
+    timerSel.addEventListener('change', function () { sel.timer = parseInt(timerSel.value, 10) || 0; });
+    timerLabel.appendChild(timerSel);
+    gOpts.appendChild(timerLabel);
+
+    camInner.appendChild(main);
+    camInner.appendChild(side);
     cam.appendChild(camInner);
     root.appendChild(cam);
     section.appendChild(root);
@@ -113,7 +517,9 @@
     sheet.appendChild(sheetFrame);
     document.body.appendChild(sheet);
 
-    /* ---- Cards ---- */
+    /* ==================================================================
+       Carousel
+       ================================================================== */
     var items = [];
     var cardW = 0, spacing = 160;
     var pos = 0, target = 0, lastActive = -1;
@@ -197,7 +603,7 @@
         }
     }
 
-    /* ---- Sway: every pinned photo swings on its tack when you navigate ---- */
+    /* Every pinned photo swings on its tack when you navigate */
     function sway(dir) {
         if (reduce) return;
         items.forEach(function (c) {
@@ -209,7 +615,6 @@
         });
     }
 
-    /* ---- Animation loop ---- */
     var raf = 0, lastT = 0;
     function tick(t) {
         var dt = Math.min(0.05, (t - lastT) / 1000) || 0.016;
@@ -281,11 +686,280 @@
         document.documentElement.classList.remove('pn-printing');
     });
 
-    /* ---- Camera ---- */
-    var stream = null, camToken = 0;
+    function addPhoto(p) {
+        var cur = mod(Math.round(target));
+        pos = target = N ? cur : 0;                         // normalise; looks identical on a ring
+        photos.splice(N ? cur + 1 : 0, 0, p);
+        rebuild();
+        if (N > 1) go(1);
+    }
+
+    /* ==================================================================
+       Booth: UI state, live view, shooting, review
+       ================================================================== */
+    var stream = null, camToken = 0, seqToken = 0;
+    var mode = 'live';                                      // live | shooting | review | saving
+    var frames = [];                                        // raw, unmirrored, uncropped video frames
+    var composed = null;                                    // final sheet canvas
 
     function setStatus(msg) { status.textContent = msg; }
+    function setSave(msg) { saveMsg.textContent = msg; }
 
+    var TOKEN_RE = /^(ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|gho_[A-Za-z0-9]{20,})$/;
+    function findStoredToken() {
+        var own = '';
+        try { own = localStorage.getItem(TOKEN_KEY) || ''; } catch (e) { }
+        if (own) return own;
+        try {
+            var i, k, v, j;
+            for (i = 0; i < localStorage.length; i++) {      // /admin shares this origin on GitHub Pages
+                k = localStorage.key(i);
+                v = (localStorage.getItem(k) || '').trim();
+                if (TOKEN_RE.test(v)) return v;
+                try {
+                    j = JSON.parse(v);
+                    if (j && typeof j.token === 'string' && TOKEN_RE.test(j.token.trim())) return j.token.trim();
+                } catch (e) { }
+            }
+        } catch (e) { }
+        return '';
+    }
+    function hasToken() {
+        return typeof window.__getGithubToken === 'function' || !!findStoredToken();
+    }
+    function getToken() {
+        if (typeof window.__getGithubToken === 'function') return Promise.resolve(window.__getGithubToken());
+        return Promise.resolve(findStoredToken());
+    }
+
+    function refreshUI() {
+        FORMATS.forEach(function (f) { fmtBtns[f.id].setAttribute('aria-pressed', String(sel.format === f.id)); });
+        Object.keys(shapeBtns).forEach(function (k) { shapeBtns[k].setAttribute('aria-pressed', String(sel.shape === k)); });
+        FILTERS.forEach(function (f) { filterBtns[f.id].setAttribute('aria-pressed', String(sel.filter === f.id)); });
+        paperBtns.forEach(function (b, i) { b.setAttribute('aria-pressed', String(sel.paper === i)); });
+        BORDERS.forEach(function (b) { borderBtns[b.id].setAttribute('aria-pressed', String(sel.border === b.id)); });
+        customBox.hidden = sel.format !== 'custom';
+        colsVal.textContent = sel.cols;
+        rowsVal.textContent = sel.rows;
+        var sp = spec(), n = sp.cols * sp.rows;
+        shotsNote.textContent = n + (n === 1 ? ' photo' : ' photos') + ' per sheet';
+    }
+
+    function fitView(ar) {
+        var vw = Math.min(380, 480 * ar);
+        view.style.width = 'min(' + vw.toFixed(0) + 'px, 100%)';
+        view.style.aspectRatio = String(ar);
+    }
+
+    function setMode(m) {
+        mode = m;
+        var inReview = m === 'review' || m === 'saving';
+        video.hidden = inReview;
+        shown.hidden = !inReview;
+        reviewBox.hidden = m !== 'review';
+        shotBtn.hidden = inReview;
+        shotBtn.disabled = m !== 'live' || !stream;
+        retakeBtn.hidden = pinBtn.hidden = dlBtn.hidden = !inReview;
+        retakeBtn.disabled = pinBtn.disabled = dlBtn.disabled = m === 'saving';
+        lockables.forEach(function (b) { b.disabled = m !== 'live'; });
+    }
+
+    function compose() {
+        var sp = spec(), L = layout(sp), f = curFilter(), paper = PAPERS[sel.paper], bid = sel.border;
+        var ink = paper.dark ? '#ffe3ee' : '#9c1f58';
+        var c = document.createElement('canvas');
+        c.width = L.W;
+        c.height = L.H;
+        var ctx = c.getContext('2d');
+        ctx.fillStyle = paper.c;
+        ctx.fillRect(0, 0, L.W, L.H);
+        L.rects.forEach(function (r, i) {
+            var fr = frames[i];
+            if (!fr) return;
+            var fw = fr.width, fh = fr.height;
+            var cw = Math.min(fw, fh * sp.ar), ch = cw / sp.ar;
+            borderBefore(ctx, bid, r, paper);
+            var t = document.createElement('canvas');       // filter a copy, so clipped corners stay clean
+            t.width = r.w;
+            t.height = r.h;
+            var tctx = t.getContext('2d');
+            tctx.translate(r.w, 0);
+            tctx.scale(-1, 1);                              // mirrored, like the live preview
+            tctx.drawImage(fr, (fw - cw) / 2, (fh - ch) / 2, cw, ch, 0, 0, r.w, r.h);
+            tctx.setTransform(1, 0, 0, 1, 0, 0);
+            applyFilter(tctx, 0, 0, r.w, r.h, f);
+            ctx.save();
+            if (bid === 'rounded') { rrect(ctx, r.x, r.y, r.w, r.h, 30); ctx.clip(); }
+            ctx.drawImage(t, r.x, r.y);
+            ctx.restore();
+            borderAfter(ctx, bid, r, i, ink, paper);
+        });
+        if (sel.date) {
+            ctx.fillStyle = ink;
+            ctx.font = '700 ' + Math.round(L.footer * 0.42) + 'px "Caveat", "Segoe Script", "Brush Script MT", cursive';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('\u2665 ' + todayStr() + ' \u2665', L.W / 2, L.footerY);
+        }
+        return c;
+    }
+
+    function recompose() {
+        composed = compose();
+        shown.width = composed.width;
+        shown.height = composed.height;
+        shown.getContext('2d').drawImage(composed, 0, 0);
+        fitView(composed.width / composed.height);
+    }
+
+    function onChange() {
+        video.style.filter = cssFilter(curFilter());
+        if (mode === 'review') recompose();
+        else if (mode === 'live' || mode === 'shooting') fitView(spec().ar);
+    }
+
+    function grab() {
+        var c = document.createElement('canvas');
+        c.width = video.videoWidth;
+        c.height = video.videoHeight;
+        c.getContext('2d').drawImage(video, 0, 0);
+        return c;
+    }
+
+    async function shoot() {
+        if (mode !== 'live' || !stream || !video.videoWidth) return;
+        var sp = spec(), n = sp.cols * sp.rows, tok = ++seqToken;
+        frames = [];
+        setSave('');
+        setMode('shooting');
+        for (var i = 0; i < n; i++) {
+            setStatus('Happy with it? Add a caption, then pin it.');
+            for (var s = sel.timer; s > 0; s--) {
+                countEl.textContent = String(s);
+                countEl.classList.add('is-on');
+                await wait(1000);
+                if (tok !== seqToken) return;
+            }
+            countEl.classList.remove('is-on');
+            frames.push(grab());
+            flash.classList.remove('is-flash');
+            void flash.offsetWidth;
+            flash.classList.add('is-flash');
+            await wait(i < n - 1 ? 700 : 250);
+            if (tok !== seqToken) return;
+        }
+        setMode('review');
+        recompose();
+        setStatus('Happy with it? Add a caption, then pin it.');
+    }
+
+    function retake() {
+        seqToken++;
+        frames = [];
+        composed = null;
+        setMode('live');
+        fitView(spec().ar);
+        setStatus('Smile! Tap capture when you are ready.');
+    }
+
+    /* ==================================================================
+    Saving: image into images/, entry appended to data/content.json (GitHub contents API)
+    ================================================================== */
+    function decodeUtf8(b64) {
+        var bin = atob(b64.replace(/\s/g, ''));
+        var bytes = Uint8Array.from(bin, function (ch) { return ch.charCodeAt(0); });
+        return new TextDecoder().decode(bytes);
+    }
+    function encodeUtf8(str) {
+        var bytes = new TextEncoder().encode(str), bin = '', i;
+        for (i = 0; i < bytes.length; i += 8192) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 8192));
+        return btoa(bin);
+    }
+    function gh(method, path, body) {
+        var url = 'https://api.github.com/repos/' + GH_OWNER + '/' + GH_REPO + '/contents/' +
+            path.split('/').map(encodeURIComponent).join('/');
+        return fetch(url, {
+            method: method,
+            cache: 'no-store',
+            headers: {
+                'Accept': 'application/vnd.github+json',
+                'Authorization': 'Bearer ' + GH_TOKEN,
+                'Content-Type': 'application/json'
+            },
+            body: body ? JSON.stringify(body) : undefined
+        }).then(function (res) {
+            return res.json().then(function (j) {
+                if (!res.ok) throw new Error(j && j.message ? j.message : 'HTTP ' + res.status);
+                return j;
+            });
+        });
+    }
+
+    async function saveToRepo(dataUrl, caption) {
+        var imgPath = IMG_DIR + '/pinboard-' + Date.now() + '.jpg';
+        await gh('PUT', imgPath, {
+            message: 'Add pinboard photo ' + imgPath,
+            content: dataUrl.split(',')[1]
+        });
+        for (var attempt = 0; attempt < 3; attempt++) {
+            var file = await gh('GET', CONTENT_PATH);
+            var text = decodeUtf8(file.content);
+            var data = JSON.parse(text);
+            data.pinboard = data.pinboard || {};
+            data.pinboard.photos = data.pinboard.photos || [];
+            data.pinboard.photos.push({ src: imgPath, caption: caption });
+            var indent = (text.match(/\n([ \t]+)"/) || [])[1] || '  ';
+            var out = JSON.stringify(data, null, indent) + (/\n$/.test(text) ? '\n' : '');
+            try {
+                await gh('PUT', CONTENT_PATH, {
+                    message: 'Add pinboard photo to content.json',
+                    content: encodeUtf8(out),
+                    sha: file.sha
+                });
+                return imgPath;
+            } catch (e) {
+                if (attempt === 2 || !/sha|match|conflict/i.test(e.message)) throw e;
+            }
+        }
+    }
+
+    async function pin() {
+        if (mode !== 'review' || !composed) return;
+        var caption = captionInput.value.trim() || todayStr();
+        var dataUrl = composed.toDataURL('image/jpeg', 0.92);
+        setMode('saving');
+        addPhoto(makePhoto(dataUrl, caption));
+        setSave('Saving\u2026');
+        try {
+            var path = await saveToRepo(dataUrl, caption);
+            setSave('Saved to ' + path + ' \u2713 Live on the site in about a minute.');
+        } catch (e) {
+            setSave('Added to the board, but saving failed: ' + e.message);
+        }
+        captionInput.value = '';
+        frames = [];
+        composed = null;
+        setMode('live');
+        fitView(spec().ar);
+        setStatus('Smile! Tap capture when you are ready.');
+    }
+
+    function download() {
+        if (!composed) return;
+        composed.toBlob(function (b) {
+            var a = document.createElement('a');
+            a.href = URL.createObjectURL(b);
+            a.download = 'pinboard-' + Date.now() + '.jpg';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+        }, 'image/jpeg', 0.92);
+    }
+
+    /* ==================================================================
+       Camera lifecycle
+       ================================================================== */
     function stopStream() {
         if (stream) stream.getTracks().forEach(function (t) { t.stop(); });
         stream = null;
@@ -311,7 +985,7 @@
                 video.srcObject = s;
                 var pl = video.play();
                 if (pl && pl.catch) pl.catch(function () { });
-                shotBtn.disabled = false;
+                shotBtn.disabled = mode !== 'live';
                 setStatus('Smile! Tap capture when you are ready.');
             })
             .catch(function (err) {
@@ -325,51 +999,34 @@
 
     function closeCam() {
         camToken++;
+        seqToken++;
         stopStream();
+        frames = [];
+        composed = null;
+        countEl.classList.remove('is-on');
+        setMode('live');
+        fitView(spec().ar);
         cam.classList.remove('is-open');
         cam.setAttribute('aria-hidden', 'true');
         addBtn.setAttribute('aria-expanded', 'false');
     }
 
-    function capture() {
-        var vw = video.videoWidth, vh = video.videoHeight;
-        if (!stream || !vw || !vh) return;
-        var W = 800, H = 1000;                              // 4:5, same crop as the preview
-        var cw = Math.min(vw, vh * 0.8), ch = cw / 0.8;
-        var canvas = document.createElement('canvas');
-        canvas.width = W;
-        canvas.height = H;
-        var ctx = canvas.getContext('2d');
-        ctx.translate(W, 0);
-        ctx.scale(-1, 1);                                   // mirrored, as in the preview
-        ctx.drawImage(video, (vw - cw) / 2, (vh - ch) / 2, cw, ch, 0, 0, W, H);
-
-        flash.classList.remove('is-flash');
-        void flash.offsetWidth;
-        flash.classList.add('is-flash');
-
-        var caption = new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-        addPhoto(makePhoto(canvas.toDataURL('image/jpeg', 0.9), caption));
-    }
-
-    function addPhoto(p) {
-        var cur = mod(Math.round(target));
-        pos = target = N ? cur : 0;                         // normalise; looks identical on a ring
-        photos.splice(N ? cur + 1 : 0, 0, p);
-        rebuild();
-        if (N > 1) go(1);
-    }
-
     addBtn.addEventListener('click', function () {
         if (cam.classList.contains('is-open')) closeCam(); else openCam();
     });
-    shotBtn.addEventListener('click', capture);
+    shotBtn.addEventListener('click', shoot);
+    retakeBtn.addEventListener('click', retake);
+    pinBtn.addEventListener('click', pin);
+    dlBtn.addEventListener('click', download);
     closeBtn.addEventListener('click', closeCam);
-    stage.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeCam(); });
+    cam.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeCam(); });
     window.addEventListener('pagehide', stopStream);
 
-    /* ---- Resize / unhide ---- */
+    /* ---- Init ---- */
     if ('ResizeObserver' in window) new ResizeObserver(measure).observe(stage);
     window.addEventListener('resize', measure);
+    refreshUI();
+    setMode('live');
+    onChange();
     rebuild();
 })();

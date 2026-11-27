@@ -495,6 +495,70 @@
             }
             function previewSrc(path) { return pending[path] ? pending[path].url : '../' + path; }
 
+            /* ---------- Pinboard approval queue ----------
+   Photos taken on the site wait in this browser's IndexedDB (same origin as /admin). */
+            var QUEUE_DB = 'ourStoryPinboard', QUEUE_STORE = 'pending';
+            var queue = [], queueApproved = {};   // queueApproved: id -> true; removed from IndexedDB after a successful save
+
+            function queueDb() {
+                return new Promise(function (resolve, reject) {
+                    var req = indexedDB.open(QUEUE_DB, 1);
+                    req.onupgradeneeded = function () { req.result.createObjectStore(QUEUE_STORE, { keyPath: 'id' }); };
+                    req.onsuccess = function () { resolve(req.result); };
+                    req.onerror = function () { reject(req.error); };
+                });
+            }
+            function loadQueue() {
+                return queueDb().then(function (db) {
+                    return new Promise(function (resolve, reject) {
+                        var rq = db.transaction(QUEUE_STORE).objectStore(QUEUE_STORE).getAll();
+                        rq.onsuccess = function () { db.close(); resolve(rq.result || []); };
+                        rq.onerror = function () { db.close(); reject(rq.error); };
+                    });
+                }).catch(function () { return []; }).then(function (list) {
+                    queue = list.sort(function (a, b) { return a.ts - b.ts; });
+                });
+            }
+            function qdelete(id) {
+                return queueDb().then(function (db) {
+                    return new Promise(function (resolve) {
+                        var tx = db.transaction(QUEUE_STORE, 'readwrite');
+                        tx.objectStore(QUEUE_STORE).delete(id);
+                        tx.oncomplete = tx.onerror = function () { db.close(); resolve(); };
+                    });
+                }).catch(function () { });
+            }
+            function approveQueued(item) {
+                var path = 'images/pinboard-' + Date.now().toString(36) + '-' + (seq++) + '.jpg';
+                pending[path] = { b64: String(item.data).split(',')[1], url: item.data, saved: false };
+                state.pinboard.photos.unshift({ src: path, caption: item.caption || '' });
+                queueApproved[item.id] = true;
+                markDirty();
+                rerender();
+            }
+            function rejectQueued(item) {
+                if (!confirm('Reject and delete this photo?')) return;
+                qdelete(item.id).then(function () {
+                    queue = queue.filter(function (q) { return q.id !== item.id; });
+                    rerender();
+                });
+            }
+            function queueCard(item) {
+                var cap = h('input', { type: 'text', 'aria-label': 'Caption' });
+                cap.value = item.caption || '';
+                cap.addEventListener('input', function () { item.caption = cap.value; });
+                return h('div', { class: 'card item' }, [
+                    h('div', null, [h('img', { class: 'thumb', style: 'object-fit:contain', alt: '', src: item.data })]),
+                    h('div', null, [
+                        h('label', { text: 'Caption' }), cap,
+                        h('div', { class: 'actions' }, [
+                            h('button', { type: 'button', class: 'btn', text: 'Approve', onclick: function () { approveQueued(item); } }),
+                            h('button', { type: 'button', class: 'btn btn--danger', text: 'Reject', onclick: function () { rejectQueued(item); } })
+                        ])
+                    ])
+                ]);
+            }
+
             /* ---------- Screens: setup, unlock, fatal ---------- */
             function showFatal(err) {
                 mount(h('div', { class: 'card screen' }, [
@@ -597,6 +661,8 @@
                 state.timeline.entries = state.timeline.entries || [];
                 state.gallery = state.gallery || {};
                 state.gallery.photos = state.gallery.photos || [];
+                state.pinboard = state.pinboard || {};
+                state.pinboard.photos = state.pinboard.photos || [];
                 state.videos = state.videos || [];
                 state.asciiMode = state.asciiMode !== undefined ? state.asciiMode : true; // true = ASCII art, false = actual video
                 state.jar = state.jar || {};
@@ -969,6 +1035,29 @@
 
                 (state.videos || []).forEach(function (v, i) { root.appendChild(videoCard(state.videos, v, i)); });
 
+                /* Pinboard */
+                var pb = state.pinboard;
+                var waiting = queue.filter(function (q) { return !queueApproved[q.id]; });
+                root.appendChild(h('h2', { text: 'Pin Board' }));
+                root.appendChild(h('p', { class: 'hint', text: 'Photos taken on the site wait here for approval, but only photos taken in this browser. Approve one to pin it; it goes live when you save. For photos from another device, download them there and add them with the button below.' }));
+                root.appendChild(h('div', { class: 'card' }, [
+                    field('Section title', pb.title, bind(pb, 'title')),
+                    field('Subtitle', pb.subtitle, bind(pb, 'subtitle'))
+                ]));
+                root.appendChild(h('p', { class: 'hint', text: waiting.length ? waiting.length + ' photo(s) waiting for approval:' : 'No photos waiting for approval.' }));
+                waiting.forEach(function (q) { root.appendChild(queueCard(q)); });
+                root.appendChild(h('div', { class: 'actions' }, [
+                    fileButton('+ Add photos', true, function (files) {
+                        Promise.all(files.map(stageImage)).then(function (paths) {
+                            paths.slice().reverse().forEach(function (path) { pb.photos.unshift({ src: path, caption: '' }); });
+                            markDirty();
+                            rerender();
+                            setStatus(paths.length + ' photo(s) added at the top. Add captions, then save.');
+                        }).catch(showError);
+                    })
+                ]));
+                pb.photos.forEach(function (p, i) { root.appendChild(photoCard(pb.photos, p, i)); });
+
                 /* Love Jar */
                 root.appendChild(h('h2', { text: 'Love Jar' }));
                 root.appendChild(h('p', { class: 'hint', text: 'Notes marked NSFW appear blurred with a tag until the viewer taps them.' }));
@@ -1021,6 +1110,7 @@
                 var used = {};
                 state.timeline.entries.forEach(function (e) { if (e.image) used[e.image] = true; });
                 state.gallery.photos.forEach(function (p) { if (p.src) used[p.src] = true; });
+                state.pinboard.photos.forEach(function (p) { if (p.src) used[p.src] = true; });
                 (state.videos || []).forEach(function (v) { if (v.src) used[v.src] = true; });
                 return used;
             }
@@ -1058,6 +1148,9 @@
                     return putFile(CONTENT_PATH, textToB64(JSON.stringify(out, null, 2) + '\n'), 'Update site content', contentSha);
                 }).then(function (res) {
                     contentSha = res.content.sha;
+                    Object.keys(queueApproved).forEach(qdelete);
+                    queue = queue.filter(function (q) { return !queueApproved[q.id]; });
+                    queueApproved = {};
                     dirty = false;
                     saveBtn.disabled = false;
                     setStatus('Saved. The live site updates within a couple of minutes.', 'ok');
@@ -1079,7 +1172,7 @@
                     contentSha = f.sha;
                     state = JSON.parse(b64ToText(f.content));
                     normalize();
-                    renderEditor();
+                    return loadQueue().then(renderEditor);
                 });
             }
 

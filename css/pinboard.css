@@ -1,6 +1,7 @@
-/* pinboard.css - thumbtacked photo carousel in #gallery. Scoped to #gallery, .pn, .pn-* and #pn-print-sheet. */
+/* pinboard.css - thumbtacked photo carousel + photo booth panel in #gallery.
+   Scoped to #gallery, .pn, .pn-* and #pn-print-sheet. */
 
-/* Gallery section now holds two blocks: stack them */
+/* Gallery section holds two blocks: stack them */
 #gallery.section--future {
   flex-direction: column;
   gap: 56px;
@@ -16,6 +17,9 @@
   text-align: center;
   font-family:
     "Caveat", "Segoe Script", "Bradley Hand", "Brush Script MT", cursive;
+}
+#gallery .pn [hidden] {
+  display: none !important;
 }
 #gallery .pn__title {
   margin: 0;
@@ -33,7 +37,7 @@
 /* ---- Cork board ---- */
 #gallery .pn__stage {
   position: relative;
-  height: calc(var(--pn-w) * 1.25 + 150px);
+  height: calc(var(--pn-w) * 1.25 + 170px);
   margin-top: 14px;
   overflow: hidden;
   box-sizing: border-box;
@@ -87,7 +91,8 @@
   display: none;
 }
 
-/* ---- Pinned photo: outer card positions, inner .pn-swing swings from the tack ---- */
+/* ---- Pinned photo: outer card positions, inner .pn-swing swings from the tack.
+   The card is a fixed slot; the print shrink-wraps the photo, so strips, grids and wide sheets keep their shape. ---- */
 #gallery .pn-card {
   position: absolute;
   top: 46px;
@@ -100,6 +105,9 @@
 #gallery .pn-swing {
   position: relative;
   box-sizing: border-box;
+  width: fit-content;
+  min-width: calc(var(--pn-w) * 0.62);
+  margin: 0 auto;
   padding: 10px 10px 0;
   border-radius: 3px;
   background: #fff;
@@ -148,8 +156,11 @@
 }
 #gallery .pn-card img {
   display: block;
-  width: 100%;
+  width: auto;
   height: auto;
+  max-width: calc(var(--pn-w) * 1.5 - 20px);
+  max-height: calc(var(--pn-w) * 1.25);
+  margin: 0 auto;
   object-fit: contain;
   background: #f8c3d6;
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
@@ -158,17 +169,17 @@
 }
 #gallery .pn-caption {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-  height: 44px;
-  overflow: hidden;
+  gap: 4px;
+  padding: 6px 0 8px;
   font-size: 21px;
   line-height: 1;
   color: #9c1f58;
 }
 #gallery .pn-caption__text {
-  min-width: 0;
+  max-width: 100%;
+  min-height: 1em;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -255,7 +266,7 @@
   color: #9c1f58;
 }
 
-/* ---- Camera panel (expands below the controls) ---- */
+/* ---- Photo booth panel (expands below the controls) ---- */
 #gallery .pn-cam {
   display: grid;
   grid-template-rows: 0fr;
@@ -280,13 +291,25 @@
     visibility 0s;
 }
 #gallery .pn-cam__inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(230px, 300px);
+  gap: 20px;
+  align-items: start;
+  justify-content: center;
+  width: 100%;
+  max-width: 800px;
+  min-height: 0;
+  margin: 0 auto;
+  box-sizing: border-box;
+  overflow: hidden;
+  padding: 4px 4px 8px;
+}
+#gallery .pn-cam__main {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 12px;
-  min-height: 0;
-  overflow: hidden;
-  padding-bottom: 6px;
+  min-width: 0;
 }
 #gallery .pn-cam__status {
   margin: 0;
@@ -296,7 +319,7 @@
 }
 #gallery .pn-cam__view {
   position: relative;
-  width: min(320px, 86vw);
+  width: min(380px, 100%);
   aspect-ratio: 4 / 5;
   box-sizing: border-box;
   overflow: hidden;
@@ -305,12 +328,38 @@
   background: #1b0f16;
   box-shadow: 0 12px 28px rgba(120, 20, 70, 0.35);
 }
-#gallery .pn-cam__view video {
+#gallery .pn-cam__view video,
+#gallery .pn-cam__result {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+#gallery .pn-cam__view video {
   transform: scaleX(-1);
+}
+#gallery .pn-cam__result {
+  object-fit: contain;
+}
+#gallery .pn-cam__count {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: grid;
+  place-items: center;
+  font:
+    700 clamp(90px, 22vw, 150px)/1 "Caveat",
+    "Segoe Script",
+    cursive;
+  color: #fff;
+  text-shadow: 0 4px 18px rgba(0, 0, 0, 0.55);
+  opacity: 0;
+  pointer-events: none;
+}
+#gallery .pn-cam__count.is-on {
+  opacity: 1;
 }
 #gallery .pn-cam__flash {
   position: absolute;
@@ -332,6 +381,45 @@
   100% {
     opacity: 0;
   }
+}
+
+#gallery .pn-cam__review {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(380px, 100%);
+}
+#gallery .pn-cam__input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 11px 16px;
+  border: 2px solid rgba(229, 69, 127, 0.35);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #9c1f58;
+  font:
+    600 15px/1.2 "Segoe UI",
+    Tahoma,
+    Verdana,
+    sans-serif;
+  text-align: center;
+  outline: none;
+}
+#gallery .pn-cam__input:focus {
+  border-color: #e5457f;
+  box-shadow: 0 0 0 3px rgba(229, 69, 127, 0.2);
+}
+#gallery .pn-cam__save {
+  max-width: 380px;
+  min-height: 1.2em;
+  margin: 0;
+  font:
+    600 14px/1.35 "Segoe UI",
+    Tahoma,
+    Verdana,
+    sans-serif;
+  color: #9c1f58;
+  overflow-wrap: anywhere;
 }
 #gallery .pn-cam__btns {
   display: flex;
@@ -371,6 +459,179 @@
   cursor: default;
 }
 
+/* ---- Side column: formats, filters, paper, options ---- */
+#gallery .pn-cam__side {
+  box-sizing: border-box;
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 8px 22px rgba(190, 40, 100, 0.15);
+  text-align: left;
+  font-family: "Segoe UI", Tahoma, Verdana, sans-serif;
+}
+#gallery .pn-side__group + .pn-side__group {
+  margin-top: 14px;
+}
+#gallery .pn-side__title {
+  margin: 0 0 8px;
+  font:
+    700 12px/1 "Segoe UI",
+    Tahoma,
+    Verdana,
+    sans-serif;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #9c1f58;
+}
+#gallery .pn-side__note {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: #b44a78;
+}
+#gallery .pn-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+#gallery .pn-chip,
+#gallery .pn-step__btn {
+  padding: 7px 12px;
+  border: 1px solid rgba(229, 69, 127, 0.3);
+  border-radius: 999px;
+  background: #fff;
+  color: #9c1f58;
+  font:
+    600 13px/1 "Segoe UI",
+    Tahoma,
+    Verdana,
+    sans-serif;
+  cursor: pointer;
+}
+#gallery .pn-chip[aria-pressed="true"] {
+  border-color: transparent;
+  background: linear-gradient(135deg, #ff7aa8, #e5457f);
+  color: #fff;
+}
+#gallery .pn-chip:disabled,
+#gallery .pn-step__btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+#gallery .pn-chip:focus-visible,
+#gallery .pn-step__btn:focus-visible,
+#gallery .pn-filter:focus-visible,
+#gallery .pn-paper:focus-visible {
+  outline: 3px solid #e5457f;
+  outline-offset: 2px;
+}
+#gallery .pn-custom {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(229, 69, 127, 0.35);
+}
+#gallery .pn-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+#gallery .pn-step__label {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 600;
+  color: #9c1f58;
+}
+#gallery .pn-step__btn {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  font-size: 16px;
+}
+#gallery .pn-step__val {
+  min-width: 18px;
+  text-align: center;
+  font-weight: 700;
+  color: #9c1f58;
+}
+
+#gallery .pn-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(62px, 1fr));
+  gap: 8px;
+}
+#gallery .pn-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+}
+#gallery .pn-filter[aria-pressed="true"] {
+  border-color: #e5457f;
+  background: #fff;
+}
+#gallery .pn-filter__swatch {
+  display: block;
+  height: 30px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #ff7aa8, #ffd36b 50%, #6bd0ff);
+}
+#gallery .pn-filter__name {
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+  color: #9c1f58;
+}
+
+#gallery .pn-papers {
+  display: flex;
+  gap: 10px;
+}
+#gallery .pn-paper {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 2px solid rgba(156, 31, 88, 0.35);
+  border-radius: 50%;
+  cursor: pointer;
+}
+#gallery .pn-paper[aria-pressed="true"] {
+  border-color: #e5457f;
+  box-shadow: 0 0 0 3px rgba(229, 69, 127, 0.35);
+}
+
+#gallery .pn-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #9c1f58;
+}
+#gallery .pn-check input[type="checkbox"] {
+  accent-color: #e5457f;
+}
+#gallery .pn-select {
+  margin-left: auto;
+  padding: 5px 8px;
+  border: 1px solid rgba(229, 69, 127, 0.3);
+  border-radius: 8px;
+  background: #fff;
+  color: #9c1f58;
+  font:
+    600 13px/1 "Segoe UI",
+    Tahoma,
+    Verdana,
+    sans-serif;
+}
+
 /* ---- Dark mode ---- */
 [data-theme="dark"] #gallery .pn__title {
   color: var(--section-text, var(--text-primary));
@@ -378,6 +639,7 @@
 }
 [data-theme="dark"] #gallery .pn__subtitle,
 [data-theme="dark"] #gallery .pn-cam__status,
+[data-theme="dark"] #gallery .pn-cam__save,
 [data-theme="dark"] #gallery .pn__count {
   color: var(--section-text, var(--text-primary));
 }
@@ -402,12 +664,56 @@
 [data-theme="dark"] #gallery .pn-cam__btn:focus-visible {
   outline-color: var(--focus-ring);
 }
+[data-theme="dark"] #gallery .pn-cam__side {
+  border-color: var(--border-subtle);
+  background: rgba(45, 20, 35, 0.6);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.3);
+}
+[data-theme="dark"] #gallery .pn-side__title,
+[data-theme="dark"] #gallery .pn-step__label,
+[data-theme="dark"] #gallery .pn-step__val,
+[data-theme="dark"] #gallery .pn-check,
+[data-theme="dark"] #gallery .pn-filter__name {
+  color: var(--text-primary);
+}
+[data-theme="dark"] #gallery .pn-side__note {
+  color: var(--text-secondary);
+}
+[data-theme="dark"] #gallery .pn-chip,
+[data-theme="dark"] #gallery .pn-step__btn,
+[data-theme="dark"] #gallery .pn-select,
+[data-theme="dark"] #gallery .pn-cam__input {
+  border-color: var(--border-strong);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+}
+[data-theme="dark"] #gallery .pn-chip[aria-pressed="true"] {
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--accent-plum), var(--accent-rose));
+  color: var(--text-inverse);
+}
+[data-theme="dark"] #gallery .pn-filter {
+  background: var(--bg-surface);
+}
+[data-theme="dark"] #gallery .pn-filter[aria-pressed="true"] {
+  border-color: var(--accent-rose);
+  background: var(--bg-elevated);
+}
+[data-theme="dark"] #gallery .pn-paper[aria-pressed="true"] {
+  border-color: var(--accent-rose);
+  box-shadow: 0 0 0 3px rgba(232, 165, 200, 0.4);
+}
 
 /* ---- Mobile ---- */
 @media (max-width: 900px) {
   #gallery .pn {
     --pn-w: clamp(130px, 38vw, 210px);
     padding: 0 12px;
+  }
+}
+@media (max-width: 700px) {
+  #gallery .pn-cam__inner {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -429,7 +735,7 @@
     min-height: 90vh;
   }
   #pn-print-sheet .pn-print-sheet__frame {
-    width: 100mm;
+    display: inline-block;
     padding: 6mm 6mm 2mm;
     box-sizing: border-box;
     background: #fff;
@@ -438,9 +744,10 @@
   }
   #pn-print-sheet img {
     display: block;
-    width: 100%;
+    width: auto;
     height: auto;
-    object-fit: contain;
+    max-width: 170mm;
+    max-height: 230mm;
   }
   #pn-print-sheet .pn-print-sheet__caption {
     margin: 4mm 0 2mm;
