@@ -12,6 +12,11 @@
     var reduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
     var photos = cfg.photos;
 
+    /* ---- Border Style Config ---- */
+    var borderStyle = (cfg.borderStyle && typeof cfg.borderStyle === 'string') ? cfg.borderStyle : 'classic';
+    var validBorderStyles = ['classic', 'polaroid', 'film', 'torn', 'washi', 'doublemat', 'instax'];
+    if (validBorderStyles.indexOf(borderStyle) === -1) borderStyle = 'classic';
+
     for (var i = photos.length - 1; i > 0; i--) {
         var j = Math.floor(Math.random() * (i + 1));
         [photos[i], photos[j]] = [photos[j], photos[i]];
@@ -41,15 +46,35 @@
     stage.setAttribute('aria-label', 'Photo booth gallery. Use the left and right arrow keys to browse.');
     var ring = el('div', 'pb__ring');
     var items = photos.map(function (p, i) {
-        var card = el('figure', 'pb-card');
+        var card = el('figure', 'pb-card pb-card--' + borderStyle);
         card.setAttribute('data-i', i);
+
+        // Some border styles need extra wrapper DOM
+        var imgWrapper = card;
+        if (borderStyle === 'doublemat') {
+            imgWrapper = el('div', 'card-inner');
+            card.appendChild(imgWrapper);
+        }
+
         var img = document.createElement('img');
         img.src = p.src;
         img.alt = p.alt || p.caption || ('Photo ' + (i + 1));
         img.draggable = false;
         img.decoding = 'async';
-        card.appendChild(img);
-        card.appendChild(el('figcaption', 'pb-card__caption', p.caption || ''));
+        imgWrapper.appendChild(img);
+
+        var caption = el('figcaption', 'pb-card__caption', p.caption || '');
+        imgWrapper.appendChild(caption);
+
+        // Washi tape corners
+        if (borderStyle === 'washi') {
+            ['tl', 'tr', 'bl', 'br'].forEach(function (pos) {
+                var corner = document.createElement('div');
+                corner.className = 'washi-corner ' + pos;
+                card.appendChild(corner);
+            });
+        }
+
         ring.appendChild(card);
         return card;
     });

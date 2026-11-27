@@ -109,6 +109,311 @@
   pointer-events: none;
   -webkit-user-drag: none;
 }
+
+/* ========================================================================
+   PHOTO BOOTH BORDER STYLES
+   Applied via .pb-card--<style> class on the .pb-card element
+   Configured in content.json: gallery.borderStyle
+   ======================================================================== */
+
+/* --- 1. Classic Photo Booth Strip (default) --- */
+#gallery .pb-card--classic {
+  padding: 8px 8px 0;
+  border-radius: 3px;
+  background: #fff;
+}
+#gallery .pb-card--classic img {
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+  border-radius: 2px;
+}
+#gallery .pb-card--classic .pb-card__caption {
+  border-top: 2px dashed rgba(156, 31, 88, 0.3);
+  padding-top: 6px;
+  margin-top: 4px;
+}
+
+/* --- 2. Polaroid Style --- */
+#gallery .pb-card--polaroid {
+  padding: 12px 12px 48px; /* thick bottom for caption area */
+  border-radius: 2px;
+  background: #fafafa;
+  box-shadow:
+    0 12px 28px rgba(120, 20, 70, 0.3),
+    0 4px 8px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+#gallery .pb-card--polaroid.is-active {
+  box-shadow:
+    0 18px 40px rgba(120, 20, 70, 0.4),
+    0 6px 12px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+#gallery .pb-card--polaroid img {
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.05);
+  border-radius: 1px;
+  background: #f0f0f0;
+}
+#gallery .pb-card--polaroid .pb-card__caption {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  right: 12px;
+  height: auto;
+  padding: 8px 0 0;
+  border-top: 1px solid rgba(156, 31, 88, 0.2);
+  text-align: left;
+  justify-content: flex-start;
+  font-size: 18px;
+  line-height: 1.3;
+  white-space: normal;
+  color: #5a1a3a;
+}
+
+/* --- 3. Vintage Film Strip --- */
+#gallery .pb-card--film {
+  padding: 0;
+  border-radius: 0;
+  background: #1a1a1a;
+  overflow: hidden;
+}
+#gallery .pb-card--film::before,
+#gallery .pb-card--film::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 14px;
+  background: #0d0d0d;
+  background-image:
+    radial-gradient(circle at 8% 50%, #fff 2px, transparent 3px),
+    radial-gradient(circle at 24% 50%, #fff 2px, transparent 3px),
+    radial-gradient(circle at 40% 50%, #fff 2px, transparent 3px),
+    radial-gradient(circle at 56% 50%, #fff 2px, transparent 3px),
+    radial-gradient(circle at 72% 50%, #fff 2px, transparent 3px),
+    radial-gradient(circle at 88% 50%, #fff 2px, transparent 3px),
+    radial-gradient(circle at 92% 50%, #fff 2px, transparent 3px),
+    radial-gradient(circle at 96% 50%, #fff 2px, transparent 3px);
+  background-size: 12.5% 100%;
+  background-repeat: repeat-x;
+  background-position: center;
+  z-index: 10;
+  pointer-events: none;
+}
+#gallery .pb-card--film::before { top: 0; }
+#gallery .pb-card--film::after { bottom: 0; }
+#gallery .pb-card--film img {
+  box-shadow: none;
+  border-radius: 0;
+  background: #000;
+  aspect-ratio: 4 / 5;
+}
+#gallery .pb-card--film .pb-card__caption {
+  background: rgba(26, 26, 26, 0.95);
+  color: #f0e6ec;
+  border-top: 2px solid #e5457f;
+  font-family: 'Courier New', monospace;
+  font-size: 16px;
+  letter-spacing: 0.5px;
+}
+
+/* --- 4. Torn Paper Edges --- */
+#gallery .pb-card--torn {
+  padding: 14px 14px 0;
+  border-radius: 0;
+  background: #fff;
+  clip-path: polygon(
+    0% 2%, 2% 0%, 4% 1%, 6% 0%, 8% 2%, 10% 0%, 12% 1%, 14% 0%, 16% 2%,
+    18% 0%, 20% 1%, 22% 0%, 24% 2%, 26% 0%, 28% 1%, 30% 0%, 32% 2%,
+    34% 0%, 36% 1%, 38% 0%, 40% 2%, 42% 0%, 44% 1%, 46% 0%, 48% 2%,
+    50% 0%, 52% 1%, 54% 0%, 56% 2%, 58% 0%, 60% 1%, 62% 0%, 64% 2%,
+    66% 0%, 68% 1%, 70% 0%, 72% 2%, 74% 0%, 76% 1%, 78% 0%, 80% 2%,
+    82% 0%, 84% 1%, 86% 0%, 88% 2%, 90% 0%, 92% 1%, 94% 0%, 96% 2%,
+    98% 0%, 100% 2%, 100% 98%, 98% 100%, 96% 99%, 94% 100%, 92% 99%,
+    90% 100%, 88% 99%, 86% 100%, 84% 99%, 82% 100%, 80% 99%, 78% 100%,
+    76% 99%, 74% 100%, 72% 99%, 70% 100%, 68% 99%, 66% 100%, 64% 99%,
+    62% 100%, 60% 99%, 58% 100%, 56% 99%, 54% 100%, 52% 99%, 50% 100%,
+    48% 99%, 46% 100%, 44% 99%, 42% 100%, 40% 99%, 38% 100%, 36% 99%,
+    34% 100%, 32% 99%, 30% 100%, 28% 99%, 26% 100%, 24% 99%, 22% 100%,
+    20% 99%, 18% 100%, 16% 99%, 14% 100%, 12% 99%, 10% 100%, 8% 99%,
+    6% 100%, 4% 99%, 2% 100%, 0% 98%
+  );
+  box-shadow:
+    0 12px 30px rgba(120, 20, 70, 0.35),
+    0 4px 8px rgba(0, 0, 0, 0.15);
+}
+#gallery .pb-card--torn.is-active {
+  box-shadow:
+    0 18px 42px rgba(120, 20, 70, 0.45),
+    0 6px 12px rgba(0, 0, 0, 0.18);
+}
+#gallery .pb-card--torn img {
+  box-shadow: none;
+  border-radius: 0;
+  clip-path: polygon(
+    0% 1%, 1% 0%, 2% 1%, 3% 0%, 4% 1%, 5% 0%, 6% 1%, 7% 0%, 8% 1%,
+    9% 0%, 10% 1%, 11% 0%, 12% 1%, 13% 0%, 14% 1%, 15% 0%, 16% 1%,
+    17% 0%, 18% 1%, 19% 0%, 20% 1%, 21% 0%, 22% 1%, 23% 0%, 24% 1%,
+    25% 0%, 26% 1%, 27% 0%, 28% 1%, 29% 0%, 30% 1%, 31% 0%, 32% 1%,
+    33% 0%, 34% 1%, 35% 0%, 36% 1%, 37% 0%, 38% 1%, 39% 0%, 40% 1%,
+    41% 0%, 42% 1%, 43% 0%, 44% 1%, 45% 0%, 46% 1%, 47% 0%, 48% 1%,
+    49% 0%, 50% 1%, 51% 0%, 52% 1%, 53% 0%, 54% 1%, 55% 0%, 56% 1%,
+    57% 0%, 58% 1%, 59% 0%, 60% 1%, 61% 0%, 62% 1%, 63% 0%, 64% 1%,
+    65% 0%, 66% 1%, 67% 0%, 68% 1%, 69% 0%, 70% 1%, 71% 0%, 72% 1%,
+    73% 0%, 74% 1%, 75% 0%, 76% 1%, 77% 0%, 78% 1%, 79% 0%, 80% 1%,
+    81% 0%, 82% 1%, 83% 0%, 84% 1%, 85% 0%, 86% 1%, 87% 0%, 88% 1%,
+    89% 0%, 90% 1%, 91% 0%, 92% 1%, 93% 0%, 94% 1%, 95% 0%, 96% 1%,
+    97% 0%, 98% 1%, 99% 0%, 100% 1%, 100% 99%, 99% 100%, 98% 99%,
+    97% 100%, 96% 99%, 95% 100%, 94% 99%, 93% 100%, 92% 99%, 91% 100%,
+    90% 99%, 89% 100%, 88% 99%, 87% 100%, 86% 99%, 85% 100%, 84% 99%,
+    83% 100%, 82% 99%, 81% 100%, 80% 99%, 79% 100%, 78% 99%, 77% 100%,
+    76% 99%, 75% 100%, 74% 99%, 73% 100%, 72% 99%, 71% 100%, 70% 99%,
+    69% 100%, 68% 99%, 67% 100%, 66% 99%, 65% 100%, 64% 99%, 63% 100%,
+    62% 99%, 61% 100%, 60% 99%, 59% 100%, 58% 99%, 57% 100%, 56% 99%,
+    55% 100%, 54% 99%, 53% 100%, 52% 99%, 51% 100%, 50% 99%, 49% 100%,
+    48% 99%, 47% 100%, 46% 99%, 45% 100%, 44% 99%, 43% 100%, 42% 99%,
+    41% 100%, 40% 99%, 39% 100%, 38% 99%, 37% 100%, 36% 99%, 35% 100%,
+    34% 99%, 33% 100%, 32% 99%, 31% 100%, 30% 99%, 29% 100%, 28% 99%,
+    27% 100%, 26% 99%, 25% 100%, 24% 99%, 23% 100%, 22% 99%, 21% 100%,
+    20% 99%, 19% 100%, 18% 99%, 17% 100%, 16% 99%, 15% 100%, 14% 99%,
+    13% 100%, 12% 99%, 11% 100%, 10% 99%, 9% 100%, 8% 99%, 7% 100%,
+    6% 99%, 5% 100%, 4% 99%, 3% 100%, 2% 99%, 1% 100%, 0% 99%
+  );
+}
+#gallery .pb-card--torn .pb-card__caption {
+  border-top: 1px dashed rgba(156, 31, 88, 0.4);
+  padding-top: 8px;
+  margin-top: 6px;
+  font-style: italic;
+}
+
+/* --- 5. Washi Tape Corners --- */
+#gallery .pb-card--washi {
+  padding: 16px 16px 0;
+  border-radius: 4px;
+  background: #fff;
+  position: relative;
+}
+#gallery .pb-card--washi .washi-corner {
+  position: absolute;
+  width: 36px;
+  height: 36px;
+  pointer-events: none;
+  z-index: 5;
+  opacity: 0.85;
+}
+#gallery .pb-card--washi .washi-corner.tl { top: -2px; left: -2px; border-radius: 4px 0 0 0; }
+#gallery .pb-card--washi .washi-corner.tr { top: -2px; right: -2px; border-radius: 0 4px 0 0; }
+#gallery .pb-card--washi .washi-corner.bl { bottom: 44px; left: -2px; border-radius: 0 0 0 4px; }
+#gallery .pb-card--washi .washi-corner.br { bottom: 44px; right: -2px; border-radius: 0 0 4px 0; }
+#gallery .pb-card--washi .washi-corner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    -45deg,
+    rgba(229, 69, 127, 0.15),
+    rgba(229, 69, 127, 0.15) 3px,
+    rgba(255, 182, 213, 0.2) 3px,
+    rgba(255, 182, 213, 0.2) 6px
+  );
+  mask-image: linear-gradient(45deg, transparent 50%, #000 50%);
+  -webkit-mask-image: linear-gradient(45deg, transparent 50%, #000 50%);
+  border-radius: inherit;
+}
+#gallery .pb-card--washi img {
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.05);
+  border-radius: 2px;
+}
+#gallery .pb-card--washi .pb-card__caption {
+  border-top: 1px dotted rgba(229, 69, 127, 0.4);
+  padding-top: 6px;
+  margin-top: 4px;
+}
+
+/* --- 6. Double Mat Border --- */
+#gallery .pb-card--doublemat {
+  padding: 0;
+  border-radius: 4px;
+  background: #fff;
+}
+#gallery .pb-card--doublemat .card-inner {
+  padding: 18px 18px 0;
+  background: #fdf6f9;
+  border: 3px solid #fff;
+  box-shadow: inset 0 0 0 1px rgba(156, 31, 88, 0.15);
+  border-radius: 2px;
+}
+#gallery .pb-card--doublemat img {
+  box-shadow: none;
+  border-radius: 1px;
+  background: #f8eef3;
+}
+#gallery .pb-card--doublemat .pb-card__caption {
+  border-top: 2px solid rgba(229, 69, 127, 0.2);
+  padding-top: 8px;
+  margin-top: 4px;
+}
+
+/* --- 7. Instant Camera (Fujifilm Instax style) --- */
+#gallery .pb-card--instax {
+  padding: 14px 14px 56px;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow:
+    0 14px 32px rgba(120, 20, 70, 0.32),
+    0 4px 8px rgba(0, 0, 0, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+#gallery .pb-card--instax.is-active {
+  box-shadow:
+    0 20px 44px rgba(120, 20, 70, 0.42),
+    0 6px 12px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+#gallery .pb-card--instax img {
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.04);
+  border-radius: 2px;
+  background: #f5f0f2;
+}
+#gallery .pb-card--instax .pb-card__caption {
+  position: absolute;
+  bottom: 14px;
+  left: 14px;
+  right: 14px;
+  height: auto;
+  padding: 10px 0 0;
+  border-top: 1px solid rgba(229, 69, 127, 0.15);
+  text-align: center;
+  justify-content: center;
+  font-size: 17px;
+  line-height: 1.3;
+  white-space: normal;
+  color: #7a2a52;
+  font-family: "Caveat", cursive;
+}
+
+/* --- Mobile adjustments for border styles --- */
+@media (max-width: 900px) {
+  #gallery .pb-card--polaroid,
+  #gallery .pb-card--instax {
+    padding-bottom: 44px;
+  }
+  #gallery .pb-card--polaroid .pb-card__caption,
+  #gallery .pb-card--instax .pb-card__caption {
+    bottom: 10px;
+    left: 10px;
+    right: 10px;
+    font-size: 16px;
+  }
+  #gallery .pb-card--washi .washi-corner {
+    width: 28px;
+    height: 28px;
+  }
+  #gallery .pb-card--washi .washi-corner.bl,
+  #gallery .pb-card--washi .washi-corner.br {
+    bottom: 40px;
+  }
+}
+
 #gallery .pb-card__caption {
   /* ... thick bottom margin, like a booth print */
   display: flex;

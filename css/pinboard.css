@@ -329,7 +329,8 @@
   box-shadow: 0 12px 28px rgba(120, 20, 70, 0.35);
 }
 #gallery .pn-cam__view video,
-#gallery .pn-cam__result {
+#gallery .pn-cam__result,
+#gallery .pn-cam__strip-preview {
   display: block;
   width: 100%;
   height: 100%;
@@ -338,8 +339,15 @@
 #gallery .pn-cam__view video {
   transform: scaleX(-1);
 }
-#gallery .pn-cam__result {
+#gallery .pn-cam__result,
+#gallery .pn-cam__strip-preview {
   object-fit: contain;
+}
+
+/* Strip preview specific styling */
+#gallery .pn-cam__strip-preview {
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.05);
 }
 #gallery .pn-cam__count {
   position: absolute;

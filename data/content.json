@@ -90,6 +90,7 @@
   "gallery": {
     "title": "Photo Booth",
     "subtitle": "Drag, swipe or use the arrows",
+    "borderStyle": "classic",
     "photos": [
       {
         "src": "images/image1.jpg",

@@ -730,9 +730,98 @@
     var mode = 'live';                                      // live | shooting | review | saving
     var frames = [];                                        // raw, unmirrored, uncropped video frames
     var composed = null;                                    // final sheet canvas
+    var stripPreview = null;                                // canvas for progressive strip preview
 
     function setStatus(msg) { status.textContent = msg; }
     function setSave(msg) { saveMsg.textContent = msg; }
+
+    /* ---- Progressive preview for multi-photo formats (strip, grid, wide, custom) ---- */
+    function renderProgressivePreview() {
+        if (mode !== 'shooting' && mode !== 'review' && mode !== 'live') return;
+        var sp = spec();
+        var n = sp.cols * sp.rows;
+        if (n < 2) return; // Only for multi-photo formats
+
+        var L = layout(sp);
+        var paper = PAPERS[sel.paper];
+        var ink = paper.dark ? '#ffe3ee' : '#9c1f58';
+        var bid = sel.border;
+
+        if (!stripPreview) {
+            stripPreview = document.createElement('canvas');
+            stripPreview.className = 'pn-cam__strip-preview';
+        }
+        stripPreview.width = L.W;
+        stripPreview.height = L.H;
+        var ctx = stripPreview.getContext('2d');
+
+        // Fill background
+        ctx.fillStyle = paper.c;
+        ctx.fillRect(0, 0, L.W, L.H);
+
+        // Draw each slot - filled if we have a frame, empty template otherwise
+        L.rects.forEach(function (r, i) {
+            // Draw border background for each slot
+            borderBefore(ctx, bid, r, paper);
+
+            if (frames[i]) {
+                // We have a captured frame for this slot - draw it
+                var fr = frames[i];
+                var fw = fr.width, fh = fr.height;
+                var cw = Math.min(fw, fh * sp.ar), ch = cw / sp.ar;
+
+                var t = document.createElement('canvas');
+                t.width = r.w;
+                t.height = r.h;
+                var tctx = t.getContext('2d');
+                tctx.translate(r.w, 0);
+                tctx.scale(-1, 1);
+                tctx.drawImage(fr, (fw - cw) / 2, (fh - ch) / 2, cw, ch, 0, 0, r.w, r.h);
+                tctx.setTransform(1, 0, 0, 1, 0, 0);
+                applyFilter(tctx, 0, 0, r.w, r.h, curFilter());
+
+                ctx.save();
+                if (bid === 'rounded') { rrect(ctx, r.x, r.y, r.w, r.h, 30); ctx.clip(); }
+                ctx.drawImage(t, r.x, r.y);
+                ctx.restore();
+            } else {
+                // Empty slot - draw placeholder
+                ctx.save();
+                ctx.fillStyle = paper.dark ? '#2b1020' : '#f0e6ec';
+                ctx.globalAlpha = 0.3;
+                if (bid === 'rounded') { rrect(ctx, r.x, r.y, r.w, r.h, 30); ctx.fill(); }
+                else { ctx.fillRect(r.x, r.y, r.w, r.h); }
+                ctx.globalAlpha = 1;
+
+                // Draw a camera icon or "tap to capture" hint
+                ctx.fillStyle = ink;
+                ctx.font = '700 ' + Math.round(r.h * 0.15) + 'px "Segoe UI Symbol", "Segoe UI", sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('\uD83D\uDCF8', r.x + r.w / 2, r.y + r.h / 2);
+                ctx.restore();
+            }
+
+            borderAfter(ctx, bid, r, i, ink, paper);
+        });
+
+        // Date stamp if enabled
+        if (sel.date) {
+            ctx.fillStyle = ink;
+            ctx.font = '700 ' + Math.round(L.footer * 0.42) + 'px "Caveat", "Segoe Script", "Brush Script MT", cursive';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('\u2665 ' + todayStr() + ' \u2665', L.W / 2, L.footerY);
+        }
+
+        // Update the shown canvas with the preview
+        shown.width = stripPreview.width;
+        shown.height = stripPreview.height;
+        shown.getContext('2d').drawImage(stripPreview, 0, 0);
+        fitView(stripPreview.width / stripPreview.height);
+        shown.hidden = false;
+        video.hidden = true;
+    }
 
 
 
@@ -758,8 +847,12 @@
     function setMode(m) {
         mode = m;
         var inReview = m === 'review' || m === 'saving';
-        video.hidden = inReview;
-        shown.hidden = !inReview;
+        var sp = spec();
+        var n = sp.cols * sp.rows;
+        var showProgressivePreview = (n >= 2 && (m === 'live' || m === 'shooting'));
+
+        video.hidden = inReview || showProgressivePreview;
+        shown.hidden = !(inReview || showProgressivePreview);
         reviewBox.hidden = m !== 'review';
         shotBtn.hidden = inReview;
         shotBtn.disabled = m !== 'live' || !stream;
@@ -819,7 +912,16 @@
     function onChange() {
         video.style.filter = cssFilter(curFilter());
         if (mode === 'review') recompose();
-        else if (mode === 'live' || mode === 'shooting') fitView(spec().ar);
+        else if (mode === 'shooting' || mode === 'live') {
+            // Update progressive preview for multi-photo formats
+            var sp = spec();
+            var n = sp.cols * sp.rows;
+            if (n >= 2) {
+                renderProgressivePreview();
+            } else {
+                fitView(sp.ar);
+            }
+        }
     }
 
     function grab() {
@@ -836,8 +938,15 @@
         frames = [];
         setSave('');
         setMode('shooting');
+
+        // Show empty preview immediately for multi-photo formats
+        var n = sp.cols * sp.rows;
+        if (n >= 2) {
+            renderProgressivePreview();
+        }
+
         for (var i = 0; i < n; i++) {
-            setStatus('Happy with it? Add a caption, then pin it.');
+            setStatus('Photo ' + (i + 1) + ' of ' + n + ' \u2014 Get ready!');
             for (var s = sel.timer; s > 0; s--) {
                 countEl.textContent = String(s);
                 countEl.classList.add('is-on');
@@ -849,6 +958,13 @@
             flash.classList.remove('is-flash');
             void flash.offsetWidth;
             flash.classList.add('is-flash');
+
+            // Update progressive preview after each capture
+            var n2 = sp.cols * sp.rows;
+            if (n2 >= 2) {
+                renderProgressivePreview();
+            }
+
             await wait(i < n - 1 ? 700 : 250);
             if (tok !== seqToken) return;
         }
@@ -861,6 +977,7 @@
         seqToken++;
         frames = [];
         composed = null;
+        stripPreview = null;
         setMode('live');
         fitView(spec().ar);
         setStatus('Smile! Tap capture when you are ready.');
@@ -907,6 +1024,7 @@ async function pin() {
     captionInput.value = '';
     frames = [];
     composed = null;
+    stripPreview = null;
     setMode('live');
     fitView(spec().ar);
     setStatus('Smile! Tap capture when you are ready.');
@@ -971,6 +1089,7 @@ async function pin() {
         stopStream();
         frames = [];
         composed = null;
+        stripPreview = null;
         countEl.classList.remove('is-on');
         setMode('live');
         fitView(spec().ar);
