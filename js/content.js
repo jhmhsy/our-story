@@ -2,7 +2,7 @@
     'use strict';
 
     var CONTENT_URL = 'data/content.json';
-    var DEPENDENTS = ['js/greetings.js', 'js/timeline.js', 'js/gallery.js', 'js/jar.js', 'js/music.js', 'js/letter.js', 'js/ascii-art.js', 'js/anniversary.js'];
+    var DEPENDENTS = ['js/greetings.js', 'js/timeline.js', 'js/gallery.js', 'js/pinboard.js', 'js/jar.js', 'js/music.js', 'js/letter.js', 'js/ascii-art.js', 'js/anniversary.js'];
     var SECTION_IDS = ['greetings', 'story', 'gallery', 'jar', 'music', 'last'];
 
     // WCAG Contrast thresholds

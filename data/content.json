@@ -607,5 +607,11 @@
       }
     ],
     "title": "Songs that remind me of us"
+  },
+  "pinboard": {
+    "title": "Pinboard",
+    "photos": [
+      { "src": "images/image7.jpg", "caption": "Matching shirts!" }
+    ]
   }
 }
