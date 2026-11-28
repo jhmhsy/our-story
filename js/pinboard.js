@@ -334,10 +334,11 @@
     var countEl = el('div', 'pn-cam__count');
     countEl.setAttribute('aria-hidden', 'true');
     var flash = el('div', 'pn-cam__flash');
-    view.appendChild(video);
     view.appendChild(shown);
+    view.appendChild(video);
     view.appendChild(countEl);
     view.appendChild(flash);
+    view.style.position = 'relative';
 
     var reviewBox = el('div', 'pn-cam__review');
     reviewBox.hidden = true;
@@ -736,16 +737,28 @@
     function setSave(msg) { saveMsg.textContent = msg; }
 
     /* ---- Progressive preview for multi-photo formats (strip, grid, wide, custom) ---- */
-    function renderProgressivePreview() {
-        if (mode !== 'shooting' && mode !== 'review' && mode !== 'live') return;
+    function slotActive() {
         var sp = spec();
-        var n = sp.cols * sp.rows;
-        if (n < 2) return; // Only for multi-photo formats
+        return sp.cols * sp.rows >= 2 && (mode === 'live' || mode === 'shooting');
+    }
+
+    function resetSlotStyles() {
+        ['position', 'left', 'top', 'width', 'height', 'objectFit', 'transform', 'borderRadius', 'zIndex']
+            .forEach(function (k) { video.style[k] = ''; });
+        ['position', 'left', 'top', 'width', 'height']
+            .forEach(function (k) { shown.style[k] = ''; });
+    }
+
+    /* Sheet canvas (captured shots + empty slots) with the live video laid over the next empty slot */
+    function renderProgressivePreview() {
+        var sp = spec(), n = sp.cols * sp.rows;
+        if (n < 2) return;
 
         var L = layout(sp);
         var paper = PAPERS[sel.paper];
         var ink = paper.dark ? '#ffe3ee' : '#9c1f58';
         var bid = sel.border;
+        var active = frames.length;                         // next empty slot; equals n when the sheet is full
 
         if (!stripPreview) {
             stripPreview = document.createElement('canvas');
@@ -755,17 +768,13 @@
         stripPreview.height = L.H;
         var ctx = stripPreview.getContext('2d');
 
-        // Fill background
         ctx.fillStyle = paper.c;
         ctx.fillRect(0, 0, L.W, L.H);
 
-        // Draw each slot - filled if we have a frame, empty template otherwise
         L.rects.forEach(function (r, i) {
-            // Draw border background for each slot
             borderBefore(ctx, bid, r, paper);
 
             if (frames[i]) {
-                // We have a captured frame for this slot - draw it
                 var fr = frames[i];
                 var fw = fr.width, fh = fr.height;
                 var cw = Math.min(fw, fh * sp.ar), ch = cw / sp.ar;
@@ -785,27 +794,29 @@
                 ctx.drawImage(t, r.x, r.y);
                 ctx.restore();
             } else {
-                // Empty slot - draw placeholder
                 ctx.save();
                 ctx.fillStyle = paper.dark ? '#2b1020' : '#f0e6ec';
                 ctx.globalAlpha = 0.3;
                 if (bid === 'rounded') { rrect(ctx, r.x, r.y, r.w, r.h, 30); ctx.fill(); }
                 else { ctx.fillRect(r.x, r.y, r.w, r.h); }
                 ctx.globalAlpha = 1;
-
-                // Draw a camera icon or "tap to capture" hint
-                ctx.fillStyle = ink;
-                ctx.font = '700 ' + Math.round(r.h * 0.15) + 'px "Segoe UI Symbol", "Segoe UI", sans-serif';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText('\uD83D\uDCF8', r.x + r.w / 2, r.y + r.h / 2);
+                if (i === active) {                         // the live feed covers this slot; outline it as a fallback
+                    ctx.strokeStyle = ink;
+                    ctx.lineWidth = 4;
+                    ctx.strokeRect(r.x, r.y, r.w, r.h);
+                } else {
+                    ctx.fillStyle = ink;
+                    ctx.font = '700 ' + Math.round(r.h * 0.15) + 'px "Segoe UI Symbol", "Segoe UI", sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('\uD83D\uDCF8', r.x + r.w / 2, r.y + r.h / 2);
+                }
                 ctx.restore();
             }
 
             borderAfter(ctx, bid, r, i, ink, paper);
         });
 
-        // Date stamp if enabled
         if (sel.date) {
             ctx.fillStyle = ink;
             ctx.font = '700 ' + Math.round(L.footer * 0.42) + 'px "Caveat", "Segoe Script", "Brush Script MT", cursive';
@@ -814,13 +825,32 @@
             ctx.fillText('\u2665 ' + todayStr() + ' \u2665', L.W / 2, L.footerY);
         }
 
-        // Update the shown canvas with the preview
         shown.width = stripPreview.width;
         shown.height = stripPreview.height;
         shown.getContext('2d').drawImage(stripPreview, 0, 0);
-        fitView(stripPreview.width / stripPreview.height);
+        fitView(L.W / L.H);
+
+        shown.style.position = 'absolute';
+        shown.style.left = '0';
+        shown.style.top = '0';
+        shown.style.width = '100%';
+        shown.style.height = '100%';
         shown.hidden = false;
-        video.hidden = true;
+
+        if (active < n) {
+            var a = L.rects[active];
+            video.style.position = 'absolute';
+            video.style.left = (a.x / L.W * 100) + '%';
+            video.style.top = (a.y / L.H * 100) + '%';
+            video.style.width = (a.w / L.W * 100) + '%';
+            video.style.height = (a.h / L.H * 100) + '%';
+            video.style.objectFit = 'cover';
+            video.style.transform = 'scaleX(-1)';
+            video.style.borderRadius = bid === 'rounded' ? (30 / a.w * 100) + '% / ' + (30 / a.h * 100) + '%' : '';
+            video.hidden = false;
+        } else {
+            video.hidden = true;                            // every slot filled, waiting for review
+        }
     }
 
 
@@ -847,14 +877,7 @@
     function setMode(m) {
         mode = m;
         var inReview = m === 'review' || m === 'saving';
-        var sp = spec();
-        var n = sp.cols * sp.rows;
-        // Show progressive preview ONLY during shooting for multi-photo formats
-        // In live mode, ALWAYS show live video for all formats
-        var showProgressivePreview = (n >= 2 && m === 'shooting');
 
-        video.hidden = inReview || showProgressivePreview;
-        shown.hidden = !(inReview || showProgressivePreview);
         reviewBox.hidden = m !== 'review';
         shotBtn.hidden = inReview;
         shotBtn.disabled = m !== 'live' || !stream;
@@ -862,11 +885,17 @@
         retakeBtn.disabled = pinBtn.disabled = dlBtn.disabled = m === 'saving';
         lockables.forEach(function (b) { b.disabled = m !== 'live'; });
 
-        // In live mode, ensure video is visible and sized correctly
-        if (m === 'live') {
+        if (inReview) {
+            resetSlotStyles();
+            video.hidden = true;
+            shown.hidden = false;
+        } else if (slotActive()) {
+            renderProgressivePreview();
+        } else {
+            resetSlotStyles();
             video.hidden = false;
             shown.hidden = true;
-            fitView(sp.ar);
+            fitView(spec().ar);
         }
     }
 
@@ -925,9 +954,7 @@
         video.style.filter = cssFilter(curFilter());
         var sp = spec();
 
-        // Detect format change and reset state
         if (currentFormatId !== null && currentFormatId !== sp.id) {
-            // Format changed - clear all captured frames and preview
             frames = [];
             stripPreview = null;
             countEl.classList.remove('is-on');
@@ -937,16 +964,10 @@
 
         if (mode === 'review') {
             recompose();
-        } else if (mode === 'shooting') {
-            // During shooting, show progressive preview for multi-photo formats
-            var n = sp.cols * sp.rows;
-            if (n >= 2) {
-                renderProgressivePreview();
-            } else {
-                fitView(sp.ar);
-            }
-        } else if (mode === 'live') {
-            // In live mode, always show live video feed for all formats
+        } else if (slotActive()) {
+            renderProgressivePreview();
+        } else {
+            resetSlotStyles();
             fitView(sp.ar);
             video.hidden = false;
             shown.hidden = true;
@@ -1007,11 +1028,9 @@
         frames = [];
         composed = null;
         stripPreview = null;
-        // Reset countdown display
         countEl.classList.remove('is-on');
         countEl.textContent = '';
         setMode('live');
-        fitView(spec().ar);
         setStatus('Smile! Tap capture when you are ready.');
     }
 
@@ -1058,7 +1077,6 @@
         composed = null;
         stripPreview = null;
         setMode('live');
-        fitView(spec().ar);
         setStatus('Smile! Tap capture when you are ready.');
     }
 
@@ -1124,7 +1142,6 @@
         stripPreview = null;
         countEl.classList.remove('is-on');
         setMode('live');
-        fitView(spec().ar);
         cam.classList.remove('is-open');
         cam.setAttribute('aria-hidden', 'true');
         addBtn.setAttribute('aria-expanded', 'false');
