@@ -10,12 +10,34 @@
     var TAP_SCROLL_PX = 8;        // touch: scroll distance that closes a tap-opened clock
 
     // ==========================================================================
+    // FORMATS - which cards each format shows (first card is the "big" unit)
+    // ==========================================================================
+    var U = {
+        years: { key: 'years', label: 'Years' },
+        months: { key: 'months', label: 'Months' },
+        days: { key: 'days', label: 'Days' },
+        hours: { key: 'hours', label: 'Hours' },
+        minutes: { key: 'minutes', label: 'Minutes' },
+        seconds: { key: 'seconds', label: 'Seconds' }
+    };
+
+    var FORMATS = [
+        { id: 'years', name: 'Years', units: [U.years, U.months, U.days, U.hours, U.minutes, U.seconds] },
+        { id: 'months', name: 'Months', units: [U.months, U.days, U.hours, U.minutes, U.seconds] },
+        { id: 'days', name: 'Days', units: [U.days, U.hours, U.minutes, U.seconds] },
+        { id: 'minutes', name: 'Minutes', units: [U.minutes, U.seconds] }
+    ];
+
+    // ==========================================================================
     // DOM & STATE
     // ==========================================================================
     var clockEl = document.getElementById('anniversary-clock');
     if (!clockEl) return;
 
     var digitElements = {};
+    var timerRow = null;
+    var toggleBtns = {};
+    var currentFormat = FORMATS[0];   // years is the default
     var rafId = null;
     var prefersReducedMotion = false;
     var lastSecond = -1;
@@ -26,15 +48,6 @@
     var tapTimer = null;
     var lastPointerType = 'mouse';
     var lastScrollY = window.scrollY || window.pageYOffset || 0;
-
-    var UNITS = [
-        { key: 'years', label: 'Years' },
-        { key: 'months', label: 'Months', max: 12 },
-        { key: 'days', label: 'Days', max: 31 },
-        { key: 'hours', label: 'Hours', max: 24 },
-        { key: 'minutes', label: 'Minutes', max: 60 },
-        { key: 'seconds', label: 'Seconds', max: 60 }
-    ];
 
     // ==========================================================================
     // INITIALIZATION
@@ -97,8 +110,18 @@
         clockEl.addEventListener('pointerdown', function (e) {
             lastPointerType = e.pointerType || 'mouse';
         });
-        clockEl.addEventListener('click', function () {
+        clockEl.addEventListener('click', function (e) {
             if (lastPointerType === 'mouse') return;   // mouse uses hover
+
+            // Tapping a format button must not collapse the clock; just keep it open longer
+            if (e.target.closest && e.target.closest('.ac-toggle')) {
+                if (tapOpen) {
+                    clearTimeout(tapTimer);
+                    tapTimer = setTimeout(closeTap, TAP_CLOSE_MS);
+                }
+                return;
+            }
+
             tapOpen = !tapOpen;
             clearTimeout(tapTimer);
             tapTimer = null;
@@ -136,19 +159,9 @@
     function buildClock() {
         var frag = document.createDocumentFragment();
 
-        var timerRow = document.createElement('div');
+        timerRow = document.createElement('div');
         timerRow.className = 'ac-timer-row';
-
-        UNITS.forEach(function (unit, index) {
-            var digit = createDigit(unit.key, unit.label);
-            digitElements[unit.key] = digit;
-            timerRow.appendChild(digit.wrapper);
-
-            if (index < UNITS.length - 1) {
-                timerRow.appendChild(createSeparator());
-            }
-        });
-
+        renderDigits();
         frag.appendChild(timerRow);
 
         var indicator = document.createElement('div');
@@ -157,7 +170,62 @@
         indicator.textContent = 'Since we both made it official <3';
         frag.appendChild(indicator);
 
+        frag.appendChild(createToggle());
+
         clockEl.appendChild(frag);
+    }
+
+    /* (Re)builds the digit cards for the current format */
+    function renderDigits() {
+        Object.keys(digitElements).forEach(function (k) { clearTimeout(digitElements[k].timer); });
+        digitElements = {};
+        while (timerRow.firstChild) timerRow.removeChild(timerRow.firstChild);
+
+        currentFormat.units.forEach(function (unit, index) {
+            var digit = createDigit(unit.key, unit.label);
+            digitElements[unit.key] = digit;
+            timerRow.appendChild(digit.wrapper);
+
+            if (index < currentFormat.units.length - 1) {
+                timerRow.appendChild(createSeparator());
+            }
+        });
+    }
+
+    function createToggle() {
+        var group = document.createElement('div');
+        group.className = 'ac-toggle';
+        group.setAttribute('role', 'group');
+        group.setAttribute('aria-label', 'Counter format');
+
+        FORMATS.forEach(function (f) {
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'ac-toggle__btn';
+            btn.textContent = f.name;
+            btn.setAttribute('aria-pressed', f.id === currentFormat.id ? 'true' : 'false');
+            btn.addEventListener('click', function () { setFormat(f.id); });
+            toggleBtns[f.id] = btn;
+            group.appendChild(btn);
+        });
+
+        return group;
+    }
+
+    function setFormat(id) {
+        if (id === currentFormat.id) return;
+        var next = null;
+        FORMATS.forEach(function (f) { if (f.id === id) next = f; });
+        if (!next) return;
+
+        currentFormat = next;
+        FORMATS.forEach(function (f) {
+            toggleBtns[f.id].setAttribute('aria-pressed', f.id === id ? 'true' : 'false');
+        });
+
+        renderDigits();
+        lastSecond = -1;   // force a render on the next tick
+        tick();
     }
 
     function createHalf(position, flap) {
@@ -222,14 +290,37 @@
     // ==========================================================================
     // TIME CALCULATION
     // ==========================================================================
+    /* years  : years, months, days (calendar), hours, minutes, seconds
+       months : months (total whole calendar months), days (calendar), hours, minutes, seconds
+       days   : days (total whole days), hours, minutes, seconds
+       minutes: minutes (total whole minutes), seconds */
     function getTimeSinceAnniversary() {
         var now = new Date();
         var diff = now - ANNIVERSARY_DATE;
+        var zero = { years: 0, months: 0, days: 0, hours: 0, minutes: 0, seconds: 0 };
 
-        if (diff < 0) {
-            return { years: 0, months: 0, days: 0, hours: 0, minutes: 0, seconds: 0 };
+        if (diff < 0) return zero;
+
+        var id = currentFormat.id;
+
+        if (id === 'minutes') {
+            return {
+                minutes: Math.floor(diff / 60000),
+                seconds: Math.floor(diff / 1000) % 60
+            };
         }
 
+        if (id === 'days') {
+            var rem = diff % 86400000;
+            return {
+                days: Math.floor(diff / 86400000),
+                hours: Math.floor(rem / 3600000),
+                minutes: Math.floor((rem % 3600000) / 60000),
+                seconds: Math.floor((rem % 60000) / 1000)
+            };
+        }
+
+        // years / months: calendar-based
         var years = 0, months = 0, days = 0, hours = 0, minutes = 0, seconds = 0;
         var tempDate = new Date(ANNIVERSARY_DATE);
 
@@ -263,7 +354,14 @@
         remainingMs -= minutes * 60000;
         seconds = Math.floor(remainingMs / 1000);
 
+        if (id === 'months') months += years * 12;
+
         return { years: years, months: months, days: days, hours: hours, minutes: minutes, seconds: seconds };
+    }
+
+    /* 2 -> "02", 1234 -> "1,234", 1234567 -> "1,234,567" */
+    function formatNumber(value) {
+        return String(value).padStart(2, '0').replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     }
 
     // ==========================================================================
@@ -276,17 +374,22 @@
         if (currentSecond === lastSecond) return;
         lastSecond = currentSecond;
 
-        UNITS.forEach(function (unit) {
+        currentFormat.units.forEach(function (unit) {
             var digit = digitElements[unit.key];
             var value = time[unit.key];
-            if (value === digit.lastValue) return;
+            if (!digit || value === digit.lastValue) return;
 
-            var padded = String(value).padStart(2, '0');
+            var text = formatNumber(value);
             var first = digit.lastValue === -1;
             digit.lastValue = value;
 
-            if (first) setStatic(digit, padded);   // first render: no animation
-            else updateDigit(digit, padded);
+            // Card grows with the text; a comma counts as half a digit
+            var commas = (text.match(/,/g) || []).length;
+            var digits = text.length - commas;
+            digit.card.style.setProperty('--ac-n', Math.max(2, digits + commas * 0.5));
+
+            if (first) setStatic(digit, text);   // first render: no animation
+            else updateDigit(digit, text);
         });
     }
 
@@ -339,6 +442,7 @@
     function destroy() {
         if (rafId) cancelAnimationFrame(rafId);
         clearTimeout(tapTimer);
+        Object.keys(digitElements).forEach(function (k) { clearTimeout(digitElements[k].timer); });
 
         if (window.matchMedia) {
             var mq = window.matchMedia('(prefers-reduced-motion: reduce)');

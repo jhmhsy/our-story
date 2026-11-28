@@ -151,12 +151,20 @@
         { id: 'line', name: 'Line', bw: 8 },
         { id: 'double', name: 'Double', bw: 16 },
         { id: 'mat', name: 'White mat', bw: 18 },
+        { id: 'polaroid', name: 'Polaroid', bw: 16 },
+        { id: 'shadow', name: 'Shadow', bw: 6 },
         { id: 'rounded', name: 'Rounded', bw: 8 },
         { id: 'film', name: 'Film', bw: 26 },
         { id: 'corners', name: 'Corners', bw: 0 },
         { id: 'stitch', name: 'Stitch', bw: 14 },
+        { id: 'dotted', name: 'Dotted', bw: 14 },
+        { id: 'scallop', name: 'Scallop', bw: 16 },
+        { id: 'neon', name: 'Neon', bw: 12 },
+        { id: 'gold', name: 'Gold', bw: 18 },
         { id: 'taped', name: 'Taped', bw: 12 },
-        { id: 'hearts', name: 'Hearts', bw: 14 }
+        { id: 'washi', name: 'Washi', bw: 10 },
+        { id: 'hearts', name: 'Hearts', bw: 14 },
+        { id: 'stars', name: 'Stars', bw: 14 }
     ];
     function curBorder() {
         for (var i = 0; i < BORDERS.length; i++) if (BORDERS[i].id === sel.border) return BORDERS[i];
@@ -202,7 +210,7 @@
     /* Drawn behind the photo */
     function borderBefore(ctx, id, r, paper) {
         var bw = curBorder().bw;
-        if (id === 'mat' || id === 'taped') {
+        if (id === 'mat' || id === 'taped' || id === 'washi') {
             ctx.save();
             ctx.shadowColor = 'rgba(40, 20, 30, 0.35)';
             ctx.shadowBlur = 16;
@@ -210,20 +218,63 @@
             ctx.fillStyle = '#fff';
             ctx.fillRect(r.x - bw, r.y - bw, r.w + bw * 2, r.h + bw * 2);
             ctx.restore();
+        } else if (id === 'polaroid') {
+            ctx.save();
+            ctx.shadowColor = 'rgba(40, 20, 30, 0.35)';
+            ctx.shadowBlur = 16;
+            ctx.shadowOffsetY = 5;
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(r.x - bw, r.y - bw, r.w + bw * 2, r.h + bw * 2 + 14);
+            ctx.restore();
+        } else if (id === 'shadow') {
+            ctx.save();
+            ctx.shadowColor = 'rgba(40, 20, 30, 0.45)';
+            ctx.shadowBlur = 22;
+            ctx.shadowOffsetX = 6;
+            ctx.shadowOffsetY = 10;
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(r.x - bw, r.y - bw, r.w + bw * 2, r.h + bw * 2);
+            ctx.restore();
         } else if (id === 'rounded') {
             ctx.fillStyle = '#fff';
             rrect(ctx, r.x - bw, r.y - bw, r.w + bw * 2, r.h + bw * 2, 38);
             ctx.fill();
+        } else if (id === 'scallop') {
+            var rad = 8, x0 = r.x - bw, y0 = r.y - bw, w0 = r.w + bw * 2, h0 = r.h + bw * 2;
+            var nx = Math.max(2, Math.round(w0 / 20)), ny = Math.max(2, Math.round(h0 / 20)), k, cx, cy;
+            ctx.save();
+            ctx.shadowColor = 'rgba(40, 20, 30, 0.3)';
+            ctx.shadowBlur = 12;
+            ctx.shadowOffsetY = 4;
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(x0 + rad, y0 + rad, w0 - rad * 2, h0 - rad * 2);
+            ctx.beginPath();
+            for (k = 0; k < nx; k++) {
+                cx = x0 + rad + (w0 - rad * 2) * (k + 0.5) / nx;
+                ctx.moveTo(cx + rad, y0 + rad);
+                ctx.arc(cx, y0 + rad, rad, 0, Math.PI * 2);
+                ctx.moveTo(cx + rad, y0 + h0 - rad);
+                ctx.arc(cx, y0 + h0 - rad, rad, 0, Math.PI * 2);
+            }
+            for (k = 0; k < ny; k++) {
+                cy = y0 + rad + (h0 - rad * 2) * (k + 0.5) / ny;
+                ctx.moveTo(x0 + rad + rad, cy);
+                ctx.arc(x0 + rad, cy, rad, 0, Math.PI * 2);
+                ctx.moveTo(x0 + w0 - rad + rad, cy);
+                ctx.arc(x0 + w0 - rad, cy, rad, 0, Math.PI * 2);
+            }
+            ctx.fill();
+            ctx.restore();
         } else if (id === 'film') {
             ctx.fillStyle = '#111';
             ctx.fillRect(r.x - bw, r.y - bw, r.w + bw * 2, r.h + bw * 2);
-            var span = r.w + bw * 2, n = Math.max(1, Math.floor(span / 30)), k;
+            var span = r.w + bw * 2, n = Math.max(1, Math.floor(span / 30)), j;
             var sx = r.x - bw + (span - (n * 30 - 14)) / 2;
             ctx.fillStyle = paper.c;
-            for (k = 0; k < n; k++) {
-                rrect(ctx, sx + k * 30, r.y - bw / 2 - 6, 16, 12, 3);
+            for (j = 0; j < n; j++) {
+                rrect(ctx, sx + j * 30, r.y - bw / 2 - 6, 16, 12, 3);
                 ctx.fill();
-                rrect(ctx, sx + k * 30, r.y + r.h + bw / 2 - 6, 16, 12, 3);
+                rrect(ctx, sx + j * 30, r.y + r.h + bw / 2 - 6, 16, 12, 3);
                 ctx.fill();
             }
         }
@@ -245,6 +296,39 @@
             ctx.lineWidth = 3;
             ctx.setLineDash([12, 8]);
             ctx.strokeRect(r.x - 9, r.y - 9, r.w + 18, r.h + 18);
+        } else if (id === 'dotted') {
+            ctx.lineWidth = 6;
+            ctx.lineCap = 'round';
+            ctx.setLineDash([0, 14]);
+            ctx.strokeRect(r.x - 9, r.y - 9, r.w + 18, r.h + 18);
+        } else if (id === 'neon') {
+            var glow = paper.dark ? '#ff8fc8' : '#ff2d8a';
+            ctx.shadowColor = glow;
+            ctx.shadowBlur = 20;
+            ctx.strokeStyle = glow;
+            ctx.lineWidth = 5;
+            ctx.strokeRect(r.x - 8, r.y - 8, r.w + 16, r.h + 16);
+            ctx.shadowBlur = 0;
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(r.x - 8, r.y - 8, r.w + 16, r.h + 16);
+        } else if (id === 'gold') {
+            ctx.strokeStyle = '#c9992b';
+            ctx.lineWidth = 4;
+            ctx.strokeRect(r.x - 6, r.y - 6, r.w + 12, r.h + 12);
+            ctx.strokeStyle = '#f3d77a';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(r.x - 13, r.y - 13, r.w + 26, r.h + 26);
+            ctx.fillStyle = '#c9992b';
+            [[r.x - 13, r.y - 13], [r.x + r.w + 13, r.y - 13], [r.x - 13, r.y + r.h + 13], [r.x + r.w + 13, r.y + r.h + 13]].forEach(function (p) {
+                ctx.beginPath();
+                ctx.moveTo(p[0], p[1] - 7);
+                ctx.lineTo(p[0] + 7, p[1]);
+                ctx.lineTo(p[0], p[1] + 7);
+                ctx.lineTo(p[0] - 7, p[1]);
+                ctx.closePath();
+                ctx.fill();
+            });
         } else if (id === 'corners') {
             var s = 42, x2 = r.x + r.w, y2 = r.y + r.h;
             ctx.fillStyle = paper.dark ? '#ffe3ee' : '#2b1020';
@@ -265,14 +349,30 @@
                 ctx.fillRect(-46, -14, 92, 28);
                 ctx.restore();
             });
-        } else if (id === 'hearts') {
-            ctx.font = '700 30px "Segoe UI Symbol", "Segoe UI", sans-serif';
+        } else if (id === 'washi') {
+            var tapes = ['rgba(255, 190, 215, 0.9)', 'rgba(255, 232, 150, 0.9)', 'rgba(178, 235, 214, 0.9)', 'rgba(190, 220, 255, 0.9)'];
+            [[r.x, r.y, -0.785], [r.x + r.w, r.y, 0.785], [r.x, r.y + r.h, 0.785], [r.x + r.w, r.y + r.h, -0.785]].forEach(function (t, k) {
+                ctx.save();
+                ctx.translate(t[0], t[1]);
+                ctx.rotate(t[2]);
+                ctx.fillStyle = tapes[k];
+                ctx.fillRect(-48, -13, 96, 26);
+                ctx.restore();
+            });
+        } else if (id === 'hearts' || id === 'stars') {
+            var glyph = id === 'hearts' ? '\u2665' : '\u2605';
+            ctx.font = '700 ' + (id === 'hearts' ? 30 : 28) + 'px "Segoe UI Symbol", "Segoe UI", sans-serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText('\u2665', r.x - 7, r.y - 7);
-            ctx.fillText('\u2665', r.x + r.w + 7, r.y - 7);
-            ctx.fillText('\u2665', r.x - 7, r.y + r.h + 7);
-            ctx.fillText('\u2665', r.x + r.w + 7, r.y + r.h + 7);
+            var xs = [r.x - 7, r.x + r.w / 2, r.x + r.w + 7];
+            var ys = [r.y - 7, r.y + r.h / 2, r.y + r.h + 7];
+            for (var a = 0; a < 3; a++) {
+                for (var b = 0; b < 3; b++) {
+                    if (a === 1 && b === 1) continue;
+                    if (id === 'hearts' && (a === 1 || b === 1)) continue;   // hearts: corners only
+                    ctx.fillText(glyph, xs[a], ys[b]);
+                }
+            }
         }
         ctx.restore();
     }
@@ -870,7 +970,7 @@
 
     function fitView(ar) {
         var vw = Math.min(380, 480 * ar);
-        view.style.width = 'min(' + vw.toFixed(0) + 'px, 100%)';
+        view.style.width = 'min(' + vw.toFixed(0) + 'px, calc(100% - 12px))';
         view.style.aspectRatio = String(ar);
     }
 
